@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   NOEMA — base styles
+   ========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  /* Tipografía editorial NOEMA en headings */
+  h1, h2 {
+    @apply font-serif;
+    letter-spacing: -0.01em;
+  }
+  h3, h4 {
+    @apply font-sans;
+  }
+
+  /* Inputs nativos: respetar el sistema NOEMA */
+  input, textarea, select, button {
+    font-family: inherit;
+  }
+
+  /* Selección con tinte sage */
+  ::selection {
+    background-color: rgba(61, 77, 62, 0.20);
+    color: #2A3328;
+  }
+
+  /* Scrollbar discreta */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(46, 59, 46, 0.15);
+    border-radius: 8px;
+    border: 2px solid #F1ECE0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(46, 59, 46, 0.30);
+  }
+}
+
+@layer components {
+  /* Caption uppercase NOEMA */
+  .caption {
+    @apply font-sans font-medium text-xs uppercase tracking-wider text-foreground-muted;
+  }
+}
