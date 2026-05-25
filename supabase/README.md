@@ -15,14 +15,14 @@ pnpm supabase:reset          # aplica migraciones + seed desde cero
 pnpm supabase:types          # regenera packages/database/src/types.ts
 ```
 
-URLs locales (default):
+URLs locales (puertos NOEMA — rango 546xx para no chocar con otros proyectos):
 
 | Servicio | URL |
 |---|---|
-| API (REST + GraphQL) | http://127.0.0.1:54321 |
-| Studio (UI) | http://127.0.0.1:54323 |
-| Inbucket (emails) | http://127.0.0.1:54324 |
-| Postgres directo | postgresql://postgres:postgres@127.0.0.1:54322/postgres |
+| API (REST + GraphQL) | http://127.0.0.1:54621 |
+| Studio (UI) | http://127.0.0.1:54623 |
+| Inbucket (emails) | http://127.0.0.1:54624 |
+| Postgres directo | postgresql://postgres:postgres@127.0.0.1:54622/postgres |
 
 ---
 

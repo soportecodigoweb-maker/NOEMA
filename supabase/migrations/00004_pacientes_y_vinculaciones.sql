@@ -59,11 +59,14 @@ create table public.vinculaciones (
   ultimo_periodo_facturado    date,
 
   creado_at                   timestamptz not null default now(),
-  actualizado_at              timestamptz not null default now(),
-
-  -- Un paciente solo puede tener una vinculación activa a la vez
-  constraint unique_paciente_activo exclude (paciente_id with =) where (estado in ('activa', 'pausada') and paciente_id is not null)
+  actualizado_at              timestamptz not null default now()
 );
+
+-- Un paciente solo puede tener una vinculación activa o pausada a la vez
+-- (índice único parcial — más eficiente que un EXCLUDE constraint con uuid)
+create unique index vinculaciones_un_paciente_activo
+  on public.vinculaciones (paciente_id)
+  where estado in ('activa', 'pausada') and paciente_id is not null;
 
 comment on table public.vinculaciones is 'Relación terapeuta-paciente. Se crea cuando el terapeuta genera el código; se activa cuando el paciente lo introduce y acepta el consentimiento.';
 comment on column public.vinculaciones.codigo_invitacion is 'Código corto único (ej. NOEMA-A3F9). Generado por trigger.';
