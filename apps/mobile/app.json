@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "NOEMA",
+    "slug": "noema",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "noema",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.noema.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "NOEMA puede adjuntar imágenes a tus registros si tú decides hacerlo.",
+        "NSPhotoLibraryUsageDescription": "NOEMA puede adjuntar imágenes a tus registros si tú decides hacerlo."
+      }
+    },
+    "android": {
+      "package": "app.noema.mobile",
+      "permissions": ["NOTIFICATIONS"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-splash-screen", { "backgroundColor": "#F1ECE0" }]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
