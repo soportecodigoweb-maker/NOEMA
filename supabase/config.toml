@@ -54,7 +54,10 @@ enable_manual_linking = false
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
-enable_confirmations = true
+# En desarrollo local desactivamos confirmación porque Supabase local NO manda
+# correos reales (los captura Mailpit en http://127.0.0.1:54624).
+# En producción esto debe ser `true`.
+enable_confirmations = false
 secure_password_change = false
 max_frequency = "1s"
 

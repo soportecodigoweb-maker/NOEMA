@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { PerfilEditor } from './PerfilEditor';
 import { signOutAction } from '../../(auth)/actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -9,11 +10,16 @@ export const dynamic = 'force-dynamic';
 export default async function AjustesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('nombre, email')
-    .eq('id', user!.id)
-    .single();
+  if (!user) return null;
+
+  const [{ data: profile }, { data: terapeuta }] = await Promise.all([
+    supabase.from('profiles').select('nombre, email, ciudad').eq('id', user.id).single(),
+    supabase
+      .from('terapeutas')
+      .select('titulo, descripcion, cedula_profesional, especialidades, enfoques, estado_verificacion')
+      .eq('profile_id', user.id)
+      .maybeSingle(),
+  ]);
 
   return (
     <div className="px-8 py-10 max-w-3xl mx-auto">
@@ -25,31 +31,30 @@ export default async function AjustesPage() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Tu cuenta</CardTitle>
-            <CardDescription>Información básica.</CardDescription>
-          </CardHeader>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-foreground-muted">Nombre</dt>
-              <dd className="text-ink font-medium">{profile?.nombre}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-foreground-muted">Correo</dt>
-              <dd className="text-ink">{profile?.email}</dd>
-            </div>
-          </dl>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>Perfil profesional</CardTitle>
             <CardDescription>
-              Lo que aparece en el directorio público.
+              Lo que aparece en el directorio público cuando estés verificado.
+              {terapeuta?.estado_verificacion === 'en_revision' && (
+                <span className="block mt-1 text-emotion-cansado">
+                  Tu cédula está en revisión.
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
-          <p className="text-sm text-foreground-muted">
-            Edición de perfil profesional · próximamente.
-          </p>
+          <PerfilEditor
+            profile={{
+              nombre: profile?.nombre ?? '',
+              email: profile?.email ?? '',
+              ciudad: profile?.ciudad ?? '',
+            }}
+            terapeuta={{
+              titulo: terapeuta?.titulo ?? '',
+              descripcion: terapeuta?.descripcion ?? '',
+              cedula: terapeuta?.cedula_profesional ?? '',
+              especialidades: (terapeuta?.especialidades ?? []).join(', '),
+              enfoques: (terapeuta?.enfoques ?? []).join(', '),
+            }}
+          />
         </Card>
 
         <Card>

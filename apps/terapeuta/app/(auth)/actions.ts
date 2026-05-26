@@ -40,7 +40,7 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
     options: {
       data: { rol: 'terapeuta', nombre },
       // En producción, esto debe ser tu dominio real
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001'}/inicio`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3006'}/inicio`,
     },
   });
 
@@ -49,13 +49,13 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
   }
 
   revalidatePath('/', 'layout');
-  redirect('/onboarding/perfil');
+  redirect('/perfil');
 }
 
 export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect('/auth/signin');
+  redirect('/signin');
 }
 
 function traducirError(msg: string): string {

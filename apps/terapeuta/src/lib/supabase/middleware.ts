@@ -39,17 +39,18 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Rutas públicas
-  const isPublic = path.startsWith('/auth') || path === '/' || path.startsWith('/_next');
+  // Rutas públicas (los grupos (auth), (onboarding), (panel) NO van en la URL)
+  const isAuthPage = path === '/signin' || path === '/signup';
+  const isPublic = isAuthPage || path === '/' || path.startsWith('/_next');
 
   if (!user && !isPublic) {
     // Sin sesión y página privada → mandar a signin
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/signin';
+    url.pathname = '/signin';
     return NextResponse.redirect(url);
   }
 
-  if (user && (path === '/' || path.startsWith('/auth'))) {
+  if (user && (path === '/' || isAuthPage)) {
     // Con sesión y página de auth → mandar al panel
     const url = request.nextUrl.clone();
     url.pathname = '/inicio';

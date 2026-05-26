@@ -15,7 +15,7 @@ export default async function PanelLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/signin');
+    redirect('/signin');
   }
 
   // Profile + terapeuta (para mostrar en sidebar)
@@ -26,17 +26,17 @@ export default async function PanelLayout({
     .single();
 
   if (!profile) {
-    redirect('/auth/signin');
+    redirect('/signin');
   }
 
   if (profile.rol !== 'terapeuta') {
     // Si por error un paciente o sin_terapeuta llega aquí, vamos a un fallback.
     // (Eventualmente: pantalla "Esta cuenta no es de terapeuta.")
-    redirect('/auth/signin');
+    redirect('/signin');
   }
 
   if (!profile.onboarding_completo) {
-    redirect('/onboarding/perfil');
+    redirect('/perfil');
   }
 
   const { data: terapeuta } = await supabase

@@ -20,7 +20,7 @@ export default function SignUpPage() {
       <p className="text-sm text-foreground-muted text-center">
         ¿Ya tienes cuenta?{' '}
         <Link
-          href="/auth/signin"
+          href="/signin"
           className="text-noema-sage font-medium underline-offset-4 hover:underline"
         >
           Inicia sesión
