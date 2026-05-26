@@ -11,6 +11,9 @@ export const metadata = {
     'Plataforma de seguimiento terapéutico entre sesiones. Para pacientes en proceso y terapeutas que acompañan.',
 };
 
+// ISR: regenera el HTML cada 60s para reflejar nuevos terapeutas verificados
+export const revalidate = 60;
+
 export default async function LandingPage() {
   const supabase = await createClient();
   const { count: terapeutasCount } = await supabase

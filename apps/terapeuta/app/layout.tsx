@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 import './globals.css';
 
@@ -26,12 +26,18 @@ export const metadata: Metadata = {
     'Da seguimiento real a tus pacientes entre sesiones. Organiza, registra y prepara mejor cada consulta.',
   applicationName: 'NOEMA',
   authors: [{ name: 'NOEMA' }],
-  themeColor: '#F1ECE0',
   robots: {
-    // El panel del terapeuta no debe indexarse
+    // El panel del terapeuta no debe indexarse;
+    // las páginas públicas (landing, directorio) sobreescriben esto.
     index: false,
     follow: false,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#F1ECE0',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

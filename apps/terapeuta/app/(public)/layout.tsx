@@ -1,6 +1,12 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Vesica } from '@/components/ui/Vesica';
 import { createClient } from '@/lib/supabase/server';
+
+// Las rutas dentro de (public) SÍ se indexan en buscadores
+export const metadata: Metadata = {
+  robots: { index: true, follow: true },
+};
 
 export default async function PublicLayout({
   children,
