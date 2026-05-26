@@ -41,7 +41,8 @@ export async function updateSession(request: NextRequest) {
 
   // Rutas públicas (los grupos (auth), (onboarding), (panel) NO van en la URL)
   const isAuthPage = path === '/signin' || path === '/signup';
-  const isPublic = isAuthPage || path === '/' || path.startsWith('/_next');
+  const isLegalPage = path === '/terminos' || path === '/privacidad';
+  const isPublic = isAuthPage || isLegalPage || path === '/' || path.startsWith('/_next');
 
   if (!user && !isPublic) {
     // Sin sesión y página privada → mandar a signin

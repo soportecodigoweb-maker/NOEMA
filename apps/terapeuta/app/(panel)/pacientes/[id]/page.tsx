@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { tiempoRelativo, formatFecha } from '@/lib/utils';
+import { GenerarResumenButton } from './GenerarResumenButton';
+import { Sparkles } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,8 +78,21 @@ export default async function PacienteResumenPage({ params }: PageProps) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  // Histórico de resúmenes IA
+  const { data: resumenesPrevios } = await supabase
+    .from('resumenes_ia')
+    .select('id, creado_at, periodo_desde, periodo_hasta, registros_count, diario_count')
+    .eq('vinculacion_id', id)
+    .order('creado_at', { ascending: false })
+    .limit(5);
+
   return (
     <div className="space-y-6">
+      {/* Botón IA */}
+      <div className="flex justify-end">
+        <GenerarResumenButton vinculacionId={id} />
+      </div>
+
       {/* KPIs */}
       <div>
         <h2 className="font-serif text-2xl text-ink mb-1">Panorama general</h2>
@@ -187,6 +202,36 @@ export default async function PacienteResumenPage({ params }: PageProps) {
           )}
         </Card>
       </div>
+
+      {/* Histórico de resúmenes IA */}
+      {resumenesPrevios && resumenesPrevios.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="size-4 text-noema-sage" strokeWidth={1.8} />
+              Resúmenes IA anteriores
+            </CardTitle>
+            <CardDescription>
+              Histórico de pre-sesiones generadas con IA.
+            </CardDescription>
+          </CardHeader>
+          <ul className="space-y-2">
+            {resumenesPrevios.map((r: any) => (
+              <li
+                key={r.id}
+                className="flex items-center justify-between text-sm py-2 border-b border-noema-deep/[0.06] last:border-0"
+              >
+                <span className="text-ink">
+                  {formatFecha(r.periodo_desde)} → {formatFecha(r.periodo_hasta)}
+                </span>
+                <span className="text-xs text-foreground-muted">
+                  {r.registros_count + r.diario_count} fuentes · {tiempoRelativo(r.creado_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* Disclaimer IA / clínico */}
       <p className="text-xs text-foreground-muted italic text-center">

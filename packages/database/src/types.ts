@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       alertas_crisis: {
@@ -959,6 +984,76 @@ export type Database = {
           },
         ]
       }
+      resumenes_ia: {
+        Row: {
+          creado_at: string
+          diario_count: number
+          generado_por: string
+          id: string
+          modelo: string
+          periodo_desde: string
+          periodo_hasta: string
+          registros_count: number
+          resumen_json: Json
+          resumen_md: string
+          tokens_input: number | null
+          tokens_output: number | null
+          vinculacion_id: string
+        }
+        Insert: {
+          creado_at?: string
+          diario_count?: number
+          generado_por: string
+          id?: string
+          modelo?: string
+          periodo_desde: string
+          periodo_hasta: string
+          registros_count?: number
+          resumen_json: Json
+          resumen_md: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          vinculacion_id: string
+        }
+        Update: {
+          creado_at?: string
+          diario_count?: number
+          generado_por?: string
+          id?: string
+          modelo?: string
+          periodo_desde?: string
+          periodo_hasta?: string
+          registros_count?: number
+          resumen_json?: Json
+          resumen_md?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          vinculacion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumenes_ia_generado_por_fkey"
+            columns: ["generado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resumenes_ia_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "mensajes_hilos_terapeuta"
+            referencedColumns: ["vinculacion_id"]
+          },
+          {
+            foreignKeyName: "resumenes_ia_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sesion_notas: {
         Row: {
           actualizado_at: string
@@ -1072,6 +1167,83 @@ export type Database = {
             columns: ["vinculacion_id"]
             isOneToOne: false
             referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_eventos: {
+        Row: {
+          id: string
+          payload: Json
+          procesado_at: string | null
+          recibido_at: string
+          tipo: string
+        }
+        Insert: {
+          id: string
+          payload: Json
+          procesado_at?: string | null
+          recibido_at?: string
+          tipo: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          procesado_at?: string | null
+          recibido_at?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
+      stripe_facturas: {
+        Row: {
+          creada_at: string
+          estado: string
+          id: string
+          moneda: string
+          monto_centavos: number
+          pacientes_count: number | null
+          pagada_at: string | null
+          periodo_fin: string | null
+          periodo_inicio: string | null
+          terapeuta_id: string
+          url_factura: string | null
+          url_pdf: string | null
+        }
+        Insert: {
+          creada_at?: string
+          estado: string
+          id: string
+          moneda?: string
+          monto_centavos: number
+          pacientes_count?: number | null
+          pagada_at?: string | null
+          periodo_fin?: string | null
+          periodo_inicio?: string | null
+          terapeuta_id: string
+          url_factura?: string | null
+          url_pdf?: string | null
+        }
+        Update: {
+          creada_at?: string
+          estado?: string
+          id?: string
+          moneda?: string
+          monto_centavos?: number
+          pacientes_count?: number | null
+          pagada_at?: string | null
+          periodo_fin?: string | null
+          periodo_inicio?: string | null
+          terapeuta_id?: string
+          url_factura?: string | null
+          url_pdf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_facturas_terapeuta_id_fkey"
+            columns: ["terapeuta_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1287,6 +1459,7 @@ export type Database = {
           modalidades: Database["public"]["Enums"]["modalidad_sesion"][]
           pacientes_activos_count: number
           plan: Database["public"]["Enums"]["plan_terapeuta"]
+          plan_estado: string
           poblaciones_atendidas: string[]
           precio_sesion_mxn: number | null
           profile_id: string
@@ -1296,6 +1469,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           titulo: string | null
+          trial_termina_at: string | null
           ultima_actividad: string | null
           verificado_at: string | null
           verificado_por: string | null
@@ -1315,6 +1489,7 @@ export type Database = {
           modalidades?: Database["public"]["Enums"]["modalidad_sesion"][]
           pacientes_activos_count?: number
           plan?: Database["public"]["Enums"]["plan_terapeuta"]
+          plan_estado?: string
           poblaciones_atendidas?: string[]
           precio_sesion_mxn?: number | null
           profile_id: string
@@ -1324,6 +1499,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           titulo?: string | null
+          trial_termina_at?: string | null
           ultima_actividad?: string | null
           verificado_at?: string | null
           verificado_por?: string | null
@@ -1343,6 +1519,7 @@ export type Database = {
           modalidades?: Database["public"]["Enums"]["modalidad_sesion"][]
           pacientes_activos_count?: number
           plan?: Database["public"]["Enums"]["plan_terapeuta"]
+          plan_estado?: string
           poblaciones_atendidas?: string[]
           precio_sesion_mxn?: number | null
           profile_id?: string
@@ -1352,6 +1529,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           titulo?: string | null
+          trial_termina_at?: string | null
           ultima_actividad?: string | null
           verificado_at?: string | null
           verificado_por?: string | null
@@ -1765,6 +1943,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       accion_auditoria: [
