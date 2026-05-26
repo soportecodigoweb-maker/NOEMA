@@ -39,10 +39,17 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Rutas públicas (los grupos (auth), (onboarding), (panel) NO van en la URL)
+  // Rutas públicas (los grupos (auth), (onboarding), (panel), (public) NO van en la URL)
   const isAuthPage = path === '/signin' || path === '/signup';
   const isLegalPage = path === '/terminos' || path === '/privacidad';
-  const isPublic = isAuthPage || isLegalPage || path === '/' || path.startsWith('/_next');
+  const isDirectorio = path === '/terapeutas' || path.startsWith('/terapeutas/');
+  const isLanding = path === '/';
+  const isPublic =
+    isAuthPage ||
+    isLegalPage ||
+    isLanding ||
+    isDirectorio ||
+    path.startsWith('/_next');
 
   if (!user && !isPublic) {
     // Sin sesión y página privada → mandar a signin
@@ -51,12 +58,15 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (path === '/' || isAuthPage)) {
+  if (user && isAuthPage) {
     // Con sesión y página de auth → mandar al panel
     const url = request.nextUrl.clone();
     url.pathname = '/inicio';
     return NextResponse.redirect(url);
   }
+
+  // Con sesión y en / o /terapeutas, dejamos pasar: la landing muestra
+  // "Mi panel" en vez de "Iniciar sesión".
 
   return response;
 }

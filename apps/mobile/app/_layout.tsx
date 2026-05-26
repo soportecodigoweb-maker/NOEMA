@@ -106,8 +106,30 @@ function AuthGate() {
       return;
     }
 
+    // Routing por rol:
+    //   - paciente (con terapeuta vinculado) → app completa de paciente
+    //   - sin_terapeuta → modo educativo (catálogo de contenido)
+    //   - terapeuta → mensaje "esta app es para pacientes"
+    const inPacienteGroup = segments[0] === '(paciente)';
+    const inSinTerapeutaGroup = segments[0] === '(sin-terapeuta)';
+
+    if (profile.rol === 'sin_terapeuta') {
+      if (!inSinTerapeutaGroup) {
+        router.replace('/(sin-terapeuta)/inicio');
+      }
+      return;
+    }
+
+    if (profile.rol === 'paciente') {
+      if (!inPacienteGroup) {
+        router.replace('/(paciente)/inicio');
+      }
+      return;
+    }
+
+    // Cualquier otro rol (terapeuta, admin) — fallback a auth
     if (inAuthGroup || inOnboardingGroup) {
-      router.replace('/(paciente)/inicio');
+      router.replace('/(auth)/welcome');
     }
   }, [session, profile, loading, segments, router]);
 
@@ -122,6 +144,7 @@ function AuthGate() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(onboarding)" />
       <Stack.Screen name="(paciente)" />
+      <Stack.Screen name="(sin-terapeuta)" />
       <Stack.Screen
         name="crisis"
         options={{
