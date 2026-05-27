@@ -175,6 +175,37 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="bg-bone/40 py-20">
+        <div className="max-w-3xl mx-auto px-6">
+          <p className="caption mb-3">Preguntas frecuentes</p>
+          <h2 className="font-serif text-3xl sm:text-4xl text-ink mb-10">
+            Lo que probablemente te preguntas.
+          </h2>
+
+          <div className="space-y-1">
+            {faqs.map((f, i) => (
+              <details
+                key={i}
+                className="group border-b border-noema-deep/[0.08] py-5"
+              >
+                <summary className="flex items-center justify-between cursor-pointer list-none">
+                  <h3 className="font-sans font-medium text-ink text-lg pr-4">
+                    {f.q}
+                  </h3>
+                  <span className="text-2xl text-foreground-muted font-light transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <div className="mt-3 text-foreground-muted leading-relaxed text-[15px]">
+                  {f.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA final */}
       <section className="bg-noema-deep text-bone">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
@@ -213,3 +244,39 @@ export default async function LandingPage() {
     </>
   );
 }
+
+const faqs: Array<{ q: string; a: React.ReactNode }> = [
+  {
+    q: '¿NOEMA es un chat con mi terapeuta?',
+    a: 'No. NOEMA no es atención en tiempo real ni chat 24/7. Tu terapeuta responde mensajes de forma asíncrona, dentro de sus horarios. Para emergencias, la app te conecta con líneas profesionales.',
+  },
+  {
+    q: '¿Mi terapeuta ve todo lo que escribo?',
+    a: 'Solo lo que tú decidas. Cada registro y entrada de diario tiene un nivel: privado (solo tú), compartido (tu terapeuta), o marcado para sesión (destacado en consulta). Lo privado es inviolable.',
+  },
+  {
+    q: '¿Cuánto cuesta?',
+    a: (
+      <>
+        Para pacientes: <strong>gratis</strong>. Para terapeutas: $100 MXN por paciente
+        activo por mes, con 30 días de prueba sin tarjeta. Sin tope de pacientes.
+      </>
+    ),
+  },
+  {
+    q: '¿Funciona si no tengo terapeuta todavía?',
+    a: 'Sí. Puedes usar la app en modo exploración: acceso a contenido educativo, biblioteca de meditaciones y lecturas, y nuestro directorio de profesionales verificados.',
+  },
+  {
+    q: '¿La inteligencia artificial reemplaza el criterio del terapeuta?',
+    a: 'No. La IA genera resúmenes operativos para preparar sesión. Nunca diagnostica ni interpreta. El terapeuta siempre tiene acceso a la información original y su criterio profesional prevalece.',
+  },
+  {
+    q: '¿Cómo se garantiza la verificación de los terapeutas?',
+    a: 'Cada terapeuta sube su cédula profesional, que validamos manualmente antes de marcarlo como verificado en el directorio. Solo terapeutas verificados aparecen en la búsqueda pública.',
+  },
+  {
+    q: '¿Qué pasa si quiero borrar mi cuenta?',
+    a: 'Puedes hacerlo desde Ajustes en cualquier momento. La cuenta se cierra de inmediato y todos tus datos se eliminan en 7 días (período de gracia por si te arrepientes).',
+  },
+];
