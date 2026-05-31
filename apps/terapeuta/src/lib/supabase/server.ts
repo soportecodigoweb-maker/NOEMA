@@ -12,8 +12,13 @@ import type { Database } from '@noema/database';
 export async function createClient() {
   const cookieStore = await cookies();
 
+  // En producción usamos URL interna (red Docker → kong:8000) para SSR.
+  // Sin esto, el server llamaría a la URL pública (HTTPS), que requiere DNS+SSL ya configurados.
+  // El client-side sigue usando NEXT_PUBLIC_SUPABASE_URL (el browser).
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    url,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {

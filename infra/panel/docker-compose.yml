@@ -33,6 +33,8 @@ services:
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # URL interna para SSR (red Docker → Kong directo, sin DNS/SSL)
+      - SUPABASE_INTERNAL_URL=http://supabase-kong:8000
     networks:
       - traefik
     labels:

@@ -11,8 +11,11 @@ import type { Database } from '@noema/database';
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Middleware corre server-side: usar URL interna en prod (red Docker).
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    url,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
