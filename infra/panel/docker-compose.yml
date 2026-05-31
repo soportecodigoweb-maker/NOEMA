@@ -1,0 +1,53 @@
+# NOEMA — Panel terapeuta en producción
+#
+# Despliega el panel Next.js detrás del Traefik existente.
+# Build context: /opt/noema/source (la raíz del monorepo en el VPS)
+#
+# Variables a configurar en .env (mismo directorio):
+#   NEXT_PUBLIC_SUPABASE_URL       (URL pública con HTTPS final)
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY  (ANON key de Supabase self-hosted)
+#   NEXT_PUBLIC_SITE_URL           (https://noema.agentecodigoweb.com)
+#   SUPABASE_SERVICE_ROLE_KEY      (server-side)
+#
+# Levantar: docker compose up -d --build
+# Logs:     docker compose logs -f panel
+# Update:   git pull && docker compose up -d --build
+
+name: noema-panel
+
+services:
+  panel:
+    build:
+      context: /opt/noema/source
+      dockerfile: apps/terapeuta/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    image: noema-panel:latest
+    container_name: noema-panel
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=n8n-traefik_app_network"
+      # Router HTTPS para el panel
+      - "traefik.http.routers.noema-panel.rule=Host(`noema.agentecodigoweb.com`)"
+      - "traefik.http.routers.noema-panel.entrypoints=websecure"
+      - "traefik.http.routers.noema-panel.tls=true"
+      - "traefik.http.routers.noema-panel.tls.certresolver=le"
+      # Prioridad menor que el router /supabase (que es más específico)
+      - "traefik.http.routers.noema-panel.priority=1"
+      - "traefik.http.services.noema-panel.loadbalancer.server.port=3000"
+
+networks:
+  traefik:
+    external: true
+    name: n8n-traefik_app_network
