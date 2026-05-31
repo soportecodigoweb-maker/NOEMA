@@ -35,11 +35,9 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
+# Copiar deps y código fuente. node_modules ya tiene todo (incluyendo workspace links)
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Re-link los workspace packages
-RUN pnpm install --frozen-lockfile --offline
 
 # Variables públicas de Supabase (en build time porque Next.js las inlinea)
 ARG NEXT_PUBLIC_SUPABASE_URL
