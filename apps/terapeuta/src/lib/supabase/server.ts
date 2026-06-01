@@ -21,6 +21,12 @@ export async function createClient() {
     url,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        // Forzar path / para que las cookies se manden en TODAS las rutas
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -28,7 +34,7 @@ export async function createClient() {
         setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, { ...options, path: '/' }),
             );
           } catch {
             // setAll falla en Server Components (read-only). El middleware
