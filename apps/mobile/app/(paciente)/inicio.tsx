@@ -9,7 +9,7 @@
  *   5. Próxima sesión
  *   6. CrisisButton flotante
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,14 +18,55 @@ import { Card } from '@/components/ui/Card';
 import { CrisisButton } from '@/components/crisis/CrisisButton';
 import { colors, spacing, fontFamily, radii } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 import { esMX } from '@noema/i18n';
 
 const DIAS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'] as const;
 
+interface ProxSesion {
+  fecha_programada: string;
+  modalidad: string;
+}
+
 export default function InicioScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const greeting = useGreeting();
+  const [proxSesion, setProxSesion] = useState<ProxSesion | null>(null);
+  const [registrosHoy, setRegistrosHoy] = useState<number>(0);
+
+  // Cargar próxima sesión + registros de hoy
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const hoyStr = new Date().toISOString().slice(0, 10);
+
+      const { data: vincs } = await supabase
+        .from('vinculaciones')
+        .select('id')
+        .eq('paciente_id', user.id)
+        .eq('estado', 'activa');
+
+      const { count } = await supabase
+        .from('registros_emocionales')
+        .select('*', { count: 'exact', head: true })
+        .eq('paciente_id', user.id)
+        .eq('fecha', hoyStr);
+      setRegistrosHoy(count ?? 0);
+
+      if (!vincs?.length) return;
+      const { data } = await supabase
+        .from('sesiones')
+        .select('fecha_programada, modalidad')
+        .in('vinculacion_id', vincs.map((v: { id: string }) => v.id))
+        .gte('fecha_programada', new Date().toISOString())
+        .eq('estado', 'programada')
+        .order('fecha_programada', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (data) setProxSesion(data as ProxSesion);
+    })();
+  }, [user]);
 
   const semana = useMemo(() => {
     const hoy = new Date();
@@ -88,12 +129,21 @@ export default function InicioScreen() {
               <View style={styles.registroHeader}>
                 <View style={{ flex: 1 }}>
                   <Text variant="h3">{esMX.paciente.todaysRegister}</Text>
-                  <Text variant="muted">3/5 completado</Text>
+                  <Text variant="muted">
+                    {registrosHoy === 0
+                      ? 'Aún no hay registros hoy'
+                      : `${registrosHoy} ${registrosHoy === 1 ? 'registro' : 'registros'} hoy`}
+                  </Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
               </View>
               <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '60%' }]} />
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.min(registrosHoy * 20, 100)}%` },
+                  ]}
+                />
               </View>
             </Card>
           </Pressable>
@@ -118,16 +168,21 @@ export default function InicioScreen() {
           </Pressable>
 
           {/* Próxima sesión */}
-          <Card padding={4} variant="flat" style={styles.sesionCard}>
-            <View style={styles.bienestarIcon}>
-              <Text style={{ fontSize: 22 }}>◐</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text variant="h3">Próxima sesión</Text>
-              <Text variant="muted">Jueves 18 de mayo · 4:00 PM</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </Card>
+          {/* Próxima sesión — dinámica desde DB */}
+          {proxSesion && (
+            <Card padding={4} variant="flat" style={styles.sesionCard}>
+              <View style={styles.bienestarIcon}>
+                <Text style={{ fontSize: 22 }}>◐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="h3">Próxima sesión</Text>
+                <Text variant="muted">
+                  {formatProxSesion(proxSesion.fecha_programada)} · {proxSesion.modalidad}
+                </Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Card>
+          )}
 
           {/* Espaciador final */}
           <View style={{ height: spacing[8] }} />
@@ -144,6 +199,20 @@ function useGreeting() {
   if (h < 12) return esMX.paciente.greetingMorning;
   if (h < 19) return esMX.paciente.greetingAfternoon;
   return esMX.paciente.greetingEvening;
+}
+
+function formatProxSesion(iso: string): string {
+  const d = new Date(iso);
+  const fecha = d.toLocaleDateString('es-MX', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  const hora = d.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${fecha} · ${hora}`;
 }
 
 const styles = StyleSheet.create({

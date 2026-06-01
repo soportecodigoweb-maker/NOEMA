@@ -5,17 +5,10 @@
  * La vesica respira suave (animación de opacidad, no rotación — la marca
  * no rota, BIBLIA §2).
  */
-import { useEffect } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { View, StyleSheet, Pressable, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
 
 import { Text } from '@/components/ui/Text';
 import { Vesica } from '@/components/ui/Vesica';
@@ -25,22 +18,35 @@ import { esMX } from '@noema/i18n';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const opacity = useSharedValue(0.85);
+  // Usamos React Native Animated nativo (no react-native-reanimated)
+  // — más compatible con Expo Go y suficiente para esta animación simple.
+  const opacity = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 2400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.85,
+          duration: 2400,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
     );
+    loop.start();
+    return () => loop.stop();
   }, [opacity]);
-
-  const vesicaAnim = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.hero}>
-        <Animated.View style={vesicaAnim}>
+        <Animated.View style={{ opacity }}>
           <Vesica size={140} color={colors.bone} strokeWidth={1.5} />
         </Animated.View>
         <View style={styles.wordmarkBlock}>

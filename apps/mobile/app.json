@@ -18,7 +18,9 @@
     },
     "android": {
       "package": "app.noema.mobile",
-      "permissions": ["NOTIFICATIONS"]
+      "permissions": [
+        "NOTIFICATIONS"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -26,7 +28,16 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-splash-screen", { "backgroundColor": "#F1ECE0" }]
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F1ECE0"
+        }
+      ],
+      "expo-font",
+      "expo-localization",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

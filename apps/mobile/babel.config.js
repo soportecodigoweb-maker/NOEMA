@@ -2,9 +2,8 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: [['babel-preset-expo', { jsxImportSource: 'react' }]],
-    plugins: [
-      // Reanimated debe ser el último plugin
-      'react-native-reanimated/plugin',
-    ],
+    // Quitamos react-native-reanimated/plugin porque la animación de welcome
+    // ahora usa React Native Animated estándar (no Reanimated).
+    // Si volvemos a usar Reanimated, reactivar el plugin aquí.
   };
 };
