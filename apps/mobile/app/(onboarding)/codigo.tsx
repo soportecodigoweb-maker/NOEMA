@@ -25,7 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function CodigoScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [codigo, setCodigo] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +69,8 @@ export default function CodigoScreen() {
         .from('profiles')
         .update({ rol: 'sin_terapeuta', onboarding_completo: true })
         .eq('id', profile.id);
-      router.replace('/(paciente)/inicio');
+      await refreshProfile();
+      router.replace('/(sin-terapeuta)/inicio');
     } finally {
       setLoading(false);
     }

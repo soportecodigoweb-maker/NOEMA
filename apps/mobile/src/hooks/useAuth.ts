@@ -111,10 +111,19 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
+  // Forzar reload del profile (útil después de cambios como completar
+  // onboarding, donde el AuthGate necesita ver el cambio inmediatamente).
+  const refreshProfile = useCallback(async () => {
+    if (!state.user) return;
+    const profile = await loadProfile(state.user.id);
+    setState((s) => ({ ...s, profile }));
+  }, [state.user, loadProfile]);
+
   return {
     ...state,
     signIn,
     signUp,
     signOut,
+    refreshProfile,
   };
 }

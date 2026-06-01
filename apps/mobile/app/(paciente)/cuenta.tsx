@@ -36,7 +36,7 @@ interface VinculacionInfo {
 
 export default function CuentaScreen() {
   const router = useRouter();
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, refreshProfile } = useAuth();
   const [vinculacion, setVinculacion] = useState<VinculacionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -105,6 +105,7 @@ export default function CuentaScreen() {
               .from('profiles')
               .update({ onboarding_completo: false })
               .eq('id', user!.id);
+            await refreshProfile();
             router.replace('/(onboarding)/codigo');
           },
         },

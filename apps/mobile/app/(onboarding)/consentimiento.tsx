@@ -54,7 +54,7 @@ const puntos: Array<{ titulo: string; descripcion: string }> = [
 export default function ConsentimientoScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ vinculacionId?: string }>();
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const [aceptado, setAceptado] = useState(false);
   const [crisisOptIn, setCrisisOptIn] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,16 +65,30 @@ export default function ConsentimientoScreen() {
     setError(null);
     setLoading(true);
     try {
-      // 1. Registrar consentimiento
+      // 1. Registrar consentimiento informado
       const { error: consentError } = await supabase.from('consentimientos').insert({
         profile_id: profile.id,
         tipo: 'consentimiento_informado',
         version: VERSION_CONSENTIMIENTO,
         aceptado: true,
       });
-      if (consentError) throw consentError;
+      if (consentError) {
+        console.error('[onboarding] consent error', consentError);
+        throw new Error(`Consentimiento: ${consentError.message}`);
+      }
 
-      // 2. Activar vinculación
+      // 2. Crear fila en `pacientes` (1:1 con profile).
+      //    La tabla `vinculaciones` tiene FK a pacientes.profile_id, así que
+      //    esta fila DEBE existir antes de actualizar la vinculación.
+      const { error: pacienteError } = await supabase
+        .from('pacientes')
+        .upsert({ profile_id: profile.id }, { onConflict: 'profile_id' });
+      if (pacienteError) {
+        console.error('[onboarding] paciente error', pacienteError);
+        throw new Error(`Paciente: ${pacienteError.message}`);
+      }
+
+      // 3. Activar vinculación con el terapeuta
       const { error: vincError } = await supabase
         .from('vinculaciones')
         .update({
@@ -86,18 +100,33 @@ export default function ConsentimientoScreen() {
           fecha_inicio: new Date().toISOString(),
         })
         .eq('id', params.vinculacionId);
-      if (vincError) throw vincError;
+      if (vincError) {
+        console.error('[onboarding] vinculacion error', vincError);
+        throw new Error(`Vinculación: ${vincError.message}`);
+      }
 
-      // 3. Marcar onboarding completo
+      // 4. Marcar onboarding completo. Esto desbloquea el AuthGate
+      //    para mandarte a (paciente)/inicio en lugar de (onboarding)/codigo.
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ rol: 'paciente', onboarding_completo: true })
         .eq('id', profile.id);
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('[onboarding] profile error', profileError);
+        throw new Error(`Profile: ${profileError.message}`);
+      }
+
+      // 5. Forzar reload del profile en useAuth para que el AuthGate
+      //    vea onboarding_completo=true ANTES de procesar el redirect.
+      //    Sin esto, hay una carrera entre el setState del hook y el
+      //    router.replace que puede mandarte de vuelta al onboarding.
+      await refreshProfile();
 
       router.replace('/(paciente)/inicio');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No pudimos activar la vinculación.');
+      const msg = e instanceof Error ? e.message : 'No pudimos activar la vinculación.';
+      console.error('[onboarding] flow failed:', msg);
+      setError(msg);
     } finally {
       setLoading(false);
     }
