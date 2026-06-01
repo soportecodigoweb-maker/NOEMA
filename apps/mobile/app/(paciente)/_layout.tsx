@@ -17,6 +17,7 @@ const tabIcons = {
   registro: '◷',
   analisis: '◴',
   recursos: '☷',
+  cuenta: '◐',
 } as const;
 
 export default function PacienteLayout() {
@@ -74,6 +75,13 @@ export default function PacienteLayout() {
         options={{
           title: 'Recursos',
           tabBarIcon: ({ color }) => <TabIcon char={tabIcons.recursos} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="cuenta"
+        options={{
+          title: 'Cuenta',
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.cuenta} color={color} />,
         }}
       />
       {/* Pantallas anidadas que existen pero no van en la tab bar */}
