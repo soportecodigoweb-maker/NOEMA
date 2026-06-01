@@ -14,10 +14,30 @@ export async function signInAction(formData: FormData): Promise<ActionResult> {
   const password = String(formData.get('password') ?? '');
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { ok: false, error: traducirError(error.message) };
+  }
+
+  // Validar rol: el panel web es SOLO para terapeutas.
+  // Pacientes y modo "sin_terapeuta" usan la app móvil.
+  if (data.user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('rol')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profile && profile.rol !== 'terapeuta' && profile.rol !== 'admin') {
+      // Cerrar sesión inmediatamente para evitar loop de redirect
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        error:
+          'Esta cuenta es de paciente. Para acceder, descarga la app NOEMA en tu celular.',
+      };
+    }
   }
 
   revalidatePath('/', 'layout');
