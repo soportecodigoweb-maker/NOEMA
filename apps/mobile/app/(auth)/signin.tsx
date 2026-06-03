@@ -80,9 +80,9 @@ export default function SignInScreen() {
               textContentType="password"
               error={error ?? undefined}
             />
-            <Pressable style={styles.forgotRow} onPress={() => {}}>
-              <Text style={styles.forgotText}>{esMX.auth.forgotPassword}</Text>
-            </Pressable>
+            {/* TODO: "Olvidaste contraseña" — implementar reset por email
+                cuando configuremos SMTP en producción. Por ahora oculto para
+                no mostrar botón muerto. */}
           </View>
 
           <View style={styles.actions}>
