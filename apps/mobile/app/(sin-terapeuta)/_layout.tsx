@@ -5,14 +5,7 @@
  */
 import { Tabs } from 'expo-router';
 import { colors, spacing, fontFamily } from '@/lib/theme';
-import { Text } from '@/components/ui/Text';
-
-const tabIcons = {
-  inicio: '⌂',
-  biblioteca: '☷',
-  favoritos: '♡',
-  perfil: '◐',
-} as const;
+import { Icon, type IconName } from '@/components/ui/Icon';
 
 export default function SinTerapeutaLayout() {
   return (
@@ -41,28 +34,28 @@ export default function SinTerapeutaLayout() {
         name="inicio"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color }) => <Ic char={tabIcons.inicio} color={color} />,
+          tabBarIcon: ({ color }) => <Ic name="home" color={color} />,
         }}
       />
       <Tabs.Screen
         name="biblioteca"
         options={{
           title: 'Biblioteca',
-          tabBarIcon: ({ color }) => <Ic char={tabIcons.biblioteca} color={color} />,
+          tabBarIcon: ({ color }) => <Ic name="book" color={color} />,
         }}
       />
       <Tabs.Screen
         name="favoritos"
         options={{
           title: 'Favoritos',
-          tabBarIcon: ({ color }) => <Ic char={tabIcons.favoritos} color={color} />,
+          tabBarIcon: ({ color }) => <Ic name="heart" color={color} />,
         }}
       />
       <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <Ic char={tabIcons.perfil} color={color} />,
+          tabBarIcon: ({ color }) => <Ic name="user" color={color} />,
         }}
       />
       <Tabs.Screen name="contenido" options={{ href: null }} />
@@ -70,10 +63,6 @@ export default function SinTerapeutaLayout() {
   );
 }
 
-function Ic({ char, color }: { char: string; color: string }) {
-  return (
-    <Text style={{ fontSize: 22, color, fontFamily: fontFamily.serifRegular }}>
-      {char}
-    </Text>
-  );
+function Ic({ name, color }: { name: IconName; color: string }) {
+  return <Icon name={name} size={22} color={color} strokeWidth={1.6} />;
 }

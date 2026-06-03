@@ -190,6 +190,33 @@ export default function CuentaScreen() {
             </Card>
           )}
 
+          {/* Accesos rápidos a contactos y sesiones */}
+          <Card padding={4} variant="flat" style={{ gap: spacing[3] }}>
+            <Pressable
+              onPress={() => router.push('/(paciente)/sesiones')}
+              style={styles.menuRow}
+            >
+              <Text variant="bodyM" style={{ flex: 1, fontFamily: fontFamily.sansMedium }}>
+                Mis sesiones
+              </Text>
+              <Text style={{ fontFamily: fontFamily.serifLight, fontSize: 22, color: '#5C6B5A' }}>
+                ›
+              </Text>
+            </Pressable>
+            <View style={styles.divider} />
+            <Pressable
+              onPress={() => router.push('/(paciente)/contactos-confianza')}
+              style={styles.menuRow}
+            >
+              <Text variant="bodyM" style={{ flex: 1, fontFamily: fontFamily.sansMedium }}>
+                Contactos de confianza
+              </Text>
+              <Text style={{ fontFamily: fontFamily.serifLight, fontSize: 22, color: '#5C6B5A' }}>
+                ›
+              </Text>
+            </Pressable>
+          </Card>
+
           {/* Privacidad */}
           <Card padding={4} variant="flat">
             <Text variant="h3">Privacidad</Text>
@@ -281,6 +308,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     borderRadius: radii.md,
     alignSelf: 'flex-start',
+  },
+  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing[2] },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(46, 59, 46, 0.06)',
   },
   changeBtn: { marginTop: spacing[4], paddingVertical: spacing[2] },
   changeBtnText: {

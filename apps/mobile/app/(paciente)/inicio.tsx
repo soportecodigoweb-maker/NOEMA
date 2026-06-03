@@ -167,22 +167,77 @@ export default function InicioScreen() {
             </Card>
           </Pressable>
 
-          {/* Próxima sesión */}
           {/* Próxima sesión — dinámica desde DB */}
           {proxSesion && (
+            <Pressable
+              onPress={() => router.push('/(paciente)/sesiones')}
+              style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+            >
+              <Card padding={4} variant="flat" style={styles.sesionCard}>
+                <View style={styles.bienestarIcon}>
+                  <Text style={{ fontSize: 22 }}>◐</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text variant="h3">Próxima sesión</Text>
+                  <Text variant="muted">
+                    {formatProxSesion(proxSesion.fecha_programada)} · {proxSesion.modalidad}
+                  </Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </Card>
+            </Pressable>
+          )}
+
+          {/* Mensajes */}
+          <Pressable
+            onPress={() => router.push('/(paciente)/mensajes')}
+            style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+          >
             <Card padding={4} variant="flat" style={styles.sesionCard}>
               <View style={styles.bienestarIcon}>
-                <Text style={{ fontSize: 22 }}>◐</Text>
+                <Text style={{ fontSize: 22 }}>✉</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text variant="h3">Próxima sesión</Text>
-                <Text variant="muted">
-                  {formatProxSesion(proxSesion.fecha_programada)} · {proxSesion.modalidad}
-                </Text>
+                <Text variant="h3">Mensajes</Text>
+                <Text variant="muted">Conversación con tu terapeuta</Text>
               </View>
               <Text style={styles.chevron}>›</Text>
             </Card>
-          )}
+          </Pressable>
+
+          {/* Diario */}
+          <Pressable
+            onPress={() => router.push('/(paciente)/diario')}
+            style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+          >
+            <Card padding={4} variant="flat" style={styles.sesionCard}>
+              <View style={styles.bienestarIcon}>
+                <Text style={{ fontSize: 22 }}>✎</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="h3">Diario</Text>
+                <Text variant="muted">Escribe sin filtro, tú decides qué compartir</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Card>
+          </Pressable>
+
+          {/* Tareas */}
+          <Pressable
+            onPress={() => router.push('/(paciente)/tareas')}
+            style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+          >
+            <Card padding={4} variant="flat" style={styles.sesionCard}>
+              <View style={styles.bienestarIcon}>
+                <Text style={{ fontSize: 22 }}>☐</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text variant="h3">Tus tareas</Text>
+                <Text variant="muted">Ejercicios que asignó tu terapeuta</Text>
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Card>
+          </Pressable>
 
           {/* Espaciador final */}
           <View style={{ height: spacing[8] }} />
