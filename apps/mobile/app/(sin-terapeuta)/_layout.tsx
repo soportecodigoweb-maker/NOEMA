@@ -1,11 +1,16 @@
 /**
  * Tab bar para usuarios en modo sin_terapeuta.
- * No tiene "Registro" ni "Análisis" (que requieren vinculación), pero sí
- * un catálogo educativo y favoritos.
  */
 import { Tabs } from 'expo-router';
 import { colors, spacing, fontFamily } from '@/lib/theme';
-import { Icon, type IconName } from '@/components/ui/Icon';
+import { Text } from '@/components/ui/Text';
+
+const tabIcons = {
+  inicio: '⌂',
+  biblioteca: '☷',
+  favoritos: '♡',
+  perfil: '◐',
+} as const;
 
 export default function SinTerapeutaLayout() {
   return (
@@ -34,28 +39,28 @@ export default function SinTerapeutaLayout() {
         name="inicio"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color }) => <Ic name="home" color={color} />,
+          tabBarIcon: ({ color }) => <Ic char={tabIcons.inicio} color={color} />,
         }}
       />
       <Tabs.Screen
         name="biblioteca"
         options={{
           title: 'Biblioteca',
-          tabBarIcon: ({ color }) => <Ic name="book" color={color} />,
+          tabBarIcon: ({ color }) => <Ic char={tabIcons.biblioteca} color={color} />,
         }}
       />
       <Tabs.Screen
         name="favoritos"
         options={{
           title: 'Favoritos',
-          tabBarIcon: ({ color }) => <Ic name="heart" color={color} />,
+          tabBarIcon: ({ color }) => <Ic char={tabIcons.favoritos} color={color} />,
         }}
       />
       <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <Ic name="user" color={color} />,
+          tabBarIcon: ({ color }) => <Ic char={tabIcons.perfil} color={color} />,
         }}
       />
       <Tabs.Screen name="contenido" options={{ href: null }} />
@@ -63,6 +68,10 @@ export default function SinTerapeutaLayout() {
   );
 }
 
-function Ic({ name, color }: { name: IconName; color: string }) {
-  return <Icon name={name} size={22} color={color} strokeWidth={1.6} />;
+function Ic({ char, color }: { char: string; color: string }) {
+  return (
+    <Text style={{ fontSize: 22, color, fontFamily: fontFamily.serifRegular }}>
+      {char}
+    </Text>
+  );
 }

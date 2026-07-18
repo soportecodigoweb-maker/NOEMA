@@ -10,10 +10,14 @@
       "ios": {
         "simulator": true
       },
+      "android": {
+        "buildType": "apk"
+      },
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-staging.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-staging-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
       }
     },
     "preview": {
@@ -22,17 +26,22 @@
       "android": {
         "buildType": "apk"
       },
+      "ios": {
+        "simulator": false
+      },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-staging.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-staging-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
       }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://your-production.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "your-production-anon-key"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
       }
     }
   },

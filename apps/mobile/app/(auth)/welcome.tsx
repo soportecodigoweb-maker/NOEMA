@@ -1,127 +1,84 @@
 /**
- * Pantalla de bienvenida (splash interactivo).
- *
- * Diseño: fondo deep, vesica grande, wordmark + tagline + 2 botones.
- * La vesica respira suave (animación de opacidad, no rotación — la marca
- * no rota, BIBLIA §2).
+ * Welcome screen — versión simplificada para diagnóstico.
  */
-import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { Text } from '@/components/ui/Text';
-import { Vesica } from '@/components/ui/Vesica';
-import { Button } from '@/components/ui/Button';
-import { colors, spacing, fontFamily } from '@/lib/theme';
-import { esMX } from '@noema/i18n';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  // Usamos React Native Animated nativo (no react-native-reanimated)
-  // — más compatible con Expo Go y suficiente para esta animación simple.
-  const opacity = useRef(new Animated.Value(0.85)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 2400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.85,
-          duration: 2400,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [opacity]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <View style={styles.safe}>
       <View style={styles.hero}>
-        <Animated.View style={{ opacity }}>
-          <Vesica size={140} color={colors.bone} strokeWidth={1.5} />
-        </Animated.View>
-        <View style={styles.wordmarkBlock}>
-          <Text style={styles.wordmark}>NOEMA</Text>
-          <Text style={styles.tagline}>{esMX.common.tagline}</Text>
-        </View>
+        <Text style={styles.wordmark}>NOEMA</Text>
+        <Text style={styles.tagline}>Tu proceso continúa acompañado.</Text>
       </View>
 
       <View style={styles.actions}>
-        <Button
-          variant="inverse"
-          fullWidth
-          size="lg"
+        <Pressable
+          style={styles.btnPrimary}
           onPress={() => router.push('/(auth)/signup')}
         >
-          Crear cuenta
-        </Button>
+          <Text style={styles.btnPrimaryText}>Crear cuenta</Text>
+        </Pressable>
+
         <Pressable
+          style={styles.btnSecondary}
           onPress={() => router.push('/(auth)/signin')}
-          style={styles.signInRow}
         >
-          <Text style={styles.signInText}>
-            ¿Ya tienes cuenta?  <Text style={styles.signInLink}>Inicia sesión</Text>
-          </Text>
+          <Text style={styles.btnSecondaryText}>Inicia sesión</Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.noemaDeep,
-    paddingHorizontal: spacing[6],
+    backgroundColor: '#3D4D3E',
+    padding: 24,
     justifyContent: 'space-between',
   },
   hero: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing[8],
-  },
-  wordmarkBlock: {
-    alignItems: 'center',
-    gap: spacing[3],
+    gap: 24,
   },
   wordmark: {
-    fontFamily: fontFamily.serifMedium,
     fontSize: 44,
-    color: colors.bone,
-    letterSpacing: 14, // ~0.34em según manual
+    color: '#FAF7F1',
+    letterSpacing: 14,
+    fontWeight: '500',
   },
   tagline: {
-    fontFamily: fontFamily.serifLightItalic,
     fontSize: 16,
     color: 'rgba(250, 247, 241, 0.7)',
     textAlign: 'center',
+    fontStyle: 'italic',
   },
   actions: {
-    paddingBottom: spacing[6],
-    gap: spacing[4],
+    paddingBottom: 24,
+    gap: 16,
   },
-  signInRow: {
+  btnPrimary: {
+    backgroundColor: '#FAF7F1',
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
-    paddingVertical: spacing[3],
   },
-  signInText: {
-    fontFamily: fontFamily.sansRegular,
-    fontSize: 14,
+  btnPrimaryText: {
+    color: '#2A3328',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  btnSecondary: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  btnSecondaryText: {
     color: 'rgba(250, 247, 241, 0.75)',
-  },
-  signInLink: {
-    fontFamily: fontFamily.sansMedium,
-    color: colors.bone,
-    textDecorationLine: 'underline',
+    fontSize: 14,
   },
 });

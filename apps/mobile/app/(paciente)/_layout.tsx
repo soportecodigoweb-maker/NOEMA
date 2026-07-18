@@ -1,14 +1,21 @@
 /**
  * Tab navigation de la app paciente.
  *
- * Tabs: Inicio · Registro · ➕ · Análisis · Recursos · Cuenta
- * El tab central abre directamente el flujo de "nuevo registro emocional".
+ * NOTA: temporalmente usando chars tipográficos para isolated SVG runtime issue.
  */
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, View, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, fontFamily, radii } from '@/lib/theme';
-import { Icon, type IconName } from '@/components/ui/Icon';
+import { Text } from '@/components/ui/Text';
+
+const tabIcons = {
+  inicio: '⌂',
+  registro: '◷',
+  analisis: '◴',
+  recursos: '☷',
+  cuenta: '◐',
+} as const;
 
 export default function PacienteLayout() {
   const router = useRouter();
@@ -27,14 +34,14 @@ export default function PacienteLayout() {
         name="inicio"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color }) => <TabIcon name="home" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.inicio} color={color} />,
         }}
       />
       <Tabs.Screen
         name="registro"
         options={{
           title: 'Registro',
-          tabBarIcon: ({ color }) => <TabIcon name="pulse" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.registro} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -57,24 +64,23 @@ export default function PacienteLayout() {
         name="analisis"
         options={{
           title: 'Análisis',
-          tabBarIcon: ({ color }) => <TabIcon name="chart" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.analisis} color={color} />,
         }}
       />
       <Tabs.Screen
         name="recursos"
         options={{
           title: 'Recursos',
-          tabBarIcon: ({ color }) => <TabIcon name="book" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.recursos} color={color} />,
         }}
       />
       <Tabs.Screen
         name="cuenta"
         options={{
           title: 'Cuenta',
-          tabBarIcon: ({ color }) => <TabIcon name="user" color={color} />,
+          tabBarIcon: ({ color }) => <TabIcon char={tabIcons.cuenta} color={color} />,
         }}
       />
-      {/* Pantallas anidadas que existen pero no van en la tab bar */}
       <Tabs.Screen name="diario" options={{ href: null }} />
       <Tabs.Screen name="tareas" options={{ href: null }} />
       <Tabs.Screen name="contactos-confianza" options={{ href: null }} />
@@ -86,14 +92,14 @@ export default function PacienteLayout() {
   );
 }
 
-function TabIcon({ name, color }: { name: IconName; color: string }) {
-  return <Icon name={name} size={22} color={color} strokeWidth={1.6} />;
+function TabIcon({ char, color }: { char: string; color: string }) {
+  return <Text style={{ fontSize: 22, color, fontFamily: fontFamily.serifRegular }}>{char}</Text>;
 }
 
 function CentralActionIcon() {
   return (
     <View style={styles.centralAction}>
-      <Icon name="plus" size={24} color={colors.bone} strokeWidth={2.2} />
+      <Text style={styles.centralPlus}>+</Text>
     </View>
   );
 }
@@ -126,5 +132,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
     elevation: 6,
+  },
+  centralPlus: {
+    color: colors.bone,
+    fontSize: 28,
+    fontFamily: fontFamily.sansLight,
+    lineHeight: 32,
   },
 });

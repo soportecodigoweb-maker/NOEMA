@@ -10,7 +10,8 @@
  *        - con sesión + onboarding → (paciente)
  *   4. Mantener el splash visible hasta que sepamos a dónde mandar al usuario
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
@@ -35,20 +36,15 @@ import {
 import { colors } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
 
-SplashScreen.preventAutoHideAsync().catch(() => {});
 SystemUI.setBackgroundColorAsync(colors.paper).catch(() => {});
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    // Mapeamos a los nombres que usa `theme.ts` (fontFamily)
     'CormorantGaramond-Light': CormorantGaramond_300Light,
     'CormorantGaramond-Regular': CormorantGaramond_400Regular,
     'CormorantGaramond-Medium': CormorantGaramond_500Medium,
     'CormorantGaramond-SemiBold': CormorantGaramond_600SemiBold,
     'CormorantGaramond-LightItalic': CormorantGaramond_300Light_Italic,
-    // DM Sans del paquete oficial solo trae 400/500/700.
-    // Mapeamos Light→Regular y SemiBold→Medium para mantener los nombres
-    // del sistema de diseño consistentes (theme.ts no cambia).
     'DMSans-Light': DMSans_400Regular,
     'DMSans-Regular': DMSans_400Regular,
     'DMSans-Medium': DMSans_500Medium,
@@ -56,14 +52,16 @@ export default function RootLayout() {
     'DMSans-Bold': DMSans_700Bold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [fontsLoaded, fontError]);
+  const [fontsTimeout, setFontsTimeout] = useState(false);
 
-  if (!fontsLoaded && !fontError) {
-    return null;
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+    const t = setTimeout(() => setFontsTimeout(true), 4000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!fontsLoaded && !fontError && !fontsTimeout) {
+    return <View style={{ flex: 1, backgroundColor: colors.paper }} />;
   }
 
   return (

@@ -28,12 +28,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#F1ECE0"
-        }
-      ],
       "expo-font",
       "expo-localization",
       "expo-secure-store",
@@ -45,7 +39,17 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "a5a841bc-a59a-4abe-ae00-4c32e5c2dc99"
       }
+    },
+    "owner": "codigoweb",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a5a841bc-a59a-4abe-ae00-4c32e5c2dc99"
     }
   }
 }
