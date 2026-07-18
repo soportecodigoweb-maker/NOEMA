@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { createClient } from '@/lib/supabase/server';
+import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
 export default async function PanelLayout({
   children,
@@ -35,6 +36,22 @@ export default async function PanelLayout({
 
   if (!profile.onboarding_completo) {
     redirect('/perfil');
+  }
+
+  // Aviso de confidencialidad (#12): el terapeuta debe aceptar la versión
+  // vigente antes de acceder al panel.
+  const { data: aviso } = await supabase
+    .from('consentimientos')
+    .select('id')
+    .eq('profile_id', user.id)
+    .eq('tipo', 'aviso_privacidad')
+    .eq('version', VERSION_AVISO)
+    .eq('aceptado', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (!aviso) {
+    redirect('/aviso-confidencialidad');
   }
 
   const { data: terapeuta } = await supabase
