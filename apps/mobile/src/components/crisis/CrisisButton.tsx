@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, radii, fontFamily } from '@/lib/theme';
 import { Text } from '@/components/ui/Text';
+import { useSosHabilitado } from '@/hooks/useSosHabilitado';
 import { esMX } from '@noema/i18n';
 
 /**
@@ -20,11 +21,15 @@ export interface CrisisButtonProps {
 
 export function CrisisButton({ variant = 'inline' }: CrisisButtonProps) {
   const router = useRouter();
+  const sosHabilitado = useSosHabilitado();
 
   const handlePress = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     router.push('/crisis');
   };
+
+  // El terapeuta puede ocultar el botón S.O.S. para este paciente (#9).
+  if (!sosHabilitado) return null;
 
   return (
     <Pressable

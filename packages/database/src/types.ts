@@ -1,4 +1,3 @@
-Initialising login role...
 export type Json =
   | string
   | number
@@ -1594,6 +1593,7 @@ export type Database = {
       vinculaciones: {
         Row: {
           actualizado_at: string
+          agenda_habilitada: boolean
           codigo_invitacion: string
           consentimiento_aceptado_at: string | null
           creado_at: string
@@ -1605,16 +1605,20 @@ export type Database = {
           fecha_pausa: string | null
           id: string
           motivo_fin: string | null
+          nivel_riesgo: Database["public"]["Enums"]["nivel_riesgo"]
+          nivel_riesgo_nota: string | null
           nombre_invitado: string | null
           notificar_crisis_terapeuta: boolean
           notificar_inactividad: boolean
           paciente_id: string | null
+          sos_habilitado: boolean
           terapeuta_id: string
           ultimo_periodo_facturado: string | null
           version_consentimiento: string | null
         }
         Insert: {
           actualizado_at?: string
+          agenda_habilitada?: boolean
           codigo_invitacion: string
           consentimiento_aceptado_at?: string | null
           creado_at?: string
@@ -1626,16 +1630,20 @@ export type Database = {
           fecha_pausa?: string | null
           id?: string
           motivo_fin?: string | null
+          nivel_riesgo?: Database["public"]["Enums"]["nivel_riesgo"]
+          nivel_riesgo_nota?: string | null
           nombre_invitado?: string | null
           notificar_crisis_terapeuta?: boolean
           notificar_inactividad?: boolean
           paciente_id?: string | null
+          sos_habilitado?: boolean
           terapeuta_id: string
           ultimo_periodo_facturado?: string | null
           version_consentimiento?: string | null
         }
         Update: {
           actualizado_at?: string
+          agenda_habilitada?: boolean
           codigo_invitacion?: string
           consentimiento_aceptado_at?: string | null
           creado_at?: string
@@ -1647,10 +1655,13 @@ export type Database = {
           fecha_pausa?: string | null
           id?: string
           motivo_fin?: string | null
+          nivel_riesgo?: Database["public"]["Enums"]["nivel_riesgo"]
+          nivel_riesgo_nota?: string | null
           nombre_invitado?: string | null
           notificar_crisis_terapeuta?: boolean
           notificar_inactividad?: boolean
           paciente_id?: string | null
+          sos_habilitado?: boolean
           terapeuta_id?: string
           ultimo_periodo_facturado?: string | null
           version_consentimiento?: string | null
@@ -1838,6 +1849,7 @@ export type Database = {
       modalidad_sesion: "presencial" | "online" | "hibrida"
       nivel_contenido: "inicial" | "intermedio" | "avanzado"
       nivel_privacidad: "privado" | "compartido" | "marcado_sesion"
+      nivel_riesgo: "sin_evaluar" | "bajo" | "medio" | "alto" | "critico"
       plan_terapeuta: "gratuito" | "prueba_premium" | "activo" | "cancelado"
       rol_usuario: "terapeuta" | "paciente" | "sin_terapeuta" | "admin"
       tipo_consentimiento:
@@ -2020,6 +2032,7 @@ export const Constants = {
       modalidad_sesion: ["presencial", "online", "hibrida"],
       nivel_contenido: ["inicial", "intermedio", "avanzado"],
       nivel_privacidad: ["privado", "compartido", "marcado_sesion"],
+      nivel_riesgo: ["sin_evaluar", "bajo", "medio", "alto", "critico"],
       plan_terapeuta: ["gratuito", "prueba_premium", "activo", "cancelado"],
       rol_usuario: ["terapeuta", "paciente", "sin_terapeuta", "admin"],
       tipo_consentimiento: [
@@ -2041,6 +2054,3 @@ export const Constants = {
     },
   },
 } as const
-<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
-A new version of Supabase CLI is available: v2.109.1 (currently installed v2.98.2)
-We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

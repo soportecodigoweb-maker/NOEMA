@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ChevronLeft, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@/components/ui/Button';
 import { TabsNav } from '@/components/pacientes/TabsNav';
+import { ConfigVinculacion } from '@/components/pacientes/ConfigVinculacion';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +21,9 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
       id,
       estado,
       fecha_inicio,
+      nivel_riesgo,
+      sos_habilitado,
+      agenda_habilitada,
       paciente:profiles!vinculaciones_paciente_id_fkey(id, nombre, avatar_url)
       `,
     )
@@ -28,6 +31,8 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
     .single();
 
   if (!vinc) notFound();
+
+  const paciente = unwrapOne(vinc.paciente);
 
   return (
     <div>
@@ -41,17 +46,15 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
           Pacientes
         </Link>
 
-        <div className="flex items-start justify-between flex-wrap gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="size-14 rounded-full bg-noema-sage/15 flex items-center justify-center text-noema-deep/70 font-medium">
-              {(vinc as any).paciente
-                ? initials((vinc as any).paciente.nombre)
-                : '⌛'}
+            <div className="flex size-14 items-center justify-center rounded-full bg-noema-sage/15 font-medium text-noema-deep/70">
+              {paciente ? initials(paciente.nombre) : '⌛'}
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-1">
+              <div className="mb-1 flex items-center gap-3">
                 <h1 className="font-serif text-3xl text-ink">
-                  {(vinc as any).paciente?.nombre ?? 'Invitación pendiente'}
+                  {paciente?.nombre ?? 'Invitación pendiente'}
                 </h1>
                 <EstadoBadge estado={vinc.estado} />
               </div>
@@ -64,10 +67,19 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="md">
+            <Link
+              href={`/mensajes/${vinc.id}`}
+              className="inline-flex items-center gap-2 rounded-md border border-noema-deep/15 bg-bone px-3 py-2 text-sm font-medium text-ink transition-colors hover:border-noema-deep/30"
+            >
               <MessageCircle className="size-4" strokeWidth={1.8} />
               Enviar mensaje
-            </Button>
+            </Link>
+            <ConfigVinculacion
+              vinculacionId={vinc.id}
+              nivelRiesgo={vinc.nivel_riesgo}
+              sosHabilitado={vinc.sos_habilitado}
+              agendaHabilitada={vinc.agenda_habilitada}
+            />
           </div>
         </div>
 
@@ -90,6 +102,11 @@ function initials(name: string): string {
     .slice(0, 2)
     .map((s) => s[0]?.toUpperCase() ?? '')
     .join('');
+}
+
+function unwrapOne<T>(x: T | T[] | null | undefined): T | null {
+  if (Array.isArray(x)) return x[0] ?? null;
+  return x ?? null;
 }
 
 function EstadoBadge({ estado }: { estado: string }) {
