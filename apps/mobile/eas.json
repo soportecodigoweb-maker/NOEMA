@@ -15,9 +15,9 @@
       },
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
-        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://qoojcgndwxhdepgrwztt.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2pjZ25kd3hoZGVwZ3J3enR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTYyNDcsImV4cCI6MjA5OTk3MjI0N30.M0Nf8dGzwkfqxwLPbkwFNDqTC3-EiCCrbp0XS6qt1qc",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://noema-web-steel.vercel.app"
       }
     },
     "preview": {
@@ -30,18 +30,18 @@
         "simulator": false
       },
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
-        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://qoojcgndwxhdepgrwztt.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2pjZ25kd3hoZGVwZ3J3enR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTYyNDcsImV4cCI6MjA5OTk3MjI0N30.M0Nf8dGzwkfqxwLPbkwFNDqTC3-EiCCrbp0XS6qt1qc",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://noema-web-steel.vercel.app"
       }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_SUPABASE_URL": "https://somosnoema.com/supabase",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgwMjY1NjcxLCJleHAiOjE5Mzc5NDU2NzF9.aaenqH3sP7UNI4gdAuTYuNByDoGPe3r7uF864mvVkO0",
-        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://somosnoema.com"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://qoojcgndwxhdepgrwztt.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvb2pjZ25kd3hoZGVwZ3J3enR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTYyNDcsImV4cCI6MjA5OTk3MjI0N30.M0Nf8dGzwkfqxwLPbkwFNDqTC3-EiCCrbp0XS6qt1qc",
+        "EXPO_PUBLIC_NOEMA_WEB_URL": "https://noema-web-steel.vercel.app"
       }
     }
   },
