@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -7,6 +8,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -1552,6 +1558,39 @@ export type Database = {
           },
         ]
       }
+      vinculacion_notas_privadas: {
+        Row: {
+          actualizado_at: string
+          contenido: string
+          vinculacion_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          contenido?: string
+          vinculacion_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          contenido?: string
+          vinculacion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vinculacion_notas_privadas_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: true
+            referencedRelation: "mensajes_hilos_terapeuta"
+            referencedColumns: ["vinculacion_id"]
+          },
+          {
+            foreignKeyName: "vinculacion_notas_privadas_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: true
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vinculaciones: {
         Row: {
           actualizado_at: string
@@ -1567,7 +1606,6 @@ export type Database = {
           id: string
           motivo_fin: string | null
           nombre_invitado: string | null
-          notas_terapeuta_privadas: string | null
           notificar_crisis_terapeuta: boolean
           notificar_inactividad: boolean
           paciente_id: string | null
@@ -1589,7 +1627,6 @@ export type Database = {
           id?: string
           motivo_fin?: string | null
           nombre_invitado?: string | null
-          notas_terapeuta_privadas?: string | null
           notificar_crisis_terapeuta?: boolean
           notificar_inactividad?: boolean
           paciente_id?: string | null
@@ -1611,7 +1648,6 @@ export type Database = {
           id?: string
           motivo_fin?: string | null
           nombre_invitado?: string | null
-          notas_terapeuta_privadas?: string | null
           notificar_crisis_terapeuta?: boolean
           notificar_inactividad?: boolean
           paciente_id?: string | null
@@ -2005,4 +2041,6 @@ export const Constants = {
     },
   },
 } as const
-
+<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
+A new version of Supabase CLI is available: v2.109.1 (currently installed v2.98.2)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

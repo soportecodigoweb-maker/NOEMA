@@ -13,11 +13,11 @@ export default async function NotasPacientePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: vinc } = await supabase
-    .from('vinculaciones')
-    .select('notas_terapeuta_privadas')
-    .eq('id', id)
-    .single();
+  const { data: notasRow } = await supabase
+    .from('vinculacion_notas_privadas')
+    .select('contenido')
+    .eq('vinculacion_id', id)
+    .maybeSingle();
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -31,7 +31,7 @@ export default async function NotasPacientePage({ params }: PageProps) {
       <Card>
         <NotasEditor
           vinculacionId={id}
-          initial={vinc?.notas_terapeuta_privadas ?? ''}
+          initial={notasRow?.contenido ?? ''}
         />
       </Card>
     </div>
