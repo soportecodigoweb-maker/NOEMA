@@ -20,28 +20,31 @@ export async function signInAction(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: traducirError(error.message) };
   }
 
-  // Validar rol: el panel web es SOLO para terapeutas.
-  // Pacientes y modo "sin_terapeuta" usan la app móvil.
-  if (data.user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('rol')
-      .eq('id', data.user.id)
-      .single();
-
-    if (profile && profile.rol !== 'terapeuta' && profile.rol !== 'admin') {
-      // Cerrar sesión inmediatamente para evitar loop de redirect
-      await supabase.auth.signOut();
-      return {
-        ok: false,
-        error:
-          'Esta cuenta es de paciente. Para acceder, descarga la app NOEMA en tu celular.',
-      };
-    }
+  if (!data.user) {
+    return { ok: false, error: 'No pudimos iniciar sesión.' };
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('rol, onboarding_completo')
+    .eq('id', data.user.id)
+    .single();
+
   revalidatePath('/', 'layout');
-  redirect('/inicio');
+
+  if (!profile) {
+    redirect('/perfil');
+  }
+
+  if (profile.rol === 'terapeuta' || profile.rol === 'admin') {
+    redirect(profile.onboarding_completo ? '/inicio' : '/perfil');
+  }
+
+  if (profile.rol === 'paciente' || profile.rol === 'sin_terapeuta') {
+    redirect('/paciente');
+  }
+
+  redirect('/perfil');
 }
 
 export async function signUpAction(formData: FormData): Promise<ActionResult> {

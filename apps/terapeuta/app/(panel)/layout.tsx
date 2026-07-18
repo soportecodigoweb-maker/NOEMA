@@ -30,11 +30,7 @@ export default async function PanelLayout({
   }
 
   if (profile.rol !== 'terapeuta' && profile.rol !== 'admin') {
-    // Si un paciente o sin_terapeuta llega aquí (panel web), cerramos su sesión
-    // y mandamos a signin con un mensaje. Sin signOut, el middleware redirige
-    // de vuelta a /inicio y hace loop.
-    await supabase.auth.signOut();
-    redirect('/signin?type=wrong-role');
+    redirect('/paciente');
   }
 
   if (!profile.onboarding_completo) {

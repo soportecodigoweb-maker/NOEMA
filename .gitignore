@@ -70,3 +70,6 @@ supabase/.temp/
 .LSOverride
 ehthumbs.db
 desktop.ini
+
+.vercel
+.env*
