@@ -194,3 +194,51 @@ El trigger `proteger_columnas_vinculacion` (que protege columnas del terapeuta) 
 00025_seed_mensajes_autoayuda      (#1 corpus 27 mensajes, borrador)
 00026_fix_trigger_service_role     (fix bug del trigger)
 ```
+
+---
+
+# ACTUALIZACIÓN FINAL (sesión autónoma extendida)
+
+Completado adicionalmente en esta tanda, todo verificado:
+
+## Terapeuta
+- **#2** Mensajes preestablecidos en el chat (7 plantillas por categoría) + a11y del composer. La parte "redactar con IA" espera cuenta de IA.
+- **#4** ✅ Historial clínico (tab nueva, estructura NOM-004): ficha de identificación + métricas de adherencia (datos duros: días tratamiento, sesiones realizadas, % adherencia tareas, registros) + timeline de evolución acumulativo.
+- **#5** ✅ Adjuntos de expediente: bucket Storage privado + tabla inmutable + RLS por vinculación. Subir imágenes/PDFs desde la pestaña Notas. Verificado (upload/signed URL/RLS).
+
+## Paciente
+- **#2** ✅ Render dinámico de formatos de tarea (scale/choice/text).
+- **#4** ✅ Retroalimentación: el terapeuta comenta cada respuesta; el paciente la ve.
+- **#5** ✅ Metas/recordatorios propios + panel de progreso personal.
+- **#7** ✅ Patrones datos-duros (bienestar vs malestar por situación/conducta) SIN interpretación.
+- **#10 + #11** ✅ Agenda: terapeuta agenda + paciente agenda si está habilitado (RLS verificada).
+- **#3** ✅ Recordatorios LOCALES (notificaciones on-device) en metas. Push REMOTO pendiente (infra).
+
+## Bugs arreglados en esta tanda
+- **emociones_catalogo VACÍO** en cloud → rompía TODO el registro de emociones (FK). Movido a migration + re-sembrado. María recuperó sus 18 registros.
+- **Trigger proteger_columnas** bloqueaba al service_role → arreglado.
+
+## Estado final por conjunto
+
+### 13 funciones terapeuta
+✅ #3(base) #4 #5(notas+adjuntos) #7 #8 #9 #12 #13 #2(sin IA)
+🟡 #1 (realtime pendiente — datos aparecen al navegar, no instantáneo)
+🔴 #6 (IA voz — OpenAI key), #10 #11 (pagos+finanzas — precios+Stripe), #3(form builder visual)
+
+### 11 funciones paciente
+✅ #2 #3(local) #4 #5 #6 #7 #8 #9 #10 #11
+🟡 #1 (corpus+algoritmo listos; falta push remoto + validación clínica del corpus)
+
+## Lo que QUEDA y por qué (bloqueado en ti)
+1. **IA (terapeuta #6, parte IA de #2 y #1-paciente):** necesito cuenta OpenAI/Anthropic + API key.
+2. **Pagos (terapeuta #10) + finanzas (#11):** necesito tus precios definitivos + Stripe.
+3. **Publicar contenido clínico** (plantillas, psicoeducación, corpus autoayuda): revisión de una psicóloga.
+4. **Push REMOTO** (entrega de mensajes autoayuda/terapeuta): requiere push server + se verifica en build real.
+5. **Realtime (terapeuta #1)** y **form builder visual (terapeuta #3):** trabajo bounded pendiente, no bloqueado, solo tiempo.
+
+## Migrations de esta tanda
+```
+00027_paciente_agenda_rls       00030_recordatorios_personales
+00028_retroalimentacion_tareas  00031_adjuntos
+00029_seed_emociones_catalogo (FIX crítico)
+```
