@@ -35,6 +35,7 @@ import {
 
 import { colors } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useAvisoPrivacidad } from '@/hooks/useAvisoPrivacidad';
 
 SystemUI.setBackgroundColorAsync(colors.paper).catch(() => {});
 
@@ -79,11 +80,16 @@ function AuthGate() {
   const segments = useSegments();
   const router = useRouter();
 
+  // Aviso de privacidad (#9): solo checamos para pacientes autenticados.
+  const esPaciente = profile?.rol === 'paciente' || profile?.rol === 'sin_terapeuta';
+  const avisoEstado = useAvisoPrivacidad(esPaciente ? profile?.id : null);
+
   useEffect(() => {
     if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
+    const onAviso = segments[0] === '(onboarding)' && segments[1] === 'aviso-privacidad';
     const onCrisis = segments[0] === 'crisis';
 
     if (onCrisis) return;
@@ -96,6 +102,17 @@ function AuthGate() {
     }
 
     if (!profile) return;
+
+    // Aviso de privacidad al primer uso — antes de cualquier otra cosa (#9).
+    if (esPaciente) {
+      if (avisoEstado === 'checking') return; // esperar el chequeo
+      if (avisoEstado === 'pending') {
+        if (!onAviso) {
+          router.replace('/(onboarding)/aviso-privacidad');
+        }
+        return;
+      }
+    }
 
     if (!profile.onboarding_completo) {
       if (!inOnboardingGroup) {
@@ -129,7 +146,7 @@ function AuthGate() {
     if (inAuthGroup || inOnboardingGroup) {
       router.replace('/(auth)/welcome');
     }
-  }, [session, profile, loading, segments, router]);
+  }, [session, profile, loading, segments, router, esPaciente, avisoEstado]);
 
   return (
     <Stack
