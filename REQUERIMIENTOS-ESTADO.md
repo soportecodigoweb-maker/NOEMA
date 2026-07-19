@@ -1,7 +1,11 @@
-# NOEMA — Estado de los 13 requerimientos
+# NOEMA — Estado de requerimientos
 
 **Última actualización:** 2026-07-18 (sesión autónoma)
 **Repo:** https://github.com/somosnoema/noema · **DB:** Supabase cloud `qoojcgndwxhdepgrwztt`
+
+Este documento cubre DOS conjuntos de requerimientos:
+- **Parte 1:** 13 funciones del TERAPEUTA (más abajo)
+- **Parte 2:** 11 funciones del PACIENTE (al final, sección "FUNCIONES DEL PACIENTE")
 
 ---
 
@@ -127,3 +131,66 @@ filtros de riesgo y buscador) → abre su ficha → botón de config (riesgo + t
 3. **Crear cuenta OpenAI** → me destraba #6 y la parte IA de #2.
 4. **Conseguir revisión clínica** del contenido de plantillas/psicoeducación (una psicóloga) → me destraba publicar #3.
 5. Con eso desbloqueado, ataco #1, #2, #4, #5 en orden.
+
+---
+
+# FUNCIONES DEL PACIENTE (11 requerimientos)
+
+**Actualizado:** 2026-07-18
+
+| # | Función del paciente | Estado |
+|---|---|---|
+| 1 | Mensajes autoayuda push por algoritmo/historial | 🟡 Corpus + algoritmo ✅ hechos; falta push + revisión clínica |
+| 2 | Acceso y respuesta a tareas asignadas | 🟡 Pantallas existen; falta render dinámico de formatos |
+| 3 | Recordatorios de tareas + alarmas propias | 🔴 Falta infra expo-notifications |
+| 4 | Retroalimentación tras cada tarea | 🔴 Nuevo |
+| 5 | Recordatorios/tareas propias + panel de progreso | 🔴 Nuevo |
+| 6 | Botón SOS si el terapeuta lo activa | ✅ **Hecho y verificado** |
+| 7 | Métricas de progreso (datos duros, SIN interpretación) | 🟡 Pantalla `analisis` existe; falta enfoque de patrones |
+| 8 | Diario emocional con control de privacidad | ✅ Ya existía (privado/compartido/marcado) |
+| 9 | Aviso de confidencialidad al primer uso | ✅ **Hecho y verificado** |
+| 10 | Vinculación en agenda al agendar cita | 🟡 Sesiones existen; falta sync bidireccional |
+| 11 | Paciente agenda si el terapeuta lo habilita | 🟡 Flag `agenda_habilitada` listo; falta UI de agendar |
+
+**Completados esta sesión (paciente): #6, #9 + base sólida de #1.**
+
+## Detalle de lo hecho (paciente)
+
+### ✅ #9 — Aviso de confidencialidad al primer uso
+- `apps/mobile/src/lib/aviso-privacidad.ts`: texto legal versionado en 6 secciones — enfatiza que el paciente decide qué comparte, lo privado es inviolable, es responsable de cuidar lo que comparte.
+- Pantalla `(onboarding)/aviso-privacidad.tsx` + gate en el AuthGate: el paciente debe aceptarlo antes de usar la app. Se registra en `consentimientos`.
+- Junto con #12 (terapeuta) cierra la confidencialidad **bilateral**.
+- ⚠️ Texto borrador — revisar con abogado.
+
+### 🟡 #1 — Mensajes de autoayuda (base sólida hecha)
+- **Schema** (`mensajes_autoayuda`): corpus clasificado por objetivo clínico × enfoque terapéutico × contexto de envío, con acción concreta y filtro de riesgo.
+- **Algoritmo** (`mensajes_autoayuda_para_paciente`): mapea los motivos de consulta del paciente → objetivos clínicos, filtra por su nivel de riesgo (SEGURIDAD: no manda mensajes automáticos a riesgo alto/crítico), evita repetir en 14 días. **Verificado** funcionando.
+- **Corpus inicial:** 27 mensajes FUNCIONALES (no frases motivacionales vacías) — cada uno con una acción concreta, basados en TCC/ACT/DBT/Activación Conductual/Mindfulness/autocompasión.
+- ⚠️ **Falta para completar #1:**
+  1. **Validación + ampliación clínica** del corpus (una psicóloga debe revisar el tono, corregir y expandir a "todos los casos" como pediste — 27 es un punto de partida, no exhaustivo).
+  2. **Entrega por push:** requiere infraestructura Expo Notifications (registro de tokens, programación de envíos, cron). Es una pieza de infra aparte.
+
+### 🐛 Fix de bug encontrado
+El trigger `proteger_columnas_vinculacion` (que protege columnas del terapeuta) bloqueaba también al `service_role` (admin/edge functions/seeds), porque su `auth.uid()` es null. Reparado: ahora exime service_role. La protección sigue aplicando al paciente.
+
+## Lo que falta del paciente y por qué
+
+**Necesita decisión/recursos tuyos:**
+- **#1 completar** → revisión clínica del corpus (psicóloga) + decisión de cuándo activar push.
+- **#3, push de #1** → requiere setup Expo Notifications (infra; se verifica solo con build real en dispositivo, no en dev).
+
+**Trabajo bounded pendiente (safe):**
+- #2 render dinámico de formatos de tarea (campos_respuesta) ~6-8h
+- #3 recordatorios locales + alarmas del paciente (expo-notifications) ~8-10h
+- #4 retroalimentación del terapeuta tras tarea ~6h
+- #5 tareas/recordatorios propios + panel de progreso personal ~12-15h
+- #7 métricas datos-duros con patrones bienestar/malestar (SIN interpretación) ~10-12h
+- #10 sync agenda terapeuta→paciente ~6h
+- #11 UI de agendar del paciente respetando `agenda_habilitada` ~8h
+
+## Migrations añadidas (paciente)
+```
+00024_mensajes_autoayuda           (#1 schema + algoritmo)
+00025_seed_mensajes_autoayuda      (#1 corpus 27 mensajes, borrador)
+00026_fix_trigger_service_role     (fix bug del trigger)
+```
