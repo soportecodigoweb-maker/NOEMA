@@ -597,6 +597,81 @@ export type Database = {
           },
         ]
       }
+      mensajes_autoayuda: {
+        Row: {
+          accion: string | null
+          contexto: Database["public"]["Enums"]["contexto_autoayuda"]
+          creado_at: string
+          enfoque: Database["public"]["Enums"]["enfoque_autoayuda"]
+          id: string
+          objetivo: Database["public"]["Enums"]["objetivo_autoayuda"]
+          publicado: boolean
+          riesgo_maximo: Database["public"]["Enums"]["nivel_riesgo"]
+          texto: string
+        }
+        Insert: {
+          accion?: string | null
+          contexto?: Database["public"]["Enums"]["contexto_autoayuda"]
+          creado_at?: string
+          enfoque: Database["public"]["Enums"]["enfoque_autoayuda"]
+          id?: string
+          objetivo: Database["public"]["Enums"]["objetivo_autoayuda"]
+          publicado?: boolean
+          riesgo_maximo?: Database["public"]["Enums"]["nivel_riesgo"]
+          texto: string
+        }
+        Update: {
+          accion?: string | null
+          contexto?: Database["public"]["Enums"]["contexto_autoayuda"]
+          creado_at?: string
+          enfoque?: Database["public"]["Enums"]["enfoque_autoayuda"]
+          id?: string
+          objetivo?: Database["public"]["Enums"]["objetivo_autoayuda"]
+          publicado?: boolean
+          riesgo_maximo?: Database["public"]["Enums"]["nivel_riesgo"]
+          texto?: string
+        }
+        Relationships: []
+      }
+      mensajes_autoayuda_enviados: {
+        Row: {
+          contexto: Database["public"]["Enums"]["contexto_autoayuda"]
+          enviado_at: string
+          id: string
+          mensaje_id: string
+          paciente_id: string
+        }
+        Insert: {
+          contexto?: Database["public"]["Enums"]["contexto_autoayuda"]
+          enviado_at?: string
+          id?: string
+          mensaje_id: string
+          paciente_id: string
+        }
+        Update: {
+          contexto?: Database["public"]["Enums"]["contexto_autoayuda"]
+          enviado_at?: string
+          id?: string
+          mensaje_id?: string
+          paciente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensajes_autoayuda_enviados_mensaje_id_fkey"
+            columns: ["mensaje_id"]
+            isOneToOne: false
+            referencedRelation: "mensajes_autoayuda"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensajes_autoayuda_enviados_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           actualizado_at: string
@@ -1266,6 +1341,9 @@ export type Database = {
           id: string
           paciente_id: string
           respuestas: Json
+          retroalimentacion: string | null
+          retroalimentacion_at: string | null
+          retroalimentacion_por: string | null
           tarea_id: string
           texto_libre: string | null
         }
@@ -1281,6 +1359,9 @@ export type Database = {
           id?: string
           paciente_id: string
           respuestas?: Json
+          retroalimentacion?: string | null
+          retroalimentacion_at?: string | null
+          retroalimentacion_por?: string | null
           tarea_id: string
           texto_libre?: string | null
         }
@@ -1296,6 +1377,9 @@ export type Database = {
           id?: string
           paciente_id?: string
           respuestas?: Json
+          retroalimentacion?: string | null
+          retroalimentacion_at?: string | null
+          retroalimentacion_por?: string | null
           tarea_id?: string
           texto_libre?: string | null
         }
@@ -1306,6 +1390,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pacientes"
             referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "tarea_respuestas_retroalimentacion_por_fkey"
+            columns: ["retroalimentacion_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "tarea_respuestas_tarea_id_fkey"
@@ -1793,9 +1884,37 @@ export type Database = {
         Returns: boolean
       }
       generar_codigo_invitacion: { Args: never; Returns: string }
+      mensajes_autoayuda_para_paciente: {
+        Args: {
+          p_contexto?: Database["public"]["Enums"]["contexto_autoayuda"]
+          p_limite?: number
+          p_paciente_id: string
+        }
+        Returns: {
+          accion: string | null
+          contexto: Database["public"]["Enums"]["contexto_autoayuda"]
+          creado_at: string
+          enfoque: Database["public"]["Enums"]["enfoque_autoayuda"]
+          id: string
+          objetivo: Database["public"]["Enums"]["objetivo_autoayuda"]
+          publicado: boolean
+          riesgo_maximo: Database["public"]["Enums"]["nivel_riesgo"]
+          texto: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "mensajes_autoayuda"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       mi_rol: {
         Args: never
         Returns: Database["public"]["Enums"]["rol_usuario"]
+      }
+      orden_riesgo: {
+        Args: { n: Database["public"]["Enums"]["nivel_riesgo"] }
+        Returns: number
       }
       paciente_autoriza_alerta_crisis: {
         Args: { p_paciente_id: string }
@@ -1820,6 +1939,20 @@ export type Database = {
         | "export"
         | "crisis_triggered"
         | "ai_generated"
+      contexto_autoayuda:
+        | "manana"
+        | "noche"
+        | "post_registro_malestar"
+        | "post_inactividad"
+        | "previo_sesion"
+        | "general"
+      enfoque_autoayuda:
+        | "tcc"
+        | "act"
+        | "dbt"
+        | "activacion_conductual"
+        | "mindfulness"
+        | "autocompasion"
       estado_sesion: "programada" | "realizada" | "cancelada" | "reagendada"
       estado_tarea: "pendiente" | "en_progreso" | "completada" | "omitida"
       estado_verificacion:
@@ -1850,6 +1983,15 @@ export type Database = {
       nivel_contenido: "inicial" | "intermedio" | "avanzado"
       nivel_privacidad: "privado" | "compartido" | "marcado_sesion"
       nivel_riesgo: "sin_evaluar" | "bajo" | "medio" | "alto" | "critico"
+      objetivo_autoayuda:
+        | "ansiedad"
+        | "depresion"
+        | "autoestima"
+        | "relaciones"
+        | "estres"
+        | "regulacion_emocional"
+        | "sueno"
+        | "general"
       plan_terapeuta: "gratuito" | "prueba_premium" | "activo" | "cancelado"
       rol_usuario: "terapeuta" | "paciente" | "sin_terapeuta" | "admin"
       tipo_consentimiento:
@@ -2005,6 +2147,22 @@ export const Constants = {
         "crisis_triggered",
         "ai_generated",
       ],
+      contexto_autoayuda: [
+        "manana",
+        "noche",
+        "post_registro_malestar",
+        "post_inactividad",
+        "previo_sesion",
+        "general",
+      ],
+      enfoque_autoayuda: [
+        "tcc",
+        "act",
+        "dbt",
+        "activacion_conductual",
+        "mindfulness",
+        "autocompasion",
+      ],
       estado_sesion: ["programada", "realizada", "cancelada", "reagendada"],
       estado_tarea: ["pendiente", "en_progreso", "completada", "omitida"],
       estado_verificacion: [
@@ -2033,6 +2191,16 @@ export const Constants = {
       nivel_contenido: ["inicial", "intermedio", "avanzado"],
       nivel_privacidad: ["privado", "compartido", "marcado_sesion"],
       nivel_riesgo: ["sin_evaluar", "bajo", "medio", "alto", "critico"],
+      objetivo_autoayuda: [
+        "ansiedad",
+        "depresion",
+        "autoestima",
+        "relaciones",
+        "estres",
+        "regulacion_emocional",
+        "sueno",
+        "general",
+      ],
       plan_terapeuta: ["gratuito", "prueba_premium", "activo", "cancelado"],
       rol_usuario: ["terapeuta", "paciente", "sin_terapeuta", "admin"],
       tipo_consentimiento: [

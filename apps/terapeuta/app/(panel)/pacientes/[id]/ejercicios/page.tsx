@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { AsignarEjercicioDialog } from './AsignarEjercicioDialog';
+import { RetroalimentarRespuesta } from '@/components/pacientes/RetroalimentarRespuesta';
 import { formatFecha, tiempoRelativo } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,13 @@ interface Tarea {
   fecha_limite: string | null;
   estado: string;
   creado_at: string;
-  respuestas: Array<{ id: string; fecha: string; texto_libre: string | null; dificultad_percibida: number | null }>;
+  respuestas: Array<{
+    id: string;
+    fecha: string;
+    texto_libre: string | null;
+    dificultad_percibida: number | null;
+    retroalimentacion: string | null;
+  }>;
 }
 
 export default async function EjerciciosPacientePage({ params }: PageProps) {
@@ -28,7 +35,7 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
       .from('tareas')
       .select(`
         id, titulo, descripcion, fecha_limite, estado, creado_at,
-        respuestas:tarea_respuestas(id, fecha, texto_libre, dificultad_percibida)
+        respuestas:tarea_respuestas(id, fecha, texto_libre, dificultad_percibida, retroalimentacion)
       `)
       .eq('vinculacion_id', id)
       .order('creado_at', { ascending: false }),
@@ -88,7 +95,7 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
                   {t.respuestas && t.respuestas.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="caption">{t.respuestas.length} respuesta(s) del paciente</p>
-                      {t.respuestas.slice(0, 2).map((r) => (
+                      {t.respuestas.slice(0, 3).map((r) => (
                         <div key={r.id} className="text-sm border-l-2 border-noema-sage/40 pl-3 py-1">
                           {r.texto_libre && (
                             <p className="text-ink/80 italic">"{r.texto_libre}"</p>
@@ -98,6 +105,11 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
                             {r.dificultad_percibida !== null &&
                               ` · Dificultad ${r.dificultad_percibida}/5`}
                           </p>
+                          <RetroalimentarRespuesta
+                            respuestaId={r.id}
+                            vinculacionId={id}
+                            inicial={r.retroalimentacion}
+                          />
                         </div>
                       ))}
                     </div>
