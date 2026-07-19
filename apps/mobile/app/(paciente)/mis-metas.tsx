@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/Input';
 import { colors, spacing, fontFamily, radii } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { programarRecordatorio } from '@/lib/notifications';
 
 interface Meta {
   id: string;
@@ -52,12 +53,23 @@ export default function MisMetasScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  const crear = async () => {
+  const crear = async (recordarEn?: { horas: number; etiqueta: string }) => {
     if (!user || !nuevoTitulo.trim()) return;
     setCreando(true);
+    const titulo = nuevoTitulo.trim();
+    let recordarAt: string | null = null;
+
+    // Programar notificación local si se eligió un recordatorio (#3)
+    if (recordarEn) {
+      const fecha = new Date(Date.now() + recordarEn.horas * 3600000);
+      recordarAt = fecha.toISOString();
+      await programarRecordatorio('Recordatorio NOEMA', titulo, fecha);
+    }
+
     const { error } = await supabase.from('recordatorios_personales').insert({
       paciente_id: user.id,
-      titulo: nuevoTitulo.trim(),
+      titulo,
+      recordar_at: recordarAt,
     });
     setCreando(false);
     if (!error) {
@@ -149,12 +161,34 @@ export default function MisMetasScreen() {
             <Button
               variant="primary"
               size="md"
-              onPress={crear}
+              onPress={() => crear()}
               loading={creando}
               disabled={!nuevoTitulo.trim()}
             >
               Agregar
             </Button>
+            {/* Recordatorios locales rápidos (#3) */}
+            {nuevoTitulo.trim().length > 0 && (
+              <View style={{ gap: spacing[2] }}>
+                <Text variant="muted">O agregar con recordatorio:</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}>
+                  {[
+                    { horas: 1, etiqueta: 'En 1 hora' },
+                    { horas: 3, etiqueta: 'En 3 horas' },
+                    { horas: 24, etiqueta: 'Mañana' },
+                  ].map((op) => (
+                    <Pressable
+                      key={op.etiqueta}
+                      onPress={() => crear(op)}
+                      disabled={creando}
+                      style={styles.recChip}
+                    >
+                      <Text variant="bodyM">{op.etiqueta}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            )}
           </Card>
 
           {/* Activas */}
@@ -254,4 +288,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkOn: { backgroundColor: colors.noemaSage, borderColor: colors.noemaSage },
+  recChip: {
+    borderWidth: 1,
+    borderColor: 'rgba(61,77,62,0.20)',
+    borderRadius: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.bone,
+  },
 });

@@ -39,6 +39,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      adjuntos: {
+        Row: {
+          archivado: boolean
+          creado_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          ruta: string
+          subido_por: string
+          tamano_bytes: number | null
+          tipo_mime: string | null
+          vinculacion_id: string
+        }
+        Insert: {
+          archivado?: boolean
+          creado_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          ruta: string
+          subido_por: string
+          tamano_bytes?: number | null
+          tipo_mime?: string | null
+          vinculacion_id: string
+        }
+        Update: {
+          archivado?: boolean
+          creado_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          ruta?: string
+          subido_por?: string
+          tamano_bytes?: number | null
+          tipo_mime?: string | null
+          vinculacion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adjuntos_subido_por_fkey"
+            columns: ["subido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adjuntos_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "mensajes_hilos_terapeuta"
+            referencedColumns: ["vinculacion_id"]
+          },
+          {
+            foreignKeyName: "adjuntos_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alertas_crisis: {
         Row: {
           contacto_confianza_id: string | null
