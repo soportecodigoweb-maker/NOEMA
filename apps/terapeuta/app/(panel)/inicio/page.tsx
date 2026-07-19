@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { tiempoRelativo } from '@/lib/utils';
+import { perfilesPorId } from '@/lib/perfiles-lookup';
 
 export const metadata = { title: 'Inicio' };
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,7 @@ export default async function InicioPage() {
         id,
         estado,
         actualizado_at,
-        paciente:profiles!vinculaciones_paciente_id_fkey(nombre, avatar_url)
+        paciente_id
         `,
       )
       .eq('terapeuta_id', user.id)
@@ -54,6 +55,16 @@ export default async function InicioPage() {
       .order('actualizado_at', { ascending: false })
       .limit(6),
   ]);
+
+  // Resolver perfiles de pacientes (el FK apunta a pacientes, no a profiles).
+  const perfiles = await perfilesPorId(
+    supabase,
+    (vinculaciones ?? []).map((v) => v.paciente_id),
+  );
+  const vinculacionesConPaciente = (vinculaciones ?? []).map((v) => ({
+    ...v,
+    paciente: v.paciente_id ? perfiles.get(v.paciente_id) ?? null : null,
+  }));
 
   const nombreCorto = profile?.nombre?.split(' ')[0] ?? '';
 
@@ -119,7 +130,7 @@ export default async function InicioPage() {
               Quien tiene actividad más reciente aparece arriba.
             </CardDescription>
           </CardHeader>
-          {!vinculaciones || vinculaciones.length === 0 ? (
+          {vinculacionesConPaciente.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-foreground-muted mb-4">
                 Aún no tienes pacientes vinculados.
@@ -132,7 +143,7 @@ export default async function InicioPage() {
             </div>
           ) : (
             <ul className="divide-y divide-noema-deep/[0.06]">
-              {vinculaciones.map((v: any) => (
+              {vinculacionesConPaciente.map((v) => (
                 <li key={v.id}>
                   <Link
                     href={`/pacientes/${v.id}`}

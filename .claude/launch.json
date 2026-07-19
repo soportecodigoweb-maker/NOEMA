@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "terapeuta",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "terapeuta", "dev"],
+      "port": 3006
+    }
+  ]
+}

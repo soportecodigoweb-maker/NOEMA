@@ -29,15 +29,19 @@ export default async function ThreadPage({ params }: PageProps) {
 
   const { data: vinc } = await supabase
     .from('vinculaciones')
-    .select(`
-      id,
-      paciente:profiles!vinculaciones_paciente_id_fkey(id, nombre)
-    `)
+    .select('id, paciente_id')
     .eq('id', vinculacionId)
     .single();
 
   if (!vinc) notFound();
-  const paciente = (vinc as any).paciente as { id: string; nombre: string } | null;
+
+  const { data: paciente } = vinc.paciente_id
+    ? await supabase
+        .from('profiles')
+        .select('id, nombre')
+        .eq('id', vinc.paciente_id)
+        .maybeSingle()
+    : { data: null };
 
   const { data: mensajes } = await supabase
     .from('mensajes')

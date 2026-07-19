@@ -28,11 +28,30 @@ export default async function PacientesPage() {
       codigo_invitacion,
       nivel_riesgo,
       sos_habilitado,
-      paciente:profiles!vinculaciones_paciente_id_fkey(id, nombre, avatar_url)
+      paciente_id
       `,
     )
     .eq('terapeuta_id', user.id)
     .order('actualizado_at', { ascending: false });
+
+  // El FK vinculaciones.paciente_id → pacientes(profile_id), y el nombre vive
+  // en profiles. Traemos los perfiles por separado y los mapeamos por id
+  // (paciente_id === profiles.id).
+  const pacienteIds = (vinculaciones ?? [])
+    .map((v) => v.paciente_id)
+    .filter((id): id is string => Boolean(id));
+
+  const perfilPorId = new Map<
+    string,
+    { id: string; nombre: string; avatar_url: string | null }
+  >();
+  if (pacienteIds.length > 0) {
+    const { data: perfiles } = await supabase
+      .from('profiles')
+      .select('id, nombre, avatar_url')
+      .in('id', pacienteIds);
+    for (const p of perfiles ?? []) perfilPorId.set(p.id, p);
+  }
 
   const rows: VinculacionRow[] = (vinculaciones ?? []).map((v) => ({
     id: v.id,
@@ -42,7 +61,7 @@ export default async function PacientesPage() {
     codigo_invitacion: v.codigo_invitacion,
     nivel_riesgo: v.nivel_riesgo,
     sos_habilitado: v.sos_habilitado,
-    paciente: unwrapOne(v.paciente),
+    paciente: v.paciente_id ? perfilPorId.get(v.paciente_id) ?? null : null,
   }));
 
   return (
@@ -77,9 +96,4 @@ export default async function PacientesPage() {
       )}
     </div>
   );
-}
-
-function unwrapOne<T>(x: T | T[] | null | undefined): T | null {
-  if (Array.isArray(x)) return x[0] ?? null;
-  return x ?? null;
 }

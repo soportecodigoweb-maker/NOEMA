@@ -24,7 +24,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
       nivel_riesgo,
       sos_habilitado,
       agenda_habilitada,
-      paciente:profiles!vinculaciones_paciente_id_fkey(id, nombre, avatar_url)
+      paciente_id
       `,
     )
     .eq('id', id)
@@ -32,7 +32,13 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
 
   if (!vinc) notFound();
 
-  const paciente = unwrapOne(vinc.paciente);
+  const { data: paciente } = vinc.paciente_id
+    ? await supabase
+        .from('profiles')
+        .select('id, nombre, avatar_url')
+        .eq('id', vinc.paciente_id)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <div>

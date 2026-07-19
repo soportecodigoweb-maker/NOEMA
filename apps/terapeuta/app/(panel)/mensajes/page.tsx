@@ -3,6 +3,7 @@ import { MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { tiempoRelativo } from '@/lib/utils';
+import { perfilesPorId } from '@/lib/perfiles-lookup';
 
 export const metadata = { title: 'Mensajes' };
 export const dynamic = 'force-dynamic';
@@ -15,19 +16,18 @@ export default async function MensajesPage() {
   // Todas las vinculaciones activas con sus últimos mensajes
   const { data: vincs } = await supabase
     .from('vinculaciones')
-    .select(`
-      id,
-      paciente:profiles!vinculaciones_paciente_id_fkey(nombre, avatar_url)
-    `)
+    .select('id, paciente_id')
     .eq('terapeuta_id', user.id)
     .eq('estado', 'activa');
 
-  // Supabase devuelve `paciente` como array (por la relación FK). Normalizamos.
-  const lista = ((vincs ?? []) as any[]).map((v) => ({
-    id: v.id as string,
-    paciente: (Array.isArray(v.paciente) ? v.paciente[0] : v.paciente) as
-      | { nombre: string; avatar_url: string | null }
-      | null,
+  // El FK apunta a pacientes; resolvemos perfiles por id.
+  const perfiles = await perfilesPorId(
+    supabase,
+    (vincs ?? []).map((v) => v.paciente_id),
+  );
+  const lista = (vincs ?? []).map((v) => ({
+    id: v.id,
+    paciente: v.paciente_id ? perfiles.get(v.paciente_id) ?? null : null,
   }));
 
   // Para cada vinculación, último mensaje + count no leídos por el terapeuta

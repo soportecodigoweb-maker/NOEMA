@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Calendar, Video, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
+import { perfilesPorId } from '@/lib/perfiles-lookup';
 
 export const metadata = { title: 'Sesiones' };
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,7 @@ interface SesionRow {
   duracion_min: number;
   modalidad: string;
   estado: string;
+  vinculacion_id: string;
   vinculacion: {
     id: string;
     paciente: { nombre: string } | null;
@@ -27,10 +29,20 @@ export default async function SesionesPage() {
   // Sesiones de TODAS las vinculaciones del terapeuta
   const { data: vincs } = await supabase
     .from('vinculaciones')
-    .select('id')
+    .select('id, paciente_id')
     .eq('terapeuta_id', user.id);
 
-  const vincIds = (vincs ?? []).map((v: { id: string }) => v.id);
+  const vincIds = (vincs ?? []).map((v) => v.id);
+
+  // Mapa vinculacion_id → perfil del paciente (el FK apunta a pacientes).
+  const perfiles = await perfilesPorId(
+    supabase,
+    (vincs ?? []).map((v) => v.paciente_id),
+  );
+  const pacientePorVinc = new Map<string, { nombre: string } | null>();
+  for (const v of vincs ?? []) {
+    pacientePorVinc.set(v.id, v.paciente_id ? perfiles.get(v.paciente_id) ?? null : null);
+  }
   if (vincIds.length === 0) {
     return (
       <div className="px-8 py-10 max-w-6xl mx-auto">
@@ -50,17 +62,19 @@ export default async function SesionesPage() {
   const { data: sesiones } = await supabase
     .from('sesiones')
     .select(`
-      id, numero, fecha_programada, duracion_min, modalidad, estado,
-      vinculacion:vinculaciones!sesiones_vinculacion_id_fkey(
-        id,
-        paciente:profiles!vinculaciones_paciente_id_fkey(nombre)
-      )
+      id, numero, fecha_programada, duracion_min, modalidad, estado, vinculacion_id
     `)
     .in('vinculacion_id', vincIds)
     .order('fecha_programada', { ascending: true });
 
   const ahora = Date.now();
-  const lista = (sesiones as SesionRow[] | null) ?? [];
+  const lista: SesionRow[] = (sesiones ?? []).map((s) => ({
+    ...s,
+    vinculacion: {
+      id: s.vinculacion_id,
+      paciente: pacientePorVinc.get(s.vinculacion_id) ?? null,
+    },
+  }));
   const proximas = lista.filter(
     (s) => new Date(s.fecha_programada).getTime() > ahora && s.estado === 'programada',
   );
