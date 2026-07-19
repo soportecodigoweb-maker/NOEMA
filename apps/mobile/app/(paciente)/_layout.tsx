@@ -83,6 +83,7 @@ export default function PacienteLayout() {
       />
       <Tabs.Screen name="diario" options={{ href: null }} />
       <Tabs.Screen name="tareas" options={{ href: null }} />
+      <Tabs.Screen name="mis-metas" options={{ href: null }} />
       <Tabs.Screen name="contactos-confianza" options={{ href: null }} />
       <Tabs.Screen name="notificar-terapeuta" options={{ href: null }} />
       <Tabs.Screen name="recursos-emergencia" options={{ href: null }} />

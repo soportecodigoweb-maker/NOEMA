@@ -879,6 +879,53 @@ export type Database = {
         }
         Relationships: []
       }
+      recordatorios_personales: {
+        Row: {
+          actualizado_at: string
+          completado: boolean
+          completado_at: string | null
+          creado_at: string
+          id: string
+          nota: string | null
+          paciente_id: string
+          recordar_at: string | null
+          recurrencia: string
+          titulo: string
+        }
+        Insert: {
+          actualizado_at?: string
+          completado?: boolean
+          completado_at?: string | null
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          paciente_id: string
+          recordar_at?: string | null
+          recurrencia?: string
+          titulo: string
+        }
+        Update: {
+          actualizado_at?: string
+          completado?: boolean
+          completado_at?: string | null
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          paciente_id?: string
+          recordar_at?: string | null
+          recurrencia?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordatorios_personales_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       recursos_asignados: {
         Row: {
           asignado_por: string

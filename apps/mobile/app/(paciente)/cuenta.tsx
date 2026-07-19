@@ -193,6 +193,18 @@ export default function CuentaScreen() {
           {/* Accesos rápidos a contactos y sesiones */}
           <Card padding={4} variant="flat" style={{ gap: spacing[3] }}>
             <Pressable
+              onPress={() => router.push('/(paciente)/mis-metas')}
+              style={styles.menuRow}
+            >
+              <Text variant="bodyM" style={{ flex: 1, fontFamily: fontFamily.sansMedium }}>
+                Mis metas y recordatorios
+              </Text>
+              <Text style={{ fontFamily: fontFamily.serifLight, fontSize: 22, color: '#5C6B5A' }}>
+                ›
+              </Text>
+            </Pressable>
+            <View style={styles.divider} />
+            <Pressable
               onPress={() => router.push('/(paciente)/sesiones')}
               style={styles.menuRow}
             >
