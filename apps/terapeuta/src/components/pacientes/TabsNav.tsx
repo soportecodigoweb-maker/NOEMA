@@ -14,6 +14,7 @@ const tabs = [
   { slug: 'sesiones', label: 'Sesiones' },
   { slug: 'ejercicios', label: 'Ejercicios' },
   { slug: 'notas', label: 'Notas' },
+  { slug: 'historial', label: 'Historial clínico' },
 ];
 
 export function TabsNav({ vinculacionId }: TabsNavProps) {
