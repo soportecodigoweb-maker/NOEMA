@@ -41,15 +41,24 @@ export default function SesionesScreen() {
   const { user } = useAuth();
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [vincActiva, setVincActiva] = useState<{ id: string; agenda: boolean } | null>(null);
+  const [agendando, setAgendando] = useState(false);
+  const [slotEnviando, setSlotEnviando] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
     const { data: vincs } = await supabase
       .from('vinculaciones')
-      .select('id')
+      .select('id, estado, agenda_habilitada')
       .eq('paciente_id', user.id)
       .in('estado', ['activa', 'pausada']);
     if (!vincs?.length) return;
+
+    // Guardar la vinculación activa para saber si puede agendar
+    const activa = vincs.find((v: { estado: string }) => v.estado === 'activa');
+    if (activa) {
+      setVincActiva({ id: activa.id, agenda: activa.agenda_habilitada === true });
+    }
 
     const ids = vincs.map((v: { id: string }) => v.id);
     const { data } = await supabase
@@ -70,6 +79,26 @@ export default function SesionesScreen() {
   }, [user]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const solicitarCita = useCallback(
+    async (slotISO: string) => {
+      if (!vincActiva) return;
+      setSlotEnviando(slotISO);
+      const { error } = await supabase.from('sesiones').insert({
+        vinculacion_id: vincActiva.id,
+        fecha_programada: slotISO,
+        duracion_min: 60,
+        modalidad: 'online',
+        estado: 'programada',
+      });
+      setSlotEnviando(null);
+      if (!error) {
+        setAgendando(false);
+        await load();
+      }
+    },
+    [vincActiva, load],
+  );
 
   const ahora = Date.now();
   const proximas = sesiones.filter(
@@ -108,6 +137,44 @@ export default function SesionesScreen() {
               Próximas y pasadas con tu terapeuta.
             </Text>
           </View>
+
+          {/* Solicitar cita — solo si el terapeuta habilitó la agenda (#11) */}
+          {vincActiva?.agenda && (
+            <View>
+              {!agendando ? (
+                <Button variant="secondary" size="md" onPress={() => setAgendando(true)}>
+                  Solicitar una cita
+                </Button>
+              ) : (
+                <Card padding={4} variant="flat" style={{ gap: spacing[3] }}>
+                  <Text variant="h3">Elige un horario</Text>
+                  <Text variant="muted">
+                    Tu terapeuta habilitó que agendes. Elige un espacio sugerido.
+                  </Text>
+                  <View style={styles.slotsWrap}>
+                    {generarSlots().map((slot) => (
+                      <Pressable
+                        key={slot.iso}
+                        onPress={() => solicitarCita(slot.iso)}
+                        disabled={slotEnviando !== null}
+                        style={[
+                          styles.slotChip,
+                          slotEnviando === slot.iso && styles.slotChipActive,
+                        ]}
+                      >
+                        <Text variant="bodyM">{slot.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <Pressable onPress={() => setAgendando(false)}>
+                    <Text variant="muted" style={{ textAlign: 'center' }}>
+                      Cancelar
+                    </Text>
+                  </Pressable>
+                </Card>
+              )}
+            </View>
+          )}
 
           {/* Próximas */}
           {proximas.length > 0 && (
@@ -149,6 +216,35 @@ export default function SesionesScreen() {
       <CrisisButton variant="floating" />
     </View>
   );
+}
+
+/**
+ * Genera espacios sugeridos: próximos días hábiles a 3 horarios comunes.
+ * (Sin date-picker nativo para no agregar dependencias.)
+ */
+function generarSlots(): Array<{ iso: string; label: string }> {
+  const slots: Array<{ iso: string; label: string }> = [];
+  const horas = [10, 16, 18];
+  const hoy = new Date();
+  let dias = 0;
+  let offset = 1;
+  while (dias < 5 && offset < 20) {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + offset);
+    offset += 1;
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) continue; // saltar fin de semana
+    dias += 1;
+    for (const h of horas) {
+      const slot = new Date(d);
+      slot.setHours(h, 0, 0, 0);
+      slots.push({
+        iso: slot.toISOString(),
+        label: `${slot.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })} · ${h}:00`,
+      });
+    }
+  }
+  return slots;
 }
 
 function ProxSesionCard({ sesion }: { sesion: Sesion }) {
@@ -248,6 +344,19 @@ const styles = StyleSheet.create({
   header: { gap: spacing[2], marginTop: spacing[2] },
   sectionLabel: { marginBottom: spacing[3] },
   empty: { alignItems: 'center', paddingVertical: spacing[10] },
+  slotsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] },
+  slotChip: {
+    borderWidth: 1,
+    borderColor: 'rgba(61, 77, 62, 0.20)',
+    borderRadius: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    backgroundColor: colors.bone,
+  },
+  slotChipActive: {
+    backgroundColor: colors.noemaSage,
+    borderColor: colors.noemaSage,
+  },
   cardDestacada: { backgroundColor: colors.noemaDeep },
   pasadaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   notaBox: {

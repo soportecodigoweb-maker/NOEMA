@@ -3,6 +3,7 @@ import { Calendar, Video, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { perfilesPorId } from '@/lib/perfiles-lookup';
+import { NuevaSesion, type PacienteOption } from '@/components/sesiones/NuevaSesion';
 
 export const metadata = { title: 'Sesiones' };
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,15 @@ export default async function SesionesPage() {
   for (const v of vincs ?? []) {
     pacientePorVinc.set(v.id, v.paciente_id ? perfiles.get(v.paciente_id) ?? null : null);
   }
+
+  // Opciones para el formulario de agendar (solo vinculaciones activas con paciente)
+  const opcionesPaciente: PacienteOption[] = (vincs ?? [])
+    .filter((v) => v.paciente_id && perfiles.get(v.paciente_id))
+    .map((v) => ({
+      vinculacionId: v.id,
+      nombre: perfiles.get(v.paciente_id as string)?.nombre ?? 'Paciente',
+    }));
+
   if (vincIds.length === 0) {
     return (
       <div className="px-8 py-10 max-w-6xl mx-auto">
@@ -87,11 +97,14 @@ export default async function SesionesPage() {
 
   return (
     <div className="px-8 py-10 max-w-6xl mx-auto space-y-10">
-      <div>
-        <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Sesiones</h1>
-        <p className="text-foreground-muted">
-          Tu agenda completa, organizada por fecha.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Sesiones</h1>
+          <p className="text-foreground-muted">
+            Tu agenda completa, organizada por fecha.
+          </p>
+        </div>
+        <NuevaSesion pacientes={opcionesPaciente} />
       </div>
 
       <section>
