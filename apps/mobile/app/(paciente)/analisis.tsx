@@ -15,6 +15,7 @@ import { Text } from '@/components/ui/Text';
 import { Card } from '@/components/ui/Card';
 import { CrisisButton } from '@/components/crisis/CrisisButton';
 import { IntensidadChart } from '@/components/charts/IntensidadChart';
+import { PatronesBienestar } from '@/components/analisis/PatronesBienestar';
 import { colors, spacing, fontFamily, emotionColors } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -155,6 +156,9 @@ export default function AnalisisScreen() {
               </View>
             )}
           </Card>
+
+          {/* Patrones datos-duros (sin interpretación) — #7 */}
+          {user && <PatronesBienestar userId={user.id} />}
 
           <View style={{ height: spacing[8] }} />
         </ScrollView>
