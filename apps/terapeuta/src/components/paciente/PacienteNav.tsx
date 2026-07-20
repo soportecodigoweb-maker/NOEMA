@@ -2,7 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, MessageCircle, Calendar, LifeBuoy, LogOut, type LucideIcon } from 'lucide-react';
+import {
+  Home,
+  MessageCircle,
+  Calendar,
+  LifeBuoy,
+  LogOut,
+  HeartPulse,
+  BookOpen,
+  ClipboardList,
+  Target,
+  BarChart3,
+  type LucideIcon,
+} from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '../../../app/(auth)/actions';
@@ -15,6 +27,11 @@ interface NavItem {
 
 const items: NavItem[] = [
   { href: '/paciente', label: 'Inicio', icon: Home },
+  { href: '/paciente/registros', label: 'Mis registros', icon: HeartPulse },
+  { href: '/paciente/diario', label: 'Diario', icon: BookOpen },
+  { href: '/paciente/tareas', label: 'Tareas', icon: ClipboardList },
+  { href: '/paciente/metas', label: 'Mis metas', icon: Target },
+  { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3 },
   { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle },
   { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar },
 ];
