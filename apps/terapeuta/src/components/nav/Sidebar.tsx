@@ -78,11 +78,13 @@ export function Sidebar({ user }: SidebarProps) {
       <aside
         className={cn(
           'flex w-64 shrink-0 flex-col bg-noema-deep text-bone',
-          // Desktop: columna fija
-          'lg:sticky lg:top-0 lg:h-screen',
-          // Móvil: drawer deslizable
-          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 lg:translate-x-0 lg:transition-none',
-          abierto ? 'translate-x-0' : '-translate-x-full',
+          // Desktop: columna fija (sin transform para que sticky funcione)
+          'lg:sticky lg:top-0 lg:h-screen lg:[transform:none]',
+          // Móvil: drawer deslizable. Usamos [transform:...] (propiedad directa)
+          // en vez de translate-x-* (variable CSS) para que la transición sí se
+          // dispare — con la variable, Chrome deja el transform congelado.
+          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 lg:transition-none',
+          abierto ? '[transform:translateX(0)]' : '[transform:translateX(-100%)]',
         )}
       >
         {/* Logo */}
