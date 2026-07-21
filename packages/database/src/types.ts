@@ -603,6 +603,73 @@ export type Database = {
         }
         Relationships: []
       }
+      expediente_inicial: {
+        Row: {
+          actualizado_at: string
+          antecedentes_familiares: string | null
+          antecedentes_personales: string | null
+          elaborado_por: string | null
+          examen_mental: string | null
+          fecha_elaboracion: string
+          impresion_diagnostica: string | null
+          motivo_consulta: string | null
+          padecimiento_actual: string | null
+          plan_terapeutico: string | null
+          pronostico: string | null
+          vinculacion_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          antecedentes_familiares?: string | null
+          antecedentes_personales?: string | null
+          elaborado_por?: string | null
+          examen_mental?: string | null
+          fecha_elaboracion?: string
+          impresion_diagnostica?: string | null
+          motivo_consulta?: string | null
+          padecimiento_actual?: string | null
+          plan_terapeutico?: string | null
+          pronostico?: string | null
+          vinculacion_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          antecedentes_familiares?: string | null
+          antecedentes_personales?: string | null
+          elaborado_por?: string | null
+          examen_mental?: string | null
+          fecha_elaboracion?: string
+          impresion_diagnostica?: string | null
+          motivo_consulta?: string | null
+          padecimiento_actual?: string | null
+          plan_terapeutico?: string | null
+          pronostico?: string | null
+          vinculacion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expediente_inicial_elaborado_por_fkey"
+            columns: ["elaborado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expediente_inicial_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: true
+            referencedRelation: "mensajes_hilos_terapeuta"
+            referencedColumns: ["vinculacion_id"]
+          },
+          {
+            foreignKeyName: "expediente_inicial_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: true
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensajes: {
         Row: {
           archivos: Json

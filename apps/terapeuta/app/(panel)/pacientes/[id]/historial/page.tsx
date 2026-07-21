@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { formatFecha } from '@/lib/utils';
 import { CalendarCheck, ClipboardList, PenLine, HeartPulse, TrendingUp } from 'lucide-react';
+import { NotaInicialNOM004 } from '@/components/pacientes/NotaInicialNOM004';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +40,7 @@ export default async function HistorialPage({ params }: PageProps) {
     { data: sesiones },
     { data: notas },
     { count: alertas },
+    { data: expediente },
   ] = await Promise.all([
     pacienteId
       ? supabase.from('profiles').select('nombre, email, ciudad').eq('id', pacienteId).maybeSingle()
@@ -69,6 +71,11 @@ export default async function HistorialPage({ params }: PageProps) {
       .from('alertas_crisis')
       .select('*', { count: 'exact', head: true })
       .eq('paciente_id', pacienteId ?? ''),
+    supabase
+      .from('expediente_inicial')
+      .select('*')
+      .eq('vinculacion_id', id)
+      .maybeSingle(),
   ]);
 
   // ── Métricas de adherencia (datos duros) ──
@@ -155,6 +162,9 @@ export default async function HistorialPage({ params }: PageProps) {
           <Campo label="Nivel de riesgo actual" valor={vinc.nivel_riesgo} />
         </dl>
       </Card>
+
+      {/* Nota clínica inicial (NOM-004) — primera sesión (#7) */}
+      <NotaInicialNOM004 vinculacionId={id} inicial={expediente ?? null} />
 
       {/* Métricas de adherencia (datos duros) */}
       <div>
