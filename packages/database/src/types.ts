@@ -774,6 +774,70 @@ export type Database = {
           },
         ]
       }
+      pagos_pacientes: {
+        Row: {
+          concepto: string | null
+          creado_at: string
+          estado: Database["public"]["Enums"]["estado_pago"]
+          fecha: string
+          id: string
+          metodo: Database["public"]["Enums"]["metodo_pago"]
+          moneda: string
+          monto: number
+          notas: string | null
+          terapeuta_id: string
+          vinculacion_id: string | null
+        }
+        Insert: {
+          concepto?: string | null
+          creado_at?: string
+          estado?: Database["public"]["Enums"]["estado_pago"]
+          fecha?: string
+          id?: string
+          metodo?: Database["public"]["Enums"]["metodo_pago"]
+          moneda?: string
+          monto: number
+          notas?: string | null
+          terapeuta_id: string
+          vinculacion_id?: string | null
+        }
+        Update: {
+          concepto?: string | null
+          creado_at?: string
+          estado?: Database["public"]["Enums"]["estado_pago"]
+          fecha?: string
+          id?: string
+          metodo?: Database["public"]["Enums"]["metodo_pago"]
+          moneda?: string
+          monto?: number
+          notas?: string | null
+          terapeuta_id?: string
+          vinculacion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_pacientes_terapeuta_id_fkey"
+            columns: ["terapeuta_id"]
+            isOneToOne: false
+            referencedRelation: "terapeutas"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "pagos_pacientes_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "mensajes_hilos_terapeuta"
+            referencedColumns: ["vinculacion_id"]
+          },
+          {
+            foreignKeyName: "pagos_pacientes_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plantillas_ejercicios: {
         Row: {
           actualizado_at: string
@@ -2068,6 +2132,7 @@ export type Database = {
         | "activacion_conductual"
         | "mindfulness"
         | "autocompasion"
+      estado_pago: "pagado" | "pendiente"
       estado_sesion: "programada" | "realizada" | "cancelada" | "reagendada"
       estado_tarea: "pendiente" | "en_progreso" | "completada" | "omitida"
       estado_verificacion:
@@ -2094,6 +2159,12 @@ export type Database = {
         | "mensual"
         | "personalizada"
       gravedad_crisis: "orientacion" | "moderada" | "alta" | "critica"
+      metodo_pago:
+        | "efectivo"
+        | "transferencia"
+        | "tarjeta"
+        | "en_linea"
+        | "otro"
       modalidad_sesion: "presencial" | "online" | "hibrida"
       nivel_contenido: "inicial" | "intermedio" | "avanzado"
       nivel_privacidad: "privado" | "compartido" | "marcado_sesion"
@@ -2278,6 +2349,7 @@ export const Constants = {
         "mindfulness",
         "autocompasion",
       ],
+      estado_pago: ["pagado", "pendiente"],
       estado_sesion: ["programada", "realizada", "cancelada", "reagendada"],
       estado_tarea: ["pendiente", "en_progreso", "completada", "omitida"],
       estado_verificacion: [
@@ -2302,6 +2374,7 @@ export const Constants = {
         "personalizada",
       ],
       gravedad_crisis: ["orientacion", "moderada", "alta", "critica"],
+      metodo_pago: ["efectivo", "transferencia", "tarjeta", "en_linea", "otro"],
       modalidad_sesion: ["presencial", "online", "hibrida"],
       nivel_contenido: ["inicial", "intermedio", "avanzado"],
       nivel_privacidad: ["privado", "compartido", "marcado_sesion"],

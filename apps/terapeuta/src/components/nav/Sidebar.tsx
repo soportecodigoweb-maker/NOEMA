@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Library,
   BarChart3,
+  Wallet,
   Settings,
   type LucideIcon,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const items: NavItem[] = [
   { href: '/sesiones', label: 'Sesiones', icon: Calendar },
   { href: '/mensajes', label: 'Mensajes', icon: MessageCircle },
   { href: '/recursos', label: 'Recursos', icon: Library },
+  { href: '/finanzas', label: 'Finanzas', icon: Wallet },
   { href: '/analiticas', label: 'Analíticas', icon: BarChart3 },
   { href: '/ajustes', label: 'Ajustes', icon: Settings },
 ];
