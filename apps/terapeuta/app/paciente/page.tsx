@@ -57,7 +57,7 @@ export default async function PacienteInicioPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <header className="mb-8">
         <p className="text-sm text-noema-sage/70">Hola,</p>
         <h1 className="mt-1 font-serif text-3xl text-ink">

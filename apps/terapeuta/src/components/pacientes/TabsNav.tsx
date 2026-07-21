@@ -22,7 +22,7 @@ export function TabsNav({ vinculacionId }: TabsNavProps) {
   const base = `/pacientes/${vinculacionId}`;
 
   return (
-    <nav className="flex gap-1 border-b border-noema-deep/[0.06] -mb-[1px]">
+    <nav className="-mb-[1px] flex gap-1 overflow-x-auto border-b border-noema-deep/[0.06] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((t) => {
         const href = t.slug ? `${base}/${t.slug}` : base;
         const active =
@@ -34,7 +34,7 @@ export function TabsNav({ vinculacionId }: TabsNavProps) {
             key={t.slug}
             href={href}
             className={cn(
-              'px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
+              'shrink-0 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
               active
                 ? 'border-noema-sage text-ink'
                 : 'border-transparent text-foreground-muted hover:text-ink',

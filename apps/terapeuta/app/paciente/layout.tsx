@@ -69,7 +69,7 @@ export default async function PacienteLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="flex min-h-screen flex-col bg-paper lg:flex-row">
       <PacienteNav
         user={{
           nombre: profile.nombre,
@@ -77,7 +77,7 @@ export default async function PacienteLayout({
           terapeutaNombre,
         }}
       />
-      <main className="flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
 
       {/* Botón de crisis flotante — siempre visible (#10) */}
       <Link

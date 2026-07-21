@@ -11,7 +11,7 @@ interface PageProps {
 export default async function NuevaSesionPage({ params }: PageProps) {
   const { id } = await params;
   return (
-    <div className="px-8 py-10 max-w-2xl">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-2xl">
       <Link
         href={`/pacientes/${id}/sesiones`}
         className="inline-flex items-center gap-1 text-foreground-muted hover:text-ink mb-6 text-sm"

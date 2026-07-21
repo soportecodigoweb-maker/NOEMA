@@ -61,7 +61,7 @@ export default async function PanelLayout({
     .maybeSingle();
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar
         user={{
           nombre: profile.nombre,
@@ -69,7 +69,7 @@ export default async function PanelLayout({
           titulo: terapeuta?.titulo ?? 'Terapeuta',
         }}
       />
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
     </div>
   );
 }

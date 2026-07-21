@@ -69,7 +69,7 @@ export default async function InicioPage() {
   const nombreCorto = profile?.nombre?.split(' ')[0] ?? '';
 
   return (
-    <div className="px-8 py-10 max-w-7xl mx-auto">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-start justify-between mb-10">
         <div>

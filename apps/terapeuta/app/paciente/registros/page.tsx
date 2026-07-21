@@ -40,7 +40,7 @@ export default async function RegistrosPage() {
   const nombrePorKey = new Map((emociones ?? []).map((e) => [e.key, e]));
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl text-ink">Mis registros</h1>

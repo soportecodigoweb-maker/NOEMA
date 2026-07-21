@@ -35,7 +35,7 @@ export default async function DetalleSesionPage({ params }: PageProps) {
   const fecha = new Date(sesion.fecha_programada);
 
   return (
-    <div className="px-8 py-10 max-w-4xl">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-4xl">
       <Link
         href={`/pacientes/${id}/sesiones`}
         className="inline-flex items-center gap-1 text-foreground-muted hover:text-ink mb-6 text-sm"

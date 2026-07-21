@@ -65,7 +65,7 @@ export default async function ProgresoPage() {
       : '—';
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-6">
         <h1 className="font-serif text-3xl text-ink">Tu progreso</h1>
         <p className="mt-1 text-sm text-ink/60">

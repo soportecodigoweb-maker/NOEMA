@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -13,6 +14,8 @@ import {
   ClipboardList,
   Target,
   BarChart3,
+  Menu,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
@@ -46,97 +49,145 @@ export interface PacienteNavProps {
 
 export function PacienteNav({ user }: PacienteNavProps) {
   const pathname = usePathname();
+  const [abierto, setAbierto] = useState(false);
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col bg-noema-deep text-bone">
-      <div className="flex items-center gap-3 px-6 py-7">
-        <Vesica size={28} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
-        <span className="font-serif text-xl tracking-[0.34em]">NOEMA</span>
-      </div>
-
-      <nav className="flex-1 px-3 py-2">
-        <ul className="space-y-1">
-          {items.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== '/paciente' && pathname.startsWith(item.href));
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'group flex items-center gap-3 rounded-md px-3 py-2.5',
-                    'text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-bone/10 text-bone'
-                      : 'text-bone/70 hover:bg-bone/[0.06] hover:text-bone',
-                  )}
-                >
-                  <item.icon
-                    className={cn(
-                      'size-[18px] shrink-0',
-                      active ? 'text-bone' : 'text-bone/60 group-hover:text-bone',
-                    )}
-                    strokeWidth={1.6}
-                  />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-6 border-t border-bone/[0.08] pt-4">
-          <Link
-            href="/paciente/crisis"
-            className={cn(
-              'group flex items-center gap-3 rounded-md px-3 py-2.5',
-              'text-sm font-medium transition-colors',
-              pathname === '/paciente/crisis'
-                ? 'bg-noema-clay/25 text-bone'
-                : 'bg-noema-clay/15 text-bone hover:bg-noema-clay/25',
-            )}
-          >
-            <LifeBuoy className="size-[18px] shrink-0" strokeWidth={1.8} />
-            Necesito apoyo ahora
-          </Link>
+    <>
+      {/* Barra superior — solo móvil */}
+      <header className="sticky top-0 z-40 flex items-center justify-between bg-noema-deep px-4 py-3 text-bone lg:hidden">
+        <div className="flex items-center gap-2.5">
+          <Vesica size={24} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
+          <span className="font-serif text-lg tracking-[0.3em]">NOEMA</span>
         </div>
-      </nav>
+        <button
+          onClick={() => setAbierto(true)}
+          aria-label="Abrir menú"
+          className="rounded-md p-1.5 hover:bg-bone/10"
+        >
+          <Menu className="size-6" strokeWidth={1.8} />
+        </button>
+      </header>
 
-      <div className="border-t border-bone/[0.08] p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-full bg-bone/15 text-sm font-medium">
-            {user.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={user.avatarUrl}
-                alt={user.nombre}
-                className="size-10 rounded-full object-cover"
-              />
-            ) : (
-              getInitials(user.nombre)
-            )}
+      {/* Overlay móvil */}
+      {abierto && (
+        <div
+          className="fixed inset-0 z-40 bg-noema-deep/50 lg:hidden"
+          onClick={() => setAbierto(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* Sidebar / drawer */}
+      <aside
+        className={cn(
+          'flex w-64 shrink-0 flex-col bg-noema-deep text-bone',
+          // Desktop: columna fija
+          'lg:sticky lg:top-0 lg:h-screen',
+          // Móvil: drawer deslizable
+          'fixed inset-y-0 left-0 z-50 transition-transform duration-300 lg:translate-x-0 lg:transition-none',
+          abierto ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
+        <div className="flex items-center justify-between px-6 py-7">
+          <div className="flex items-center gap-3">
+            <Vesica size={28} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
+            <span className="font-serif text-xl tracking-[0.34em]">NOEMA</span>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{user.nombre}</p>
-            {user.terapeutaNombre && (
-              <p className="truncate text-xs text-bone/60">
-                con {user.terapeutaNombre}
-              </p>
-            )}
-          </div>
-        </div>
-        <form action={signOutAction} className="mt-3">
           <button
-            type="submit"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-bone/60 transition-colors hover:bg-bone/[0.06] hover:text-bone"
+            onClick={() => setAbierto(false)}
+            aria-label="Cerrar menú"
+            className="rounded-md p-1 hover:bg-bone/10 lg:hidden"
           >
-            <LogOut className="size-4" strokeWidth={1.6} />
-            Cerrar sesión
+            <X className="size-5" strokeWidth={1.8} />
           </button>
-        </form>
-      </div>
-    </aside>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-2">
+          <ul className="space-y-1">
+            {items.map((item) => {
+              const active =
+                pathname === item.href ||
+                (item.href !== '/paciente' && pathname.startsWith(item.href));
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setAbierto(false)}
+                    className={cn(
+                      'group flex items-center gap-3 rounded-md px-3 py-2.5',
+                      'text-sm font-medium transition-colors',
+                      active
+                        ? 'bg-bone/10 text-bone'
+                        : 'text-bone/70 hover:bg-bone/[0.06] hover:text-bone',
+                    )}
+                  >
+                    <item.icon
+                      className={cn(
+                        'size-[18px] shrink-0',
+                        active ? 'text-bone' : 'text-bone/60 group-hover:text-bone',
+                      )}
+                      strokeWidth={1.6}
+                    />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="mt-6 border-t border-bone/[0.08] pt-4">
+            <Link
+              href="/paciente/crisis"
+              onClick={() => setAbierto(false)}
+              className={cn(
+                'group flex items-center gap-3 rounded-md px-3 py-2.5',
+                'text-sm font-medium transition-colors',
+                pathname === '/paciente/crisis'
+                  ? 'bg-noema-clay/25 text-bone'
+                  : 'bg-noema-clay/15 text-bone hover:bg-noema-clay/25',
+              )}
+            >
+              <LifeBuoy className="size-[18px] shrink-0" strokeWidth={1.8} />
+              Necesito apoyo ahora
+            </Link>
+          </div>
+        </nav>
+
+        <div className="border-t border-bone/[0.08] p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-full bg-bone/15 text-sm font-medium">
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={user.avatarUrl}
+                  alt={user.nombre}
+                  className="size-10 rounded-full object-cover"
+                />
+              ) : (
+                getInitials(user.nombre)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{user.nombre}</p>
+              {user.terapeutaNombre && (
+                <p className="truncate text-xs text-bone/60">
+                  con {user.terapeutaNombre}
+                </p>
+              )}
+            </div>
+          </div>
+          <form action={signOutAction} className="mt-3">
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-bone/60 transition-colors hover:bg-bone/[0.06] hover:text-bone"
+            >
+              <LogOut className="size-4" strokeWidth={1.6} />
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </aside>
+    </>
   );
 }
 

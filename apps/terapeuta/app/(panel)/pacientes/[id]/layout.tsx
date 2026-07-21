@@ -43,7 +43,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
   return (
     <div>
       {/* Cabecera del paciente */}
-      <div className="px-8 pt-10 pb-6 border-b border-noema-deep/[0.06]">
+      <div className="px-5 pt-8 pb-6 sm:px-8 sm:pt-10 border-b border-noema-deep/[0.06]">
         <Link
           href="/pacientes"
           className="inline-flex items-center gap-1 text-foreground-muted hover:text-ink mb-4 text-sm"
@@ -96,7 +96,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
       </div>
 
       {/* Contenido del tab */}
-      <div className="px-8 py-8 max-w-6xl">{children}</div>
+      <div className="px-5 py-6 sm:px-8 sm:py-8 max-w-6xl">{children}</div>
     </div>
   );
 }

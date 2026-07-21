@@ -55,7 +55,7 @@ export default async function SesionesPage() {
 
   if (vincIds.length === 0) {
     return (
-      <div className="px-8 py-10 max-w-6xl mx-auto">
+      <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-6xl mx-auto">
         <h1 className="font-serif text-4xl text-ink mb-2">Sesiones</h1>
         <p className="text-foreground-muted mb-8">
           Aquí verás todas tus sesiones programadas y realizadas.
@@ -96,7 +96,7 @@ export default async function SesionesPage() {
     .reverse();
 
   return (
-    <div className="px-8 py-10 max-w-6xl mx-auto space-y-10">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-6xl mx-auto space-y-10">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Sesiones</h1>

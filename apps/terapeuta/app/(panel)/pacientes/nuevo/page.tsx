@@ -7,7 +7,7 @@ export const metadata = { title: 'Nuevo paciente' };
 
 export default function NuevoPacientePage() {
   return (
-    <div className="px-8 py-10 max-w-2xl mx-auto">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-2xl mx-auto">
       <Link
         href="/pacientes"
         className="inline-flex items-center gap-1 text-foreground-muted hover:text-ink mb-6 text-sm"

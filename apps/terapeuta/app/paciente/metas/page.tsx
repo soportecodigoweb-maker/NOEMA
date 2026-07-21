@@ -20,7 +20,7 @@ export default async function MetasPage() {
     .order('creado_at', { ascending: false });
 
   return (
-    <div className="mx-auto max-w-2xl px-8 py-10">
+    <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="mb-6">
         <h1 className="font-serif text-3xl text-ink">Mis metas</h1>
         <p className="mt-1 text-sm text-ink/60">

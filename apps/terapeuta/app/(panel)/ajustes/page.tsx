@@ -44,7 +44,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
   ]);
 
   return (
-    <div className="px-8 py-10 max-w-3xl mx-auto">
+    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-3xl mx-auto">
       <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Ajustes</h1>
       <p className="text-foreground-muted mb-8">
         Tu perfil profesional, plan y preferencias.

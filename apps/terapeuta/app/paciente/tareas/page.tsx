@@ -29,7 +29,7 @@ export default async function TareasPacientePage() {
 
   if (!vinc) {
     return (
-      <div className="mx-auto max-w-3xl px-8 py-10">
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
         <h1 className="font-serif text-3xl text-ink">Tareas</h1>
         <p className="mt-4 text-ink/60">Aún no tienes un terapeuta vinculado.</p>
       </div>
@@ -46,7 +46,7 @@ export default async function TareasPacientePage() {
     .order('creado_at', { ascending: false });
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
       <h1 className="font-serif text-3xl text-ink">Tareas</h1>
       <p className="mt-1 text-sm text-ink/60">Lo que tu terapeuta te asignó. Respóndelas a tu ritmo.</p>
 
