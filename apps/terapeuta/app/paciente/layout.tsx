@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { LifeBuoy } from 'lucide-react';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { createClient } from '@/lib/supabase/server';
+import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
 export default async function PacienteLayout({
   children,
@@ -32,6 +33,21 @@ export default async function PacienteLayout({
   if (profile.rol !== 'paciente' && profile.rol !== 'sin_terapeuta') {
     await supabase.auth.signOut();
     redirect('/signin?type=wrong-role');
+  }
+
+  // Aviso de privacidad al entrar (#8): el paciente debe aceptar la versión vigente.
+  const { data: aviso } = await supabase
+    .from('consentimientos')
+    .select('id')
+    .eq('profile_id', user.id)
+    .eq('tipo', 'aviso_privacidad')
+    .eq('version', VERSION_AVISO_PACIENTE)
+    .eq('aceptado', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (!aviso) {
+    redirect('/aviso-paciente');
   }
 
   // Terapeuta vinculado (query separada — el FK apunta a terapeutas, no profiles)

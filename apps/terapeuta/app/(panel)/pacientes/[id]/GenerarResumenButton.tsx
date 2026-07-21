@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Sparkles, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { createClient } from '@/lib/supabase/client';
+import { generarResumenAction } from './resumen-actions';
 
 interface ResumenResult {
   ok: boolean;
   resumen_md?: string;
-  resumen_json?: any;
   meta?: {
     registros: number;
     diario: number;
@@ -20,40 +18,18 @@ interface ResumenResult {
 }
 
 export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ResumenResult | null>(null);
-  const [, startTransition] = useTransition();
 
   const generar = async () => {
     setLoading(true);
     setResult(null);
     try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setResult({ ok: false, error: 'Sesión expirada.' });
-        return;
-      }
-
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const res = await fetch(`${supabaseUrl}/functions/v1/generar-resumen`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ vinculacion_id: vinculacionId, dias: 14 }),
-      });
-
-      const data: ResumenResult = await res.json();
+      const data = await generarResumenAction(vinculacionId, 14);
       setResult(data);
-      if (data.ok) {
-        startTransition(() => router.refresh());
-      }
-    } catch (e) {
-      setResult({ ok: false, error: 'No pudimos conectar con la IA.' });
+    } catch {
+      setResult({ ok: false, error: 'No se pudo generar el resumen.' });
     } finally {
       setLoading(false);
     }
@@ -124,8 +100,8 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
               {renderMarkdown(result.resumen_md)}
             </article>
             <div className="mt-6 pt-4 border-t border-noema-deep/[0.06] text-xs text-foreground-muted italic">
-              Generado por IA con guardrails. Es información operativa, no diagnóstica.
-              El resumen se guardó en el histórico del paciente.
+              Generado a partir de los datos que tu paciente compartió (registros,
+              diario marcado para sesión y tareas). Información operativa, no diagnóstica.
             </div>
           </>
         )}
