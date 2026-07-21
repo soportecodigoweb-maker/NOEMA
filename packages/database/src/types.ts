@@ -1811,9 +1811,11 @@ export type Database = {
           notificar_inactividad: boolean
           paciente_id: string | null
           sos_habilitado: boolean
+          telefono_terapeuta: string | null
           terapeuta_id: string
           ultimo_periodo_facturado: string | null
           version_consentimiento: string | null
+          video_crisis_url: string | null
         }
         Insert: {
           actualizado_at?: string
@@ -1836,9 +1838,11 @@ export type Database = {
           notificar_inactividad?: boolean
           paciente_id?: string | null
           sos_habilitado?: boolean
+          telefono_terapeuta?: string | null
           terapeuta_id: string
           ultimo_periodo_facturado?: string | null
           version_consentimiento?: string | null
+          video_crisis_url?: string | null
         }
         Update: {
           actualizado_at?: string
@@ -1861,9 +1865,11 @@ export type Database = {
           notificar_inactividad?: boolean
           paciente_id?: string | null
           sos_habilitado?: boolean
+          telefono_terapeuta?: string | null
           terapeuta_id?: string
           ultimo_periodo_facturado?: string | null
           version_consentimiento?: string | null
+          video_crisis_url?: string | null
         }
         Relationships: [
           {

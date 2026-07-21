@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { Phone, MessageCircle, LifeBuoy } from 'lucide-react';
+import Link from 'next/link';
+import { Phone, MessageCircle, Video, LifeBuoy, HeartHandshake } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ const LINEAS_MX = [
     descripcion: 'Apoyo psicológico gratuito 24 horas.',
   },
   {
-    nombre: 'Cruz Roja Mexicana',
+    nombre: 'Emergencias',
     telefono: '911',
     descripcion: 'Emergencias médicas y psicológicas.',
   },
@@ -27,8 +28,25 @@ export default async function PacienteCrisisPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) redirect('/signin');
+
+  // Vinculación activa con datos de contacto de crisis del terapeuta
+  const { data: vinc } = await supabase
+    .from('vinculaciones')
+    .select('id, terapeuta_id, telefono_terapeuta, video_crisis_url')
+    .eq('paciente_id', user.id)
+    .eq('estado', 'activa')
+    .maybeSingle();
+
+  let terapeutaNombre: string | null = null;
+  if (vinc) {
+    const { data: t } = await supabase
+      .from('profiles')
+      .select('nombre')
+      .eq('id', vinc.terapeuta_id)
+      .maybeSingle();
+    terapeutaNombre = t?.nombre ?? null;
+  }
 
   const { data: contactos } = await supabase
     .from('contactos_confianza')
@@ -38,7 +56,7 @@ export default async function PacienteCrisisPage() {
     .order('creado_at', { ascending: true });
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
       <header className="mb-8 flex items-center gap-4">
         <div className="flex size-14 items-center justify-center rounded-full bg-noema-clay/20">
           <LifeBuoy className="size-7 text-noema-clay" strokeWidth={1.6} />
@@ -46,21 +64,79 @@ export default async function PacienteCrisisPage() {
         <div>
           <h1 className="font-serif text-3xl text-ink">Necesito apoyo</h1>
           <p className="mt-1 text-sm text-ink/60">
-            No estás sola. Estas líneas y personas están disponibles ahora.
+            No estás sola. Elige cómo quieres pedir ayuda ahora.
           </p>
         </div>
       </header>
 
+      {/* Contacto con el terapeuta (#10) */}
+      {vinc && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
+            Contactar a {terapeutaNombre ?? 'mi terapeuta'}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Link
+              href="/paciente/mensajes"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-sage"
+            >
+              <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
+                <MessageCircle className="size-5 text-noema-sage" strokeWidth={1.7} />
+              </div>
+              <span className="font-medium text-ink">Mensaje</span>
+              <span className="text-xs text-ink/50">Escríbele ahora</span>
+            </Link>
+
+            {vinc.telefono_terapeuta ? (
+              <a
+                href={`tel:${vinc.telefono_terapeuta.replace(/\s/g, '')}`}
+                className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-clay"
+              >
+                <div className="flex size-11 items-center justify-center rounded-full bg-noema-clay/15">
+                  <Phone className="size-5 text-noema-clay" strokeWidth={1.7} />
+                </div>
+                <span className="font-medium text-ink">Llamar</span>
+                <span className="text-xs text-ink/50">{vinc.telefono_terapeuta}</span>
+              </a>
+            ) : (
+              <OpcionDeshabilitada icon={<Phone className="size-5" strokeWidth={1.7} />} label="Llamar" nota="No configurado" />
+            )}
+
+            {vinc.video_crisis_url ? (
+              <a
+                href={vinc.video_crisis_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-sage"
+              >
+                <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
+                  <Video className="size-5 text-noema-sage" strokeWidth={1.7} />
+                </div>
+                <span className="font-medium text-ink">Videollamada</span>
+                <span className="text-xs text-ink/50">Entrar ahora</span>
+              </a>
+            ) : (
+              <OpcionDeshabilitada icon={<Video className="size-5" strokeWidth={1.7} />} label="Videollamada" nota="No configurado" />
+            )}
+          </div>
+          <p className="mt-3 text-xs text-ink/50">
+            Recuerda: la comunicación con tu terapeuta puede no ser inmediata. Si
+            es una emergencia, usa las líneas de abajo.
+          </p>
+        </section>
+      )}
+
+      {/* Líneas de emergencia */}
       <section className="mb-8">
         <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
-          Líneas de emergencia — México
+          Líneas de emergencia — México (24/7)
         </h2>
         <div className="space-y-3">
           {LINEAS_MX.map((linea) => (
             <a
               key={linea.telefono}
               href={`tel:${linea.telefono.replace(/\s/g, '')}`}
-              className="flex items-start gap-4 rounded-2xl border-[0.5px] border-ink/10 bg-white p-5 transition-colors hover:border-noema-clay/40"
+              className="flex items-start gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-noema-clay/40"
             >
               <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-clay/15">
                 <Phone className="size-5 text-noema-clay" strokeWidth={1.8} />
@@ -77,8 +153,9 @@ export default async function PacienteCrisisPage() {
         </div>
       </section>
 
+      {/* Contactos de confianza */}
       {contactos && contactos.length > 0 && (
-        <section className="mb-8">
+        <section>
           <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
             Tus contactos de confianza
           </h2>
@@ -87,42 +164,41 @@ export default async function PacienteCrisisPage() {
               <a
                 key={c.id}
                 href={`tel:${c.telefono.replace(/\s/g, '')}`}
-                className="flex items-start gap-4 rounded-2xl border-[0.5px] border-ink/10 bg-white p-5 transition-colors hover:border-noema-sage/40"
+                className="flex items-center gap-4 rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-noema-sage/40"
               >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-sage/15">
-                  <Phone className="size-5 text-noema-sage" strokeWidth={1.8} />
+                  <HeartHandshake className="size-5 text-noema-sage" strokeWidth={1.7} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-serif text-base text-ink">{c.nombre}</h3>
-                  <p className="mt-0.5 text-xs text-ink/60">{c.relacion}</p>
-                  <p className="mt-1 font-mono text-base text-ink/80">{c.telefono}</p>
+                  <p className="text-xs text-ink/60">{c.relacion}</p>
                 </div>
+                <span className="font-mono text-sm text-ink/70">{c.telefono}</span>
               </a>
             ))}
           </div>
         </section>
       )}
+    </div>
+  );
+}
 
-      <section className="rounded-2xl bg-noema-sage/10 p-6">
-        <div className="flex items-start gap-3">
-          <MessageCircle className="mt-0.5 size-5 shrink-0 text-noema-sage" strokeWidth={1.6} />
-          <div>
-            <h3 className="font-serif text-base text-ink">
-              Si prefieres escribir a tu terapeuta
-            </h3>
-            <p className="mt-1 text-sm text-ink/70">
-              Recuerda que la comunicación con tu terapeuta es asíncrona — puede
-              tardar en responder. Si el momento es urgente, usa una de las líneas de arriba.
-            </p>
-            <a
-              href="/paciente/mensajes"
-              className="mt-3 inline-flex items-center gap-2 rounded-md bg-noema-deep px-4 py-2 text-sm font-medium text-bone transition-colors hover:bg-noema-deep/90"
-            >
-              Abrir mensajes
-            </a>
-          </div>
-        </div>
-      </section>
+function OpcionDeshabilitada({
+  icon,
+  label,
+  nota,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  nota: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink/10 bg-ink/[0.02] p-5 text-center opacity-60">
+      <div className="flex size-11 items-center justify-center rounded-full bg-ink/5 text-ink/40">
+        {icon}
+      </div>
+      <span className="font-medium text-ink/50">{label}</span>
+      <span className="text-xs text-ink/40">{nota}</span>
     </div>
   );
 }

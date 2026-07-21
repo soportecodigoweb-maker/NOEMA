@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { LifeBuoy } from 'lucide-react';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { createClient } from '@/lib/supabase/server';
 
@@ -32,22 +34,23 @@ export default async function PacienteLayout({
     redirect('/signin?type=wrong-role');
   }
 
-  // Buscar terapeuta vinculado (si tiene) para mostrar nombre en nav
+  // Terapeuta vinculado (query separada — el FK apunta a terapeutas, no profiles)
   const { data: vinculacion } = await supabase
     .from('vinculaciones')
-    .select('terapeuta:profiles!vinculaciones_terapeuta_id_fkey(nombre)')
+    .select('terapeuta_id')
     .eq('paciente_id', user.id)
     .eq('estado', 'activa')
     .maybeSingle();
 
-  const terapeutaRaw = vinculacion?.terapeuta as
-    | { nombre?: string }
-    | { nombre?: string }[]
-    | null
-    | undefined;
-  const terapeutaNombre = Array.isArray(terapeutaRaw)
-    ? terapeutaRaw[0]?.nombre ?? null
-    : terapeutaRaw?.nombre ?? null;
+  let terapeutaNombre: string | null = null;
+  if (vinculacion?.terapeuta_id) {
+    const { data: t } = await supabase
+      .from('profiles')
+      .select('nombre')
+      .eq('id', vinculacion.terapeuta_id)
+      .maybeSingle();
+    terapeutaNombre = t?.nombre ?? null;
+  }
 
   return (
     <div className="flex min-h-screen bg-paper">
@@ -58,7 +61,17 @@ export default async function PacienteLayout({
           terapeutaNombre,
         }}
       />
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      <main className="flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
+
+      {/* Botón de crisis flotante — siempre visible (#10) */}
+      <Link
+        href="/paciente/crisis"
+        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-noema-clay px-5 py-3 text-sm font-medium text-white shadow-lg transition-transform hover:scale-105"
+        aria-label="Necesito apoyo ahora"
+      >
+        <LifeBuoy className="size-5" strokeWidth={1.9} />
+        <span className="hidden sm:inline">Necesito apoyo</span>
+      </Link>
     </div>
   );
 }
