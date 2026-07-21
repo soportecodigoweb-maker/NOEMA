@@ -25,31 +25,30 @@ export default async function PublicLayout({
             <Vesica size={26} color="currentColor" strokeWidth={1.5} />
             <span className="font-serif text-lg tracking-[0.34em]">NOEMA</span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-medium">
-            <Link href="/terapeutas" className="text-foreground-muted hover:text-ink">
-              Encuentra terapeuta
+          {user ? (
+            <Link
+              href="/inicio"
+              className="rounded-md bg-noema-sage px-4 py-2 text-sm font-medium text-bone transition-colors hover:bg-noema-deep"
+            >
+              Mi panel
             </Link>
-            {user ? (
+          ) : (
+            /* Dos accesos claros por rol (#1) */
+            <nav className="flex items-center gap-2 text-sm font-medium">
               <Link
-                href="/inicio"
-                className="px-4 py-2 rounded-md bg-noema-sage text-bone hover:bg-noema-deep transition-colors"
+                href="/signin?rol=paciente"
+                className="rounded-md border border-noema-deep/15 px-3 py-2 text-noema-deep transition-colors hover:bg-noema-deep/5"
               >
-                Mi panel
+                Acceso paciente
               </Link>
-            ) : (
-              <>
-                <Link href="/signin" className="text-foreground-muted hover:text-ink">
-                  Iniciar sesión
-                </Link>
-                <Link
-                  href="/signup"
-                  className="px-4 py-2 rounded-md bg-noema-sage text-bone hover:bg-noema-deep transition-colors"
-                >
-                  Soy terapeuta
-                </Link>
-              </>
-            )}
-          </nav>
+              <Link
+                href="/signin?rol=terapeuta"
+                className="rounded-md bg-noema-deep px-3 py-2 text-bone transition-colors hover:bg-noema-deep/90"
+              >
+                Acceso terapeuta
+              </Link>
+            </nav>
+          )}
         </div>
       </header>
 

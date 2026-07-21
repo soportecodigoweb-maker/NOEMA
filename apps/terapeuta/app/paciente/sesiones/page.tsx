@@ -137,7 +137,7 @@ function SesionCard({ sesion, destacar }: { sesion: Sesion; destacar?: boolean }
           <p
             className={`mt-1 text-sm ${destacar && esHoy ? 'text-bone/80' : 'text-ink/60'}`}
           >
-            {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+            {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })}
             {sesion.duracion_min && ` · ${sesion.duracion_min} min`}
           </p>
 

@@ -98,6 +98,19 @@ export async function eliminarMetaAction(id: string): Promise<{ ok: boolean }> {
   return { ok: true };
 }
 
+/** Vincula al paciente con un terapeuta usando el código de invitación (#3). */
+export async function redimirCodigoAction(codigo: string): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('redimir_codigo', { p_codigo: codigo });
+  if (error) return { ok: false, error: 'No se pudo vincular. Intenta de nuevo.' };
+  const res = data as unknown as { ok: boolean; error?: string };
+  if (res?.ok) {
+    revalidatePath('/paciente');
+    return { ok: true };
+  }
+  return { ok: false, error: res?.error ?? 'Código no válido.' };
+}
+
 /** Responde una tarea (con campos dinámicos). */
 export async function responderTareaAction(
   tareaId: string,

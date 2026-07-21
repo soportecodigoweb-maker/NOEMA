@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Calendar, MessageCircle, Smartphone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { VincularTerapeuta } from '@/components/paciente/VincularTerapeuta';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,22 +14,28 @@ export default async function PacienteInicioPage() {
 
   if (!user) redirect('/signin');
 
-  // Vinculación activa
+  // Vinculación activa (el FK terapeuta_id apunta a terapeutas, no a profiles,
+  // así que NO usamos embed — resolvemos el nombre por separado).
   const { data: vinculacion } = await supabase
     .from('vinculaciones')
-    .select(`
-      id,
-      terapeuta:profiles!vinculaciones_terapeuta_id_fkey(nombre)
-    `)
+    .select('id, terapeuta_id')
     .eq('paciente_id', user.id)
     .eq('estado', 'activa')
     .maybeSingle();
 
-  // Próxima sesión programada
+  // Nombre del terapeuta (query aparte)
+  let terapeutaNombre: string | null = null;
   let proximaSesion: { fecha_programada: string; modalidad: string | null } | null = null;
   let mensajesSinLeer = 0;
 
   if (vinculacion) {
+    const { data: terap } = await supabase
+      .from('profiles')
+      .select('nombre')
+      .eq('id', vinculacion.terapeuta_id)
+      .maybeSingle();
+    terapeutaNombre = terap?.nombre ?? null;
+
     const { data: sesion } = await supabase
       .from('sesiones')
       .select('fecha_programada, modalidad')
@@ -40,7 +47,6 @@ export default async function PacienteInicioPage() {
       .maybeSingle();
     proximaSesion = sesion;
 
-    // Mensajes del terapeuta sin leer
     const { count } = await supabase
       .from('mensajes')
       .select('*', { count: 'exact', head: true })
@@ -50,26 +56,20 @@ export default async function PacienteInicioPage() {
     mensajesSinLeer = count ?? 0;
   }
 
-  const terapeutaRaw = vinculacion?.terapeuta as
-    | { nombre?: string }
-    | { nombre?: string }[]
-    | null
-    | undefined;
-  const terapeutaNombre = Array.isArray(terapeutaRaw)
-    ? terapeutaRaw[0]?.nombre ?? null
-    : terapeutaRaw?.nombre ?? null;
-
   return (
     <div className="mx-auto max-w-3xl px-8 py-10">
-      <header className="mb-10">
+      <header className="mb-8">
         <p className="text-sm text-noema-sage/70">Hola,</p>
         <h1 className="mt-1 font-serif text-3xl text-ink">
           Tu proceso continúa acompañado.
         </h1>
+        {terapeutaNombre && (
+          <p className="mt-1 text-sm text-ink/60">Vinculada con {terapeutaNombre}</p>
+        )}
       </header>
 
       {!vinculacion ? (
-        <SinTerapeutaCard />
+        <VincularTerapeuta />
       ) : (
         <div className="space-y-4">
           <ProximaSesionCard sesion={proximaSesion} terapeuta={terapeutaNombre} />
@@ -145,7 +145,7 @@ function ProximaSesionCard({
             })}
           </h2>
           <p className={`mt-1 text-sm ${esHoy ? 'text-bone/80' : 'text-ink/60'}`}>
-            {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} ·{' '}
+            {fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Mexico_City' })} ·{' '}
             {sesion.modalidad === 'online' ? 'Videollamada' : 'Presencial'}
             {terapeuta && ` · con ${terapeuta}`}
           </p>
@@ -206,20 +206,3 @@ function MobileAppCard() {
   );
 }
 
-function SinTerapeutaCard() {
-  return (
-    <div className="rounded-2xl border-[0.5px] border-ink/10 bg-white p-8">
-      <h2 className="font-serif text-xl text-ink">Aún no estás vinculada con un terapeuta</h2>
-      <p className="mt-3 text-sm text-ink/70">
-        Cuando tu terapeuta te envíe un código de invitación, podrás usarlo desde
-        la app móvil para conectar tu cuenta con la de tu terapeuta.
-      </p>
-      <Link
-        href="/terapeutas"
-        className="mt-6 inline-flex items-center gap-2 rounded-md bg-noema-deep px-4 py-2.5 text-sm font-medium text-bone transition-colors hover:bg-noema-deep/90"
-      >
-        Explorar el directorio de terapeutas
-      </Link>
-    </div>
-  );
-}

@@ -10,7 +10,14 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Formato de fecha en español MX.
+ * Zona horaria de referencia — todo NOEMA opera en hora de Ciudad de México (#5).
+ * El servidor de Vercel corre en UTC, así que SIEMPRE pasamos timeZone en los
+ * formatos para que el paciente vea su hora local correcta.
+ */
+export const TZ_MX = 'America/Mexico_City';
+
+/**
+ * Formato de fecha en español MX (hora de Ciudad de México).
  */
 export function formatFecha(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -18,12 +25,24 @@ export function formatFecha(date: Date | string): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: TZ_MX,
   });
 }
 
 export function formatFechaCorta(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: TZ_MX });
+}
+
+/** Hora en formato 12h de CDMX. */
+export function formatHora(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: TZ_MX });
+}
+
+/** Fecha + hora de CDMX. */
+export function formatFechaHora(date: Date | string): string {
+  return `${formatFecha(date)} · ${formatHora(date)}`;
 }
 
 /**

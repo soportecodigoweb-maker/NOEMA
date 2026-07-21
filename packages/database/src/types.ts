@@ -2034,6 +2034,7 @@ export type Database = {
         Args: { p_terapeuta_id: string }
         Returns: undefined
       }
+      redimir_codigo: { Args: { p_codigo: string }; Returns: Json }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       soy_parte_de_sesion: { Args: { p_sesion_id: string }; Returns: boolean }

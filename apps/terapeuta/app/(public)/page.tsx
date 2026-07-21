@@ -41,17 +41,27 @@ export default async function LandingPage() {
             de una app.
           </p>
 
-          <div className="mt-12 flex flex-wrap gap-3">
-            <Link href="/terapeutas">
-              <Button variant="inverse" size="lg">
-                Encuentra un terapeuta
+          {/* Accesos claros por rol (#1) */}
+          <div className="mt-12 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link href="/signin?rol=paciente">
+              <Button variant="inverse" size="lg" className="w-full sm:w-auto">
+                Entrar como paciente
                 <ArrowRight className="size-4" strokeWidth={1.8} />
               </Button>
             </Link>
-            <Link href="/signup">
-              <Button variant="ghost" size="lg" className="text-bone hover:bg-bone/10">
-                Soy terapeuta
+            <Link href="/signin?rol=terapeuta">
+              <Button variant="inverse" size="lg" className="w-full sm:w-auto">
+                Entrar como terapeuta
+                <ArrowRight className="size-4" strokeWidth={1.8} />
               </Button>
+            </Link>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-4 text-sm text-bone/70">
+            <Link href="/terapeutas" className="underline underline-offset-4 hover:text-bone">
+              Explorar el directorio de terapeutas
+            </Link>
+            <Link href="/signup" className="underline underline-offset-4 hover:text-bone">
+              Soy terapeuta y quiero registrarme
             </Link>
           </div>
         </div>
