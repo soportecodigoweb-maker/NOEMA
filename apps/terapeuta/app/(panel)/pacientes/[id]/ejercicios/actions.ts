@@ -17,10 +17,11 @@ export async function asignarPlantillaAction(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Sin sesión' };
 
-  // Tomar datos de la plantilla
+  // Tomar datos de la plantilla (incluidos los campos de respuesta, para que
+  // el paciente conteste cada pregunta dentro de la misma tarea — punto #8).
   const { data: plantilla } = await supabase
     .from('plantillas_ejercicios')
-    .select('titulo, descripcion, contenido_md, categoria')
+    .select('titulo, descripcion, contenido_md, categoria, campos_respuesta')
     .eq('id', plantillaId)
     .single();
 
@@ -34,6 +35,7 @@ export async function asignarPlantillaAction(
     titulo: plantilla.titulo,
     descripcion: plantilla.descripcion,
     contenido_md: plantilla.contenido_md,
+    campos_respuesta: plantilla.campos_respuesta ?? [],
     fecha_limite: fechaLimite || null,
     comentarios_terapeuta: mensaje || null,
     estado: 'pendiente',

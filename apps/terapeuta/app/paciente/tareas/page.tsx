@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ResponderTarea } from '@/components/paciente/ResponderTarea';
+import { HojaMembretada } from '@/components/ui/HojaMembretada';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tareas' };
@@ -55,42 +56,37 @@ export default async function TareasPacientePage() {
           No tienes tareas asignadas por ahora.
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-6 space-y-6">
           {tareas.map((t) => {
             const est = ESTADO_LABEL[t.estado] ?? { label: t.estado, color: 'bg-ink/10 text-ink/50' };
             const feedback = (t.respuestas ?? [])
               .filter((r) => r.retroalimentacion)
               .sort((a, b) => (b.retroalimentacion_at ?? '').localeCompare(a.retroalimentacion_at ?? ''))[0];
             const campos = Array.isArray(t.campos_respuesta) ? (t.campos_respuesta as unknown[]) : [];
+            const etiqueta = t.fecha_limite
+              ? `${est.label} · hasta ${new Date(t.fecha_limite).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
+              : est.label;
             return (
-              <li key={t.id} className="rounded-2xl border border-ink/10 bg-white p-5">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className={`rounded px-2 py-0.5 text-[11px] font-medium ${est.color}`}>{est.label}</span>
-                  {t.fecha_limite && (
-                    <span className="text-xs text-rose-600">
-                      Hasta {new Date(t.fecha_limite).toLocaleDateString('es-MX')}
-                    </span>
+              <li key={t.id}>
+                <HojaMembretada titulo={t.titulo} subtitulo={t.descripcion} etiqueta={etiqueta}>
+                  {t.contenido_md && (
+                    <div className="whitespace-pre-wrap font-sans text-[0.95rem] leading-relaxed text-ink/85">
+                      {t.contenido_md}
+                    </div>
                   )}
-                </div>
-                <h3 className="font-serif text-lg text-ink">{t.titulo}</h3>
-                {t.descripcion && <p className="mt-1 text-sm text-ink/70">{t.descripcion}</p>}
-                {t.contenido_md && (
-                  <div className="mt-2 rounded-lg bg-paper/50 p-3 text-sm text-ink/70 whitespace-pre-wrap">
-                    {t.contenido_md}
-                  </div>
-                )}
 
-                {feedback?.retroalimentacion && (
-                  <div className="mt-3 rounded-lg bg-noema-sage/10 p-3 text-sm">
-                    <p className="text-[11px] uppercase tracking-wider text-noema-deep/60">
-                      Tu terapeuta comentó
-                    </p>
-                    <p className="text-ink/80">{feedback.retroalimentacion}</p>
-                  </div>
-                )}
+                  {feedback?.retroalimentacion && (
+                    <div className="mt-4 rounded-lg bg-noema-sage/10 p-3 text-sm">
+                      <p className="text-[11px] uppercase tracking-wider text-noema-deep/60">
+                        Tu terapeuta comentó
+                      </p>
+                      <p className="text-ink/80">{feedback.retroalimentacion}</p>
+                    </div>
+                  )}
 
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <ResponderTarea tareaId={t.id} campos={campos as any} />
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  <ResponderTarea tareaId={t.id} campos={campos as any} />
+                </HojaMembretada>
               </li>
             );
           })}

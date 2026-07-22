@@ -12,12 +12,13 @@ export default async function PacienteMensajesPage() {
 
   if (!user) redirect('/signin');
 
+  // El FK vinculaciones.terapeuta_id apunta a terapeutas(profile_id), no a
+  // profiles, así que el embed `profiles!vinculaciones_terapeuta_id_fkey` no
+  // resuelve en PostgREST (devuelve error → vinculacion null → "sin terapeuta").
+  // Como terapeuta_id === profiles.id, resolvemos el perfil en una 2ª consulta.
   const { data: vinculacion } = await supabase
     .from('vinculaciones')
-    .select(`
-      id,
-      terapeuta:profiles!vinculaciones_terapeuta_id_fkey(id, nombre, avatar_url)
-    `)
+    .select('id, terapeuta_id')
     .eq('paciente_id', user.id)
     .eq('estado', 'activa')
     .maybeSingle();
@@ -48,11 +49,11 @@ export default async function PacienteMensajesPage() {
     .neq('autor_id', user.id)
     .is('leido_at', null);
 
-  const terapeutaRaw = vinculacion.terapeuta as
-    | { id: string; nombre: string; avatar_url: string | null }
-    | { id: string; nombre: string; avatar_url: string | null }[]
-    | null;
-  const terapeuta = Array.isArray(terapeutaRaw) ? terapeutaRaw[0] ?? null : terapeutaRaw;
+  const { data: terapeuta } = await supabase
+    .from('profiles')
+    .select('nombre')
+    .eq('id', vinculacion.terapeuta_id)
+    .maybeSingle();
 
   return (
     <MensajesThread
