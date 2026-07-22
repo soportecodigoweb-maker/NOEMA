@@ -43,7 +43,7 @@ export function VincularTerapeuta() {
               className="mt-5 inline-flex items-center gap-2 rounded-md bg-noema-deep px-4 py-2.5 text-sm font-medium text-bone transition-colors hover:bg-noema-deep/90"
             >
               <KeyRound className="size-4" strokeWidth={1.8} />
-              Vincularme con mi terapeuta
+              Colocar código para vincularme con mi terapeuta
             </button>
           ) : (
             <div className="mt-5 space-y-3">

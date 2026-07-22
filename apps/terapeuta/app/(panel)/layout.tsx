@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { AlertasCrisisEnVivo } from '@/components/crisis/AlertasCrisisEnVivo';
+import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -74,6 +75,9 @@ export default async function PanelLayout({
 
       {/* Alertas de crisis en vivo (#4) — visibles en cualquier pantalla */}
       <AlertasCrisisEnVivo />
+
+      {/* Registros emocionales llegando en vivo (#6) */}
+      <RegistrosEnVivo />
     </div>
   );
 }
