@@ -2,9 +2,8 @@ import Link from 'next/link';
 import { ChevronLeft, User } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@/components/ui/Card';
-import { Composer } from './Composer';
 import { MarkAsRead } from './MarkAsRead';
+import { HiloTerapeuta } from './HiloTerapeuta';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +15,6 @@ interface Mensaje {
   id: string;
   contenido: string;
   autor_id: string;
-  es_sistema: boolean;
   creado_at: string;
   leido_at: string | null;
 }
@@ -45,80 +43,45 @@ export default async function ThreadPage({ params }: PageProps) {
 
   const { data: mensajes } = await supabase
     .from('mensajes')
-    .select('id, contenido, autor_id, es_sistema, creado_at, leido_at')
+    .select('id, contenido, autor_id, creado_at, leido_at')
     .eq('vinculacion_id', vinculacionId)
     .order('creado_at', { ascending: true });
+
+  // Mensajes rápidos: los de este paciente + los generales del terapeuta (#7)
+  const { data: rapidos } = await supabase
+    .from('mensajes_rapidos')
+    .select('id, texto, vinculacion_id')
+    .eq('terapeuta_id', user.id)
+    .or(`vinculacion_id.eq.${vinculacionId},vinculacion_id.is.null`)
+    .order('orden', { ascending: true });
 
   const lista = (mensajes as Mensaje[] | null) ?? [];
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-screen flex-col">
       {/* Header */}
-      <div className="px-8 py-5 border-b border-noema-deep/[0.06] flex items-center gap-4">
-        <Link
-          href="/mensajes"
-          className="text-foreground-muted hover:text-ink"
-        >
+      <div className="flex items-center gap-4 border-b border-noema-deep/[0.06] px-5 py-5 sm:px-8">
+        <Link href="/mensajes" className="text-foreground-muted hover:text-ink">
           <ChevronLeft className="size-5" strokeWidth={1.6} />
         </Link>
-        <div className="size-10 rounded-full bg-noema-sage/15 flex items-center justify-center text-noema-deep/70 text-sm font-medium">
+        <div className="flex size-10 items-center justify-center rounded-full bg-noema-sage/15 text-sm font-medium text-noema-deep/70">
           {paciente ? initials(paciente.nombre) : <User className="size-4" />}
         </div>
         <div>
           <p className="font-medium text-ink">{paciente?.nombre ?? 'Paciente'}</p>
-          <p className="text-xs text-foreground-muted">Conversación asíncrona</p>
+          <p className="text-xs text-foreground-muted">Conversación en tiempo real</p>
         </div>
       </div>
 
       {/* Auto-marca como leídos al entrar */}
       <MarkAsRead vinculacionId={vinculacionId} />
 
-      {/* Mensajes */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 max-w-3xl mx-auto w-full">
-        {lista.length === 0 ? (
-          <Card variant="flat" className="text-center py-12">
-            <p className="text-foreground-muted">Aún no hay mensajes. Escribe el primero.</p>
-          </Card>
-        ) : (
-          <ul className="space-y-3">
-            {lista.map((m) => {
-              const mio = m.autor_id === user.id;
-              return (
-                <li key={m.id} className={mio ? 'flex justify-end' : 'flex justify-start'}>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                      mio
-                        ? 'bg-noema-sage text-bone rounded-br-sm'
-                        : 'bg-bone text-ink rounded-bl-sm border border-noema-deep/[0.06]'
-                    }`}
-                  >
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                      {m.contenido}
-                    </p>
-                    <p
-                      className={`text-[10px] mt-1 ${
-                        mio ? 'text-bone/60' : 'text-foreground-muted'
-                      }`}
-                    >
-                      {new Date(m.creado_at).toLocaleTimeString('es-MX', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-
-      {/* Composer */}
-      <div className="border-t border-noema-deep/[0.06] p-4 bg-paper">
-        <div className="max-w-3xl mx-auto">
-          <Composer vinculacionId={vinculacionId} />
-        </div>
-      </div>
+      <HiloTerapeuta
+        vinculacionId={vinculacionId}
+        userId={user.id}
+        mensajesIniciales={lista}
+        rapidos={rapidos ?? []}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/nav/Sidebar';
+import { AlertasCrisisEnVivo } from '@/components/crisis/AlertasCrisisEnVivo';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -70,6 +71,9 @@ export default async function PanelLayout({
         }}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
+
+      {/* Alertas de crisis en vivo (#4) — visibles en cualquier pantalla */}
+      <AlertasCrisisEnVivo />
     </div>
   );
 }

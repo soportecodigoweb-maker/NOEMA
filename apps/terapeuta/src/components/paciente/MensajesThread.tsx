@@ -39,6 +39,34 @@ export function MensajesThread({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [mensajes.length]);
 
+  // Tiempo real: escucha mensajes nuevos de esta conversación (los del
+  // terapeuta llegan al instante, sin recargar).
+  useEffect(() => {
+    const canal = supabase
+      .channel(`mensajes:${vinculacionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'mensajes',
+          filter: `vinculacion_id=eq.${vinculacionId}`,
+        },
+        (payload) => {
+          const nuevo = payload.new as Mensaje;
+          setMensajes((prev) =>
+            prev.some((m) => m.id === nuevo.id) ? prev : [...prev, nuevo],
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vinculacionId]);
+
   const enviar = () => {
     const contenido = texto.trim();
     if (!contenido) return;

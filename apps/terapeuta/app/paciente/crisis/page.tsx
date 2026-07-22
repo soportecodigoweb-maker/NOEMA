@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { Phone, MessageCircle, Video, LifeBuoy, HeartHandshake } from 'lucide-react';
+import { Phone, LifeBuoy, HeartHandshake } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { ContactoCrisis } from '@/components/paciente/ContactoCrisis';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export default async function PacienteCrisisPage() {
   // Vinculación activa con datos de contacto de crisis del terapeuta
   const { data: vinc } = await supabase
     .from('vinculaciones')
-    .select('id, terapeuta_id, telefono_terapeuta, video_crisis_url')
+    .select('id, terapeuta_id, telefono_terapeuta, video_crisis_url, sos_habilitado')
     .eq('paciente_id', user.id)
     .eq('estado', 'activa')
     .maybeSingle();
@@ -69,61 +69,14 @@ export default async function PacienteCrisisPage() {
         </div>
       </header>
 
-      {/* Contacto con el terapeuta (#10) */}
+      {/* Contacto con el terapeuta (#10) + aviso inmediato (#4) */}
       {vinc && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
-            Contactar a {terapeutaNombre ?? 'mi terapeuta'}
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Link
-              href="/paciente/mensajes"
-              className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-sage"
-            >
-              <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
-                <MessageCircle className="size-5 text-noema-sage" strokeWidth={1.7} />
-              </div>
-              <span className="font-medium text-ink">Mensaje</span>
-              <span className="text-xs text-ink/50">Escríbele ahora</span>
-            </Link>
-
-            {vinc.telefono_terapeuta ? (
-              <a
-                href={`tel:${vinc.telefono_terapeuta.replace(/\s/g, '')}`}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-clay"
-              >
-                <div className="flex size-11 items-center justify-center rounded-full bg-noema-clay/15">
-                  <Phone className="size-5 text-noema-clay" strokeWidth={1.7} />
-                </div>
-                <span className="font-medium text-ink">Llamar</span>
-                <span className="text-xs text-ink/50">{vinc.telefono_terapeuta}</span>
-              </a>
-            ) : (
-              <OpcionDeshabilitada icon={<Phone className="size-5" strokeWidth={1.7} />} label="Llamar" nota="No configurado" />
-            )}
-
-            {vinc.video_crisis_url ? (
-              <a
-                href={vinc.video_crisis_url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-sage"
-              >
-                <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
-                  <Video className="size-5 text-noema-sage" strokeWidth={1.7} />
-                </div>
-                <span className="font-medium text-ink">Videollamada</span>
-                <span className="text-xs text-ink/50">Entrar ahora</span>
-              </a>
-            ) : (
-              <OpcionDeshabilitada icon={<Video className="size-5" strokeWidth={1.7} />} label="Videollamada" nota="No configurado" />
-            )}
-          </div>
-          <p className="mt-3 text-xs text-ink/50">
-            Recuerda: la comunicación con tu terapeuta puede no ser inmediata. Si
-            es una emergencia, usa las líneas de abajo.
-          </p>
-        </section>
+        <ContactoCrisis
+          terapeutaNombre={terapeutaNombre ?? 'mi terapeuta'}
+          telefonoTerapeuta={vinc.telefono_terapeuta}
+          videoCrisisUrl={vinc.video_crisis_url}
+          sosHabilitado={vinc.sos_habilitado !== false}
+        />
       )}
 
       {/* Líneas de emergencia */}
@@ -179,26 +132,6 @@ export default async function PacienteCrisisPage() {
           </div>
         </section>
       )}
-    </div>
-  );
-}
-
-function OpcionDeshabilitada({
-  icon,
-  label,
-  nota,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  nota: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-ink/10 bg-ink/[0.02] p-5 text-center opacity-60">
-      <div className="flex size-11 items-center justify-center rounded-full bg-ink/5 text-ink/40">
-        {icon}
-      </div>
-      <span className="font-medium text-ink/50">{label}</span>
-      <span className="text-xs text-ink/40">{nota}</span>
     </div>
   );
 }

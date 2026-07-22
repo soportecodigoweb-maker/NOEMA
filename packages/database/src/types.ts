@@ -800,6 +800,48 @@ export type Database = {
           },
         ]
       }
+      mensajes_rapidos: {
+        Row: {
+          creado_at: string
+          id: string
+          orden: number
+          terapeuta_id: string
+          texto: string
+          vinculacion_id: string | null
+        }
+        Insert: {
+          creado_at?: string
+          id?: string
+          orden?: number
+          terapeuta_id: string
+          texto: string
+          vinculacion_id?: string | null
+        }
+        Update: {
+          creado_at?: string
+          id?: string
+          orden?: number
+          terapeuta_id?: string
+          texto?: string
+          vinculacion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensajes_rapidos_terapeuta_id_fkey"
+            columns: ["terapeuta_id"]
+            isOneToOne: false
+            referencedRelation: "terapeutas"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "mensajes_rapidos_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           actualizado_at: string
