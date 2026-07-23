@@ -3,5 +3,6 @@
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter terapeuta build",
-  "outputDirectory": "apps/terapeuta/.next"
+  "outputDirectory": "apps/terapeuta/.next",
+  "regions": ["pdx1"]
 }

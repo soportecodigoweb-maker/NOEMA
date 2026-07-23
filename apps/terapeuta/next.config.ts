@@ -1,8 +1,6 @@
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
-  // Build standalone (~100MB en lugar de todo node_modules) — para Docker
-  output: 'standalone',
   reactStrictMode: true,
   // Packages del monorepo que Next debe transpilar
   transpilePackages: [

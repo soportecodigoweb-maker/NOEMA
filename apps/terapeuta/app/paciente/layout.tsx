@@ -20,11 +20,25 @@ export default async function PacienteLayout({
     redirect('/signin');
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, nombre, avatar_url, rol')
-    .eq('id', user.id)
-    .single();
+  // Profile, aviso y vinculación dependen solo de user.id → en paralelo.
+  const [{ data: profile }, { data: aviso }, { data: vinculacion }] = await Promise.all([
+    supabase.from('profiles').select('id, nombre, avatar_url, rol').eq('id', user.id).single(),
+    supabase
+      .from('consentimientos')
+      .select('id')
+      .eq('profile_id', user.id)
+      .eq('tipo', 'aviso_privacidad')
+      .eq('version', VERSION_AVISO_PACIENTE)
+      .eq('aceptado', true)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('vinculaciones')
+      .select('terapeuta_id')
+      .eq('paciente_id', user.id)
+      .eq('estado', 'activa')
+      .maybeSingle(),
+  ]);
 
   if (!profile) {
     redirect('/signin');
@@ -36,27 +50,12 @@ export default async function PacienteLayout({
   }
 
   // Aviso de privacidad al entrar (#8): el paciente debe aceptar la versión vigente.
-  const { data: aviso } = await supabase
-    .from('consentimientos')
-    .select('id')
-    .eq('profile_id', user.id)
-    .eq('tipo', 'aviso_privacidad')
-    .eq('version', VERSION_AVISO_PACIENTE)
-    .eq('aceptado', true)
-    .limit(1)
-    .maybeSingle();
-
   if (!aviso) {
     redirect('/aviso-paciente');
   }
 
-  // Terapeuta vinculado (query separada — el FK apunta a terapeutas, no profiles)
-  const { data: vinculacion } = await supabase
-    .from('vinculaciones')
-    .select('terapeuta_id')
-    .eq('paciente_id', user.id)
-    .eq('estado', 'activa')
-    .maybeSingle();
+  // Nombre del terapeuta vinculado (query separada — el FK apunta a terapeutas,
+  // no a profiles, así que no se puede usar embed).
 
   let terapeutaNombre: string | null = null;
   if (vinculacion?.terapeuta_id) {
