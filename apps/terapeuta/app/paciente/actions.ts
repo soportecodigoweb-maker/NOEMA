@@ -135,7 +135,14 @@ export async function responderTareaAction(
   });
   if (error) return { ok: false };
 
-  await supabase.from('tareas').update({ estado: 'en_progreso' }).eq('id', tareaId).eq('estado', 'pendiente');
+  // Al enviar el formulario la tarea queda COMPLETADA (antes se quedaba en
+  // 'en_progreso' para siempre y el terapeuta nunca la veía terminada).
+  await supabase
+    .from('tareas')
+    .update({ estado: 'completada' })
+    .eq('id', tareaId)
+    .in('estado', ['pendiente', 'en_progreso']);
+
   revalidatePath('/paciente/tareas');
   return { ok: true };
 }

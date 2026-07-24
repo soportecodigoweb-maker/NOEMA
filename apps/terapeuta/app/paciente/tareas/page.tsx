@@ -41,7 +41,10 @@ export default async function TareasPacientePage() {
     .from('tareas')
     .select(`
       id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta,
-      respuestas:tarea_respuestas(id, retroalimentacion, retroalimentacion_at)
+      respuestas:tarea_respuestas(
+        id, retroalimentacion, retroalimentacion_at,
+        respuestas, texto_libre, dificultad_percibida, creado_at
+      )
     `)
     .eq('vinculacion_id', vinc.id)
     .order('creado_at', { ascending: false });
@@ -63,6 +66,10 @@ export default async function TareasPacientePage() {
               .filter((r) => r.retroalimentacion)
               .sort((a, b) => (b.retroalimentacion_at ?? '').localeCompare(a.retroalimentacion_at ?? ''))[0];
             const campos = Array.isArray(t.campos_respuesta) ? (t.campos_respuesta as unknown[]) : [];
+            // Respuesta más reciente del paciente (si ya la envió).
+            const previa = (t.respuestas ?? [])
+              .filter((r) => r.creado_at)
+              .sort((a, b) => (b.creado_at ?? '').localeCompare(a.creado_at ?? ''))[0];
             const etiqueta = t.fecha_limite
               ? `${est.label} · hasta ${new Date(t.fecha_limite).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
               : est.label;
@@ -84,8 +91,22 @@ export default async function TareasPacientePage() {
                     </div>
                   )}
 
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  <ResponderTarea tareaId={t.id} campos={campos as any} />
+                  <ResponderTarea
+                    tareaId={t.id}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    campos={campos as any}
+                    respuestaPrevia={
+                      previa
+                        ? {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            respuestas: (previa.respuestas ?? null) as any,
+                            texto_libre: previa.texto_libre,
+                            dificultad_percibida: previa.dificultad_percibida,
+                            creado_at: previa.creado_at,
+                          }
+                        : null
+                    }
+                  />
                 </HojaMembretada>
               </li>
             );

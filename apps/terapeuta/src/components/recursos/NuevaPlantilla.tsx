@@ -1,20 +1,18 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, X, Trash2, FolderHeart, FolderLock } from 'lucide-react';
+import { Plus, X, FolderHeart, FolderLock } from 'lucide-react';
 import { crearPlantillaAction } from '../../../app/(panel)/recursos/actions';
-
-type TipoCampo = 'text' | 'scale' | 'choice';
-interface Pregunta {
-  label: string;
-  type: TipoCampo;
-  options: string;
-}
+import {
+  EditorPreguntas,
+  aCamposGuardados,
+  type PreguntaBorrador,
+} from './EditorPreguntas';
 
 export function NuevaPlantilla() {
   const [open, setOpen] = useState(false);
   const [destino, setDestino] = useState<'paciente' | 'terapeuta'>('paciente');
-  const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
+  const [preguntas, setPreguntas] = useState<PreguntaBorrador[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -24,27 +22,10 @@ export function NuevaPlantilla() {
     setError(null);
   };
 
-  const addPregunta = () =>
-    setPreguntas((p) => [...p, { label: '', type: 'text', options: '' }]);
-  const setPregunta = (i: number, patch: Partial<Pregunta>) =>
-    setPreguntas((p) => p.map((q, idx) => (idx === i ? { ...q, ...patch } : q)));
-  const delPregunta = (i: number) =>
-    setPreguntas((p) => p.filter((_, idx) => idx !== i));
-
   const onSubmit = (formData: FormData) => {
     setError(null);
-    // Serializar preguntas a JSON para la action.
-    const campos = preguntas
-      .filter((q) => q.label.trim())
-      .map((q) => ({
-        label: q.label.trim(),
-        type: q.type,
-        ...(q.type === 'choice'
-          ? { options: q.options.split(',').map((o) => o.trim()).filter(Boolean) }
-          : {}),
-      }));
     formData.set('destino', destino);
-    formData.set('campos', JSON.stringify(campos));
+    formData.set('campos', JSON.stringify(aCamposGuardados(preguntas)));
     startTransition(async () => {
       const res = await crearPlantillaAction(formData);
       // Si tiene éxito, la action redirige; si falla, muestra error.
@@ -153,68 +134,7 @@ export function NuevaPlantilla() {
 
               {/* Preguntas para el paciente (solo recursos de paciente) */}
               {destino === 'paciente' && (
-                <div className="rounded-xl border border-noema-deep/10 bg-bone/40 p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-sm font-medium text-ink">Preguntas para el paciente</p>
-                    <button
-                      type="button"
-                      onClick={addPregunta}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-noema-sage hover:underline"
-                    >
-                      <Plus className="size-3.5" strokeWidth={2} />
-                      Añadir pregunta
-                    </button>
-                  </div>
-                  {preguntas.length === 0 ? (
-                    <p className="text-xs text-foreground-muted">
-                      Sin preguntas, el paciente solo tendrá un espacio libre. Añade
-                      preguntas para que responda cada una dentro de la tarea.
-                    </p>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {preguntas.map((q, i) => (
-                        <div key={i} className="rounded-lg border border-noema-deep/10 bg-white p-2.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-serif text-sm text-noema-sage">{i + 1}.</span>
-                            <input
-                              value={q.label}
-                              onChange={(e) => setPregunta(i, { label: e.target.value })}
-                              placeholder="Escribe la pregunta o indicación"
-                              className="flex-1 rounded-md border border-noema-deep/15 bg-bone px-2.5 py-1.5 text-sm focus:border-noema-sage focus:outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => delPregunta(i)}
-                              aria-label="Quitar"
-                              className="text-foreground-muted hover:text-noema-clay"
-                            >
-                              <Trash2 className="size-4" />
-                            </button>
-                          </div>
-                          <div className="mt-2 flex items-center gap-2 pl-6">
-                            <select
-                              value={q.type}
-                              onChange={(e) => setPregunta(i, { type: e.target.value as TipoCampo })}
-                              className="rounded-md border border-noema-deep/15 bg-white px-2 py-1 text-xs text-ink/80 focus:border-noema-sage focus:outline-none"
-                            >
-                              <option value="text">Texto libre</option>
-                              <option value="scale">Escala 1–5</option>
-                              <option value="choice">Opción múltiple</option>
-                            </select>
-                            {q.type === 'choice' && (
-                              <input
-                                value={q.options}
-                                onChange={(e) => setPregunta(i, { options: e.target.value })}
-                                placeholder="Opciones separadas por coma"
-                                className="flex-1 rounded-md border border-noema-deep/15 bg-bone px-2.5 py-1 text-xs focus:border-noema-sage focus:outline-none"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <EditorPreguntas preguntas={preguntas} onChange={setPreguntas} />
               )}
 
               {error && <p className="text-sm text-red-600">{error}</p>}
