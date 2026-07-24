@@ -1,35 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, X, Loader2 } from 'lucide-react';
+import {
+  Sparkles,
+  X,
+  Loader2,
+  Activity,
+  Bookmark,
+  ClipboardCheck,
+  BookOpen,
+  TrendingUp,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { generarResumenAction } from './resumen-actions';
-
-interface ResumenResult {
-  ok: boolean;
-  resumen_md?: string;
-  meta?: {
-    registros: number;
-    diario: number;
-    dias: number;
-  };
-  error?: string;
-}
+import { Sparkline, Dona, Anillo, Tendencia } from '@/components/charts/Charts';
+import { formatFecha } from '@/lib/utils';
+import { generarResumenAction, type ResumenData } from './resumen-actions';
 
 export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ResumenResult | null>(null);
+  const [data, setData] = useState<ResumenData | null>(null);
 
   const generar = async () => {
     setLoading(true);
-    setResult(null);
+    setData(null);
     try {
-      const data = await generarResumenAction(vinculacionId, 14);
-      setResult(data);
+      setData(await generarResumenAction(vinculacionId, 14));
     } catch {
-      setResult({ ok: false, error: 'No se pudo generar el resumen.' });
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -46,15 +44,16 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
         }}
       >
         <Sparkles className="size-4" strokeWidth={1.8} />
-        Generar resumen pre-sesión
+        Resumen pre-sesión
       </Button>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-noema-deep/40 flex items-center justify-center p-4">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-noema-deep/50 p-4">
+      <div className="my-6 w-full max-w-3xl rounded-2xl bg-white shadow-xl">
+        {/* Cabecera */}
+        <div className="flex items-center justify-between border-b border-noema-deep/[0.06] px-6 py-4">
           <div className="flex items-center gap-2">
             <Sparkles className="size-5 text-noema-sage" strokeWidth={1.8} />
             <h2 className="font-serif text-2xl text-ink">Resumen pre-sesión</h2>
@@ -62,7 +61,7 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
           <button
             onClick={() => {
               setOpen(false);
-              setResult(null);
+              setData(null);
             }}
             className="text-foreground-muted hover:text-ink"
           >
@@ -70,113 +69,242 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
           </button>
         </div>
 
-        {loading && (
-          <div className="py-16 text-center space-y-3">
-            <Loader2 className="size-8 animate-spin text-noema-sage mx-auto" />
-            <p className="text-sm text-foreground-muted">
-              Analizando lo que tu paciente compartió…
-            </p>
-          </div>
-        )}
-
-        {result && !result.ok && (
-          <div className="py-8 text-center space-y-3">
-            <p className="text-[#B85450]">{result.error}</p>
-            <Button variant="secondary" size="sm" onClick={generar}>
-              Intentar de nuevo
-            </Button>
-          </div>
-        )}
-
-        {result?.ok && result.resumen_md && (
-          <>
-            {result.meta && (
-              <p className="caption mb-4">
-                Basado en {result.meta.registros} registros y {result.meta.diario} entradas de diario
-                · últimos {result.meta.dias} días
+        <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
+          {loading && (
+            <div className="space-y-3 py-16 text-center">
+              <Loader2 className="mx-auto size-8 animate-spin text-noema-sage" />
+              <p className="text-sm text-foreground-muted">
+                Analizando lo que {`${vinculacionId ? 'tu paciente' : ''}`} compartió…
               </p>
-            )}
-            <article className="prose-noema text-ink space-y-4">
-              {renderMarkdown(result.resumen_md)}
-            </article>
-            <div className="mt-6 pt-4 border-t border-noema-deep/[0.06] text-xs text-foreground-muted italic">
-              Generado a partir de los datos que tu paciente compartió (registros,
-              diario marcado para sesión y tareas). Información operativa, no diagnóstica.
             </div>
-          </>
-        )}
-      </Card>
+          )}
+
+          {data && !data.ok && (
+            <div className="space-y-3 py-8 text-center">
+              <p className="text-noema-clay">{data.error ?? 'No se pudo generar el resumen.'}</p>
+              <Button variant="secondary" size="sm" onClick={generar}>
+                Intentar de nuevo
+              </Button>
+            </div>
+          )}
+
+          {data?.ok && <Contenido data={data} />}
+        </div>
+      </div>
     </div>
   );
 }
 
-/**
- * Render minimalista de markdown (headers + bullets + blockquote + bold).
- * No usamos react-markdown para mantener el bundle pequeño.
- */
-function renderMarkdown(md: string): React.ReactNode {
-  const lines = md.split('\n');
-  return lines.map((line, i) => {
-    if (line.startsWith('# ')) {
-      return (
-        <h2 key={i} className="font-serif text-2xl text-ink mt-2">
-          {line.slice(2)}
-        </h2>
-      );
-    }
-    if (line.startsWith('## ')) {
-      return (
-        <h3 key={i} className="font-sans font-semibold text-ink mt-6">
-          {line.slice(3)}
-        </h3>
-      );
-    }
-    if (line.startsWith('### ')) {
-      return (
-        <h4 key={i} className="font-sans font-medium text-ink mt-4">
-          {inlineMd(line.slice(4))}
-        </h4>
-      );
-    }
-    if (line.startsWith('> ')) {
-      return (
-        <blockquote
-          key={i}
-          className="border-l-2 border-noema-sage/40 pl-3 italic text-ink/80 font-serif"
-        >
-          {line.slice(2)}
-        </blockquote>
-      );
-    }
-    if (line.startsWith('- ')) {
-      return (
-        <li key={i} className="ml-5 list-disc text-sm text-ink/90">
-          {inlineMd(line.slice(2))}
-        </li>
-      );
-    }
-    if (line.startsWith('---')) {
-      return <hr key={i} className="border-noema-deep/[0.08] my-4" />;
-    }
-    if (line.trim() === '') return null;
+function Contenido({ data }: { data: ResumenData }) {
+  const m = data.metricas;
+  const sinDatos = m.registros === 0 && m.diario === 0 && m.tareasTotal === 0;
+
+  if (sinDatos) {
     return (
-      <p key={i} className="text-sm text-ink/90 leading-relaxed">
-        {inlineMd(line)}
+      <p className="py-10 text-center text-sm text-foreground-muted">
+        {data.nombre} no ha compartido registros ni marcado contenido para esta sesión en los
+        últimos {data.dias} días.
       </p>
     );
-  });
+  }
+
+  return (
+    <div className="space-y-6">
+      <p className="caption">
+        {data.nombre} · últimos {data.dias} días
+      </p>
+
+      {/* Métricas */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Metrica
+          icono={<Activity className="size-4" />}
+          valor={String(m.registros)}
+          label="Registros"
+        />
+        <Metrica
+          icono={<TrendingUp className="size-4" />}
+          valor={m.intensidadProm !== null ? `${m.intensidadProm}/5` : '—'}
+          label="Intensidad media"
+          extra={<Tendencia delta={m.deltaIntensidad} />}
+        />
+        <Metrica
+          icono={<Bookmark className="size-4" />}
+          valor={String(m.marcados)}
+          label="Marcados p/ sesión"
+        />
+        <Metrica
+          icono={<ClipboardCheck className="size-4" />}
+          valor={m.adherenciaPct !== null ? `${m.adherenciaPct}%` : '—'}
+          label={`Adherencia (${m.tareasCompletadas}/${m.tareasTotal})`}
+        />
+      </div>
+
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-noema-deep/10 bg-white p-4 sm:col-span-2">
+          <p className="caption mb-2">Intensidad emocional en el tiempo</p>
+          {data.serie.some((s) => s.intensidad > 0) ? (
+            <Sparkline
+              data={data.serie.map((s) => s.intensidad)}
+              width={440}
+              height={70}
+              color="#3D4D3E"
+              strokeWidth={2}
+            />
+          ) : (
+            <p className="py-6 text-center text-xs text-foreground-muted">Sin registros con intensidad.</p>
+          )}
+        </div>
+        <div className="rounded-xl border border-noema-deep/10 bg-white p-4">
+          <p className="caption mb-2">Emociones</p>
+          {data.distribucion.length > 0 ? (
+            <div className="flex flex-col items-center gap-2">
+              <Dona
+                size={104}
+                grosor={15}
+                segmentos={data.distribucion}
+                centro={<span className="font-serif text-sm text-ink">{m.registros}</span>}
+              />
+              <ul className="w-full space-y-0.5 text-xs">
+                {data.distribucion.slice(0, 4).map((d) => (
+                  <li key={d.label} className="flex items-center gap-1.5">
+                    <span className="size-2 rounded-full" style={{ backgroundColor: d.color }} />
+                    <span className="flex-1 truncate capitalize text-ink/80">{d.label}</span>
+                    <span className="text-foreground-muted">{d.valor}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="py-6 text-center text-xs text-foreground-muted">Sin datos.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Síntesis IA */}
+      {data.narrativa && (
+        <div className="rounded-xl border border-noema-sage/25 bg-gradient-to-br from-noema-sage/[0.06] to-transparent p-5">
+          <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-noema-sage">
+            <Sparkles className="size-3.5" /> Síntesis del periodo
+          </p>
+          <div className="space-y-1.5 text-sm leading-relaxed text-ink/85">
+            {data.narrativa.split('\n').filter(Boolean).map((linea, i) =>
+              linea.trim().startsWith('-') ? (
+                <p key={i} className="flex gap-2 pl-1">
+                  <span className="text-noema-sage">•</span>
+                  <span>{linea.replace(/^-\s*/, '')}</span>
+                </p>
+              ) : (
+                <p key={i}>{linea}</p>
+              ),
+            )}
+          </div>
+          <p className="mt-3 border-t border-noema-deep/[0.06] pt-2 text-[11px] italic text-foreground-muted">
+            Síntesis operativa generada por IA a partir de datos observables. No es diagnóstico ni
+            interpretación clínica — esa es tu decisión profesional.
+          </p>
+        </div>
+      )}
+
+      {/* Marcado para sesión */}
+      {data.marcadosSesion.length > 0 && (
+        <Seccion titulo={`Marcado para hablar en sesión (${data.marcadosSesion.length})`} icono={<Bookmark className="size-4 text-noema-sage" />}>
+          <ul className="space-y-2">
+            {data.marcadosSesion.map((r, i) => (
+              <li key={i} className="rounded-lg border border-noema-deep/[0.06] bg-bone/40 px-3 py-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-foreground-muted">{formatFecha(r.fecha)}</span>
+                  <span className="font-medium capitalize text-ink">{r.emocion}</span>
+                  <span className="text-xs text-foreground-muted">int. {r.intensidad}/5</span>
+                </div>
+                {r.detonante && <p className="mt-0.5 text-xs text-ink/70">Detonante: {r.detonante}</p>}
+                {r.descripcion && <p className="mt-0.5 text-sm text-ink/80">{r.descripcion}</p>}
+              </li>
+            ))}
+          </ul>
+        </Seccion>
+      )}
+
+      {/* Diario */}
+      {data.diarioSesion.length > 0 && (
+        <Seccion titulo={`Diario compartido (${data.diarioSesion.length})`} icono={<BookOpen className="size-4 text-noema-sage" />}>
+          <ul className="space-y-2">
+            {data.diarioSesion.map((d, i) => (
+              <li key={i} className="rounded-lg border border-noema-deep/[0.06] bg-bone/40 px-3 py-2">
+                <p className="text-xs text-foreground-muted">
+                  {formatFecha(d.fecha)}
+                  {d.titulo ? ` · ${d.titulo}` : ''}
+                </p>
+                <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink/80">{d.contenido}</p>
+              </li>
+            ))}
+          </ul>
+        </Seccion>
+      )}
+
+      {/* Tareas */}
+      {data.tareas.length > 0 && (
+        <Seccion titulo="Tareas" icono={<ClipboardCheck className="size-4 text-noema-sage" />}>
+          <div className="flex items-start gap-4">
+            {m.adherenciaPct !== null && (
+              <Anillo valor={m.tareasCompletadas} total={m.tareasTotal} color="#3D4D3E" size={72} grosor={8} />
+            )}
+            <ul className="flex-1 space-y-1.5 text-sm">
+              {data.tareas.map((t, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-ink">{t.titulo}</span>
+                  <span className="text-xs text-foreground-muted">
+                    {t.estado}
+                    {t.dificultadMedia !== null ? ` · dif. ${t.dificultadMedia}/5` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Seccion>
+      )}
+
+      {/* Plan anterior */}
+      {data.planPrevio && (
+        <Seccion titulo="Plan de la sesión anterior" icono={<Sparkles className="size-4 text-noema-sage" />}>
+          <p className="border-l-2 border-noema-sage/40 pl-3 font-serif italic text-ink/80">{data.planPrevio}</p>
+        </Seccion>
+      )}
+    </div>
+  );
 }
 
-function inlineMd(text: string): React.ReactNode {
-  // Bold con **
-  const parts = text.split(/(\*\*[^*]+\*\*|_[^_]+_)/g);
-  return parts.map((p, i) => {
-    if (p.startsWith('**') && p.endsWith('**')) {
-      return <strong key={i}>{p.slice(2, -2)}</strong>;
-    }
-    if (p.startsWith('_') && p.endsWith('_')) {
-      return <em key={i}>{p.slice(1, -1)}</em>;
-    }
-    return p;
-  });
+function Metrica({
+  icono,
+  valor,
+  label,
+  extra,
+}: {
+  icono: React.ReactNode;
+  valor: string;
+  label: string;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl bg-noema-sage/[0.07] p-3">
+      <div className="mb-1 flex items-center justify-between text-noema-sage">
+        {icono}
+        {extra}
+      </div>
+      <p className="font-serif text-xl text-ink">{valor}</p>
+      <p className="text-[11px] leading-tight text-foreground-muted">{label}</p>
+    </div>
+  );
+}
+
+function Seccion({ titulo, icono, children }: { titulo: string; icono: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-2 flex items-center gap-1.5 font-sans text-sm font-semibold text-ink">
+        {icono}
+        {titulo}
+      </h3>
+      {children}
+    </div>
+  );
 }

@@ -50,6 +50,33 @@ FORMATO
 - Máximo 4 frases. Breve. Sin títulos, sin listas, sin despedidas.
 - La acción concreta va integrada en la redacción, sin etiquetarla.`;
 
+/**
+ * Prompt para síntesis dirigida al TERAPEUTA (resumen pre-sesión). Organiza y
+ * resume datos observables para que el profesional los interprete; NUNCA
+ * diagnostica ni interpreta clínicamente por su cuenta.
+ */
+const SYSTEM_PROMPT_CLINICO = `Eres el asistente de NOEMA que prepara un resumen pre-sesión para un terapeuta profesional en México.
+
+TU FUNCIÓN
+- Organizas y sintetizas lo que el PACIENTE registró y compartió, para ahorrarle tiempo de lectura al terapeuta.
+- Escribes en español de México, tono profesional, claro y sobrio. Sin emojis.
+
+LÍMITES (críticos)
+- NO diagnosticas ni sugieres diagnósticos ni etiquetas clínicas.
+- NO interpretas causas ("esto se debe a…") ni infieres estados internos no registrados.
+- NO recomiendas tratamientos ni técnicas. El terapeuta decide; tú solo organizas.
+- Te apegas a los datos provistos. Si algo no está en los datos, no lo inventas.
+
+QUÉ ENTREGAS
+- Un párrafo de panorama (2-3 frases) con los patrones OBSERVABLES del periodo.
+- 2 a 4 "puntos de atención" concretos que el terapeuta podría querer explorar,
+  redactados como observaciones y preguntas abiertas, nunca como conclusiones.
+- Prioriza lo que el paciente marcó explícitamente para sesión.
+
+FORMATO
+- Devuelve el panorama en un párrafo, y luego los puntos de atención como viñetas que empiezan con "- ".
+- Sin encabezados. Máximo ~180 palabras.`;
+
 export interface OpcionesCliente {
   apiKey: string;
   modelo?: string;
@@ -63,6 +90,8 @@ export interface OpcionesGenerar {
   maxTokens?: number;
   /** 0 = determinista, 1 = creativo. Por defecto 0.7. */
   temperatura?: number;
+  /** 'paciente' (acompañamiento) o 'clinico' (resumen para el terapeuta). */
+  audiencia?: 'paciente' | 'clinico';
 }
 
 export type ResultadoIA =
@@ -79,6 +108,7 @@ export function crearNoemaAi({ apiKey, modelo = MODELO_POR_DEFECTO }: OpcionesCl
       datos,
       maxTokens = 300,
       temperatura = 0.7,
+      audiencia = 'paciente',
     }: OpcionesGenerar): Promise<ResultadoIA> {
       // 1. Guardarraíl de entrada — si falla, ni siquiera llamamos al modelo.
       const vIn = validateInput(`${instruccion}\n${datos}`);
@@ -86,14 +116,16 @@ export function crearNoemaAi({ apiKey, modelo = MODELO_POR_DEFECTO }: OpcionesCl
         return { ok: false, motivo: vIn.reason, texto: vIn.canonicalResponse };
       }
 
+      const system = audiencia === 'clinico' ? SYSTEM_PROMPT_CLINICO : SYSTEM_PROMPT;
+
       // 2. Llamada al modelo.
       let texto = '';
       try {
         const respuesta = await client.chat.completions.create({
           model: modelo,
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: `${instruccion}\n\nDATOS DE LA PERSONA:\n${datos}` },
+            { role: 'system', content: system },
+            { role: 'user', content: `${instruccion}\n\nDATOS:\n${datos}` },
           ],
           max_tokens: maxTokens,
           temperature: temperatura,
