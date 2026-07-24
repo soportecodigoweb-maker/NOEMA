@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Progreso' };
@@ -15,6 +16,7 @@ interface Fila {
 }
 
 export default async function ProgresoPage() {
+  await exigirFuncionPaciente('progreso_habilitado');
   const supabase = await createClient();
   const {
     data: { user },

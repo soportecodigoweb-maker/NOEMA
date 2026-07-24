@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { CrearDiario } from '@/components/paciente/CrearDiario';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Diario' };
@@ -13,6 +14,7 @@ const PRIVACIDAD_LABEL: Record<string, string> = {
 };
 
 export default async function DiarioPage() {
+  await exigirFuncionPaciente('diario_habilitado');
   const supabase = await createClient();
   const {
     data: { user },

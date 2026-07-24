@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { MessageCircle, X } from 'lucide-react';
+import {
+  reproducirSonido,
+  enNoMolestar,
+  type SonidoNotificacion,
+} from '@/lib/sonido-notificacion';
 
 interface Aviso {
   id: string;
@@ -11,6 +16,35 @@ interface Aviso {
   titulo: string;
   cuerpo: string | null;
   url: string | null;
+}
+
+/** Preferencias del terapeuta (Ajustes → Mis notificaciones). */
+export interface PreferenciasAviso {
+  sonido: SonidoNotificacion;
+  mensajes: boolean;
+  registros: boolean;
+  tareas: boolean;
+  noMolestarActivo: boolean;
+  noMolestarDesde: string;
+  noMolestarHasta: string;
+}
+
+const POR_DEFECTO: PreferenciasAviso = {
+  sonido: 'suave',
+  mensajes: true,
+  registros: true,
+  tareas: true,
+  noMolestarActivo: false,
+  noMolestarDesde: '21:00',
+  noMolestarHasta: '08:00',
+};
+
+/** ¿Este tipo de notificación está encendido en los ajustes? */
+function tipoActivo(tipo: string, p: PreferenciasAviso): boolean {
+  if (tipo === 'mensaje') return p.mensajes;
+  if (tipo === 'registro') return p.registros;
+  if (tipo === 'tarea_completada') return p.tareas;
+  return true; // vinculación y demás: siempre
 }
 
 /**
@@ -21,7 +55,11 @@ interface Aviso {
  * Las alertas de crisis tienen su propio aviso (más prominente), así que aquí
  * se omiten para no duplicar.
  */
-export function AvisoNotificacion() {
+export function AvisoNotificacion({
+  preferencias = POR_DEFECTO,
+}: {
+  preferencias?: PreferenciasAviso;
+}) {
   const router = useRouter();
   const [avisos, setAvisos] = useState<Aviso[]>([]);
 
@@ -39,7 +77,20 @@ export function AvisoNotificacion() {
         (payload) => {
           const n = payload.new as Aviso;
           if (n.tipo === 'crisis') return; // ya tiene aviso propio
+
+          // Respetar los ajustes: si este tipo está apagado, la notificación
+          // igual queda registrada en la campana, pero no salta el aviso.
+          if (!tipoActivo(n.tipo, preferencias)) return;
+
+          // No molestar: en ese horario no salta ni suena.
+          const silenciado =
+            preferencias.noMolestarActivo &&
+            enNoMolestar(preferencias.noMolestarDesde, preferencias.noMolestarHasta);
+          if (silenciado) return;
+
           setAvisos((prev) => [n, ...prev].slice(0, 3));
+          reproducirSonido(preferencias.sonido);
+
           // Se oculta solo a los 6 segundos.
           setTimeout(() => {
             setAvisos((prev) => prev.filter((x) => x.id !== n.id));

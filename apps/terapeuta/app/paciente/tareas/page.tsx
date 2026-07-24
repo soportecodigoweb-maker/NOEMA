@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ResponderTarea } from '@/components/paciente/ResponderTarea';
 import { HojaMembretada } from '@/components/ui/HojaMembretada';
 import { ListaMateriales } from '@/components/recursos/ListaMateriales';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tareas' };
@@ -15,6 +16,7 @@ const ESTADO_LABEL: Record<string, { label: string; color: string }> = {
 };
 
 export default async function TareasPacientePage() {
+  await exigirFuncionPaciente('tareas_habilitadas');
   const supabase = await createClient();
   const {
     data: { user },

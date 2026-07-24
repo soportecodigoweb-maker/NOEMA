@@ -23,22 +23,44 @@ import { CentroNotificaciones } from '@/components/notificaciones/CentroNotifica
 import { cn } from '@/lib/utils';
 import { signOutAction } from '../../../app/(auth)/actions';
 
+export interface FuncionesPaciente {
+  sos: boolean;
+  chat: boolean;
+  diario: boolean;
+  registros: boolean;
+  tareas: boolean;
+  progreso: boolean;
+  agenda: boolean;
+}
+
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Función que debe estar habilitada para mostrarlo (undefined = siempre). */
+  requiere?: keyof FuncionesPaciente;
 }
 
 const items: NavItem[] = [
   { href: '/paciente', label: 'Inicio', icon: Home },
-  { href: '/paciente/registros', label: 'Mis registros', icon: HeartPulse },
-  { href: '/paciente/diario', label: 'Diario', icon: BookOpen },
-  { href: '/paciente/tareas', label: 'Tareas', icon: ClipboardList },
+  { href: '/paciente/registros', label: 'Mis registros', icon: HeartPulse, requiere: 'registros' },
+  { href: '/paciente/diario', label: 'Diario', icon: BookOpen, requiere: 'diario' },
+  { href: '/paciente/tareas', label: 'Tareas', icon: ClipboardList, requiere: 'tareas' },
   { href: '/paciente/metas', label: 'Mis metas', icon: Target },
-  { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3 },
-  { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle },
+  { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3, requiere: 'progreso' },
+  { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle, requiere: 'chat' },
   { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar },
 ];
+
+const TODAS_ACTIVAS: FuncionesPaciente = {
+  sos: true,
+  chat: true,
+  diario: true,
+  registros: true,
+  tareas: true,
+  progreso: true,
+  agenda: false,
+};
 
 export interface PacienteNavProps {
   user: {
@@ -46,11 +68,13 @@ export interface PacienteNavProps {
     avatarUrl?: string | null;
     terapeutaNombre?: string | null;
   };
+  funciones?: FuncionesPaciente;
 }
 
-export function PacienteNav({ user }: PacienteNavProps) {
+export function PacienteNav({ user, funciones = TODAS_ACTIVAS }: PacienteNavProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
+  const visibles = items.filter((i) => !i.requiere || funciones[i.requiere]);
 
   return (
     <>
@@ -114,7 +138,7 @@ export function PacienteNav({ user }: PacienteNavProps) {
 
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           <ul className="space-y-1">
-            {items.map((item) => {
+            {visibles.map((item) => {
               const active =
                 pathname === item.href ||
                 (item.href !== '/paciente' && pathname.startsWith(item.href));
@@ -145,7 +169,7 @@ export function PacienteNav({ user }: PacienteNavProps) {
             })}
           </ul>
 
-          <div className="mt-6 border-t border-bone/[0.08] pt-4">
+          <div className={cn('mt-6 border-t border-bone/[0.08] pt-4', !funciones.sos && 'hidden')}>
             <Link
               href="/paciente/crisis"
               onClick={() => setAbierto(false)}

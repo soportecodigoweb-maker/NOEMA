@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { Phone, LifeBuoy, HeartHandshake } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ContactoCrisis } from '@/components/paciente/ContactoCrisis';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,7 @@ const LINEAS_MX = [
 ];
 
 export default async function PacienteCrisisPage() {
+  await exigirFuncionPaciente('sos_habilitado');
   const supabase = await createClient();
   const {
     data: { user },

@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Ca
 import { Button } from '@/components/ui/Button';
 import { PerfilEditor } from './PerfilEditor';
 import { PlanCard } from './PlanCard';
+import { PanelConfiguracion } from '@/components/ajustes/PanelConfiguracion';
+import type { ConfigTerapeuta } from './config-actions';
 import { signOutAction } from '../../(auth)/actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -23,6 +25,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     { data: terapeuta },
     { data: facturas },
     { count: pacientesActivos },
+    { data: config },
   ] = await Promise.all([
     supabase.from('profiles').select('nombre, email, ciudad').eq('id', user.id).single(),
     supabase
@@ -41,7 +44,33 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
       .select('*', { count: 'exact', head: true })
       .eq('terapeuta_id', user.id)
       .eq('estado', 'activa'),
+    supabase
+      .from('configuracion_terapeuta')
+      .select('*')
+      .eq('terapeuta_id', user.id)
+      .maybeSingle(),
   ]);
+
+  // Si aún no tiene fila de configuración, mostramos los valores por defecto.
+  const configInicial: ConfigTerapeuta = {
+    sos_habilitado: config?.sos_habilitado ?? true,
+    chat_habilitado: config?.chat_habilitado ?? true,
+    agenda_habilitada: config?.agenda_habilitada ?? false,
+    diario_habilitado: config?.diario_habilitado ?? true,
+    registros_habilitados: config?.registros_habilitados ?? true,
+    tareas_habilitadas: config?.tareas_habilitadas ?? true,
+    progreso_habilitado: config?.progreso_habilitado ?? true,
+    mensajes_ia_habilitados: config?.mensajes_ia_habilitados ?? true,
+    notif_paciente: config?.notif_paciente ?? true,
+    notif_sonido: config?.notif_sonido ?? 'suave',
+    notif_mensajes: config?.notif_mensajes ?? true,
+    notif_registros: config?.notif_registros ?? true,
+    notif_crisis: config?.notif_crisis ?? true,
+    notif_tareas: config?.notif_tareas ?? true,
+    no_molestar_activo: config?.no_molestar_activo ?? false,
+    no_molestar_desde: config?.no_molestar_desde ?? '21:00',
+    no_molestar_hasta: config?.no_molestar_hasta ?? '08:00',
+  };
 
   return (
     <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-3xl mx-auto">
@@ -86,6 +115,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
             }}
           />
         </Card>
+
+        {/* Funciones del paciente y notificaciones */}
+        <PanelConfiguracion inicial={configInicial} />
 
         <PlanCard
           planEstado={terapeuta?.plan_estado ?? 'sin_pago'}

@@ -267,6 +267,80 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracion_terapeuta: {
+        Row: {
+          actualizado_at: string
+          agenda_habilitada: boolean
+          chat_habilitado: boolean
+          diario_habilitado: boolean
+          mensajes_ia_habilitados: boolean
+          no_molestar_activo: boolean
+          no_molestar_desde: string
+          no_molestar_hasta: string
+          notif_crisis: boolean
+          notif_mensajes: boolean
+          notif_paciente: boolean
+          notif_registros: boolean
+          notif_sonido: string
+          notif_tareas: boolean
+          progreso_habilitado: boolean
+          registros_habilitados: boolean
+          sos_habilitado: boolean
+          tareas_habilitadas: boolean
+          terapeuta_id: string
+        }
+        Insert: {
+          terapeuta_id: string
+          actualizado_at?: string
+          agenda_habilitada?: boolean
+          chat_habilitado?: boolean
+          diario_habilitado?: boolean
+          mensajes_ia_habilitados?: boolean
+          no_molestar_activo?: boolean
+          no_molestar_desde?: string
+          no_molestar_hasta?: string
+          notif_crisis?: boolean
+          notif_mensajes?: boolean
+          notif_paciente?: boolean
+          notif_registros?: boolean
+          notif_sonido?: string
+          notif_tareas?: boolean
+          progreso_habilitado?: boolean
+          registros_habilitados?: boolean
+          sos_habilitado?: boolean
+          tareas_habilitadas?: boolean
+        }
+        Update: {
+          actualizado_at?: string
+          agenda_habilitada?: boolean
+          chat_habilitado?: boolean
+          diario_habilitado?: boolean
+          mensajes_ia_habilitados?: boolean
+          no_molestar_activo?: boolean
+          no_molestar_desde?: string
+          no_molestar_hasta?: string
+          notif_crisis?: boolean
+          notif_mensajes?: boolean
+          notif_paciente?: boolean
+          notif_registros?: boolean
+          notif_sonido?: string
+          notif_tareas?: boolean
+          progreso_habilitado?: boolean
+          registros_habilitados?: boolean
+          sos_habilitado?: boolean
+          tareas_habilitadas?: boolean
+          terapeuta_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracion_terapeuta_terapeuta_id_fkey"
+            columns: ["terapeuta_id"]
+            isOneToOne: true
+            referencedRelation: "terapeutas"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       consentimientos: {
         Row: {
           aceptado: boolean
@@ -2061,6 +2135,13 @@ export type Database = {
         Row: {
           actualizado_at: string
           agenda_habilitada: boolean
+          chat_habilitado: boolean
+          diario_habilitado: boolean
+          registros_habilitados: boolean
+          tareas_habilitadas: boolean
+          progreso_habilitado: boolean
+          mensajes_ia_habilitados: boolean
+          notif_paciente: boolean
           codigo_invitacion: string
           consentimiento_aceptado_at: string | null
           creado_at: string
@@ -2088,6 +2169,13 @@ export type Database = {
         Insert: {
           actualizado_at?: string
           agenda_habilitada?: boolean
+          chat_habilitado?: boolean
+          diario_habilitado?: boolean
+          registros_habilitados?: boolean
+          tareas_habilitadas?: boolean
+          progreso_habilitado?: boolean
+          mensajes_ia_habilitados?: boolean
+          notif_paciente?: boolean
           codigo_invitacion: string
           consentimiento_aceptado_at?: string | null
           creado_at?: string
@@ -2115,6 +2203,13 @@ export type Database = {
         Update: {
           actualizado_at?: string
           agenda_habilitada?: boolean
+          chat_habilitado?: boolean
+          diario_habilitado?: boolean
+          registros_habilitados?: boolean
+          tareas_habilitadas?: boolean
+          progreso_habilitado?: boolean
+          mensajes_ia_habilitados?: boolean
+          notif_paciente?: boolean
           codigo_invitacion?: string
           consentimiento_aceptado_at?: string | null
           creado_at?: string

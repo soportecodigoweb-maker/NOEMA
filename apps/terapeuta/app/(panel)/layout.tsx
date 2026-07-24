@@ -24,7 +24,8 @@ export default async function PanelLayout({
 
   // Profile, aviso y terapeuta dependen solo de user.id → en paralelo
   // (antes iban en serie: 3 idas y vueltas a la BD encadenadas).
-  const [{ data: profile }, { data: aviso }, { data: terapeuta }] = await Promise.all([
+  const [{ data: profile }, { data: aviso }, { data: terapeuta }, { data: config }] =
+    await Promise.all([
     supabase
       .from('profiles')
       .select('id, nombre, avatar_url, rol, onboarding_completo')
@@ -39,8 +40,15 @@ export default async function PanelLayout({
       .eq('aceptado', true)
       .limit(1)
       .maybeSingle(),
-    supabase.from('terapeutas').select('titulo').eq('profile_id', user.id).maybeSingle(),
-  ]);
+      supabase.from('terapeutas').select('titulo').eq('profile_id', user.id).maybeSingle(),
+      supabase
+        .from('configuracion_terapeuta')
+        .select(
+          'notif_sonido, notif_mensajes, notif_registros, notif_tareas, notif_crisis, no_molestar_activo, no_molestar_desde, no_molestar_hasta',
+        )
+        .eq('terapeuta_id', user.id)
+        .maybeSingle(),
+    ]);
 
   if (!profile) {
     redirect('/signin');
@@ -71,13 +79,23 @@ export default async function PanelLayout({
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
 
       {/* Alertas de crisis en vivo (#4) — visibles en cualquier pantalla */}
-      <AlertasCrisisEnVivo />
+      <AlertasCrisisEnVivo habilitado={config?.notif_crisis ?? true} />
 
       {/* Registros emocionales llegando en vivo (#6) */}
       <RegistrosEnVivo />
 
-      {/* Aviso emergente de mensajes y demás notificaciones */}
-      <AvisoNotificacion />
+      {/* Aviso emergente, según Ajustes → Mis notificaciones */}
+      <AvisoNotificacion
+        preferencias={{
+          sonido: (config?.notif_sonido ?? 'suave') as 'suave' | 'campana' | 'silencioso',
+          mensajes: config?.notif_mensajes ?? true,
+          registros: config?.notif_registros ?? true,
+          tareas: config?.notif_tareas ?? true,
+          noMolestarActivo: config?.no_molestar_activo ?? false,
+          noMolestarDesde: config?.no_molestar_desde ?? '21:00',
+          noMolestarHasta: config?.no_molestar_hasta ?? '08:00',
+        }}
+      />
     </div>
   );
 }

@@ -35,7 +35,9 @@ export default async function PacienteLayout({
       .maybeSingle(),
     supabase
       .from('vinculaciones')
-      .select('terapeuta_id')
+      .select(
+        'terapeuta_id, sos_habilitado, chat_habilitado, diario_habilitado, registros_habilitados, tareas_habilitadas, progreso_habilitado, agenda_habilitada',
+      )
       .eq('paciente_id', user.id)
       .eq('estado', 'activa')
       .maybeSingle(),
@@ -68,6 +70,18 @@ export default async function PacienteLayout({
     terapeutaNombre = t?.nombre ?? null;
   }
 
+  // Funciones que su terapeuta le habilitó (Ajustes → Funciones del paciente).
+  // Sin vinculación aún, se muestra todo lo que no depende del terapeuta.
+  const funciones = {
+    sos: vinculacion?.sos_habilitado ?? true,
+    chat: vinculacion?.chat_habilitado ?? true,
+    diario: vinculacion?.diario_habilitado ?? true,
+    registros: vinculacion?.registros_habilitados ?? true,
+    tareas: vinculacion?.tareas_habilitadas ?? true,
+    progreso: vinculacion?.progreso_habilitado ?? true,
+    agenda: vinculacion?.agenda_habilitada ?? false,
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-paper lg:flex-row">
       <PacienteNav
@@ -76,18 +90,21 @@ export default async function PacienteLayout({
           avatarUrl: profile.avatar_url,
           terapeutaNombre,
         }}
+        funciones={funciones}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
 
-      {/* Botón de crisis flotante — siempre visible (#10) */}
-      <Link
-        href="/paciente/crisis"
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-noema-clay px-5 py-3 text-sm font-medium text-white shadow-lg transition-transform hover:scale-105"
-        aria-label="Necesito apoyo ahora"
-      >
-        <LifeBuoy className="size-5" strokeWidth={1.9} />
-        <span className="hidden sm:inline">Necesito apoyo</span>
-      </Link>
+      {/* Botón de crisis flotante — solo si su terapeuta lo habilitó (#10) */}
+      {funciones.sos && (
+        <Link
+          href="/paciente/crisis"
+          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-noema-clay px-5 py-3 text-sm font-medium text-white shadow-lg transition-transform hover:scale-105"
+          aria-label="Necesito apoyo ahora"
+        >
+          <LifeBuoy className="size-5" strokeWidth={1.9} />
+          <span className="hidden sm:inline">Necesito apoyo</span>
+        </Link>
+      )}
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />

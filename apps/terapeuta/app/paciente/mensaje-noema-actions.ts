@@ -51,13 +51,18 @@ export async function obtenerMensajeNoemaAction(): Promise<{
 
   if (existente) return { ok: true, mensaje: existente as MensajeNoema };
 
-  // ── 2. Riesgo: no automatizamos acompañamiento en riesgo alto/crítico ─────
+  // ── 2. ¿Su terapeuta habilitó los mensajes de NOEMA? + nivel de riesgo ────
   const { data: vinc } = await supabase
     .from('vinculaciones')
-    .select('nivel_riesgo')
+    .select('nivel_riesgo, mensajes_ia_habilitados')
     .eq('paciente_id', user.id)
     .eq('estado', 'activa')
     .maybeSingle();
+
+  // El terapeuta puede apagar esta función desde Ajustes.
+  if (vinc && vinc.mensajes_ia_habilitados === false) {
+    return { ok: false, motivo: 'sin_ia' };
+  }
 
   if (vinc?.nivel_riesgo === 'alto' || vinc?.nivel_riesgo === 'critico') {
     return {

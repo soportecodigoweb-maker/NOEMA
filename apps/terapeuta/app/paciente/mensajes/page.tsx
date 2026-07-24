@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { MensajesThread } from '@/components/paciente/MensajesThread';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PacienteMensajesPage() {
+  await exigirFuncionPaciente('chat_habilitado');
   const supabase = await createClient();
   const {
     data: { user },

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CrearRegistro } from '@/components/paciente/CrearRegistro';
+import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mis registros' };
@@ -20,6 +21,7 @@ const PRIVACIDAD_LABEL: Record<string, string> = {
 };
 
 export default async function RegistrosPage() {
+  await exigirFuncionPaciente('registros_habilitados');
   const supabase = await createClient();
   const {
     data: { user },

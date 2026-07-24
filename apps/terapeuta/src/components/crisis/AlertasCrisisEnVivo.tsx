@@ -19,7 +19,12 @@ interface AlertaViva {
  * Realtime; la RLS (alertas_crisis_terapeuta_notificado) hace que solo lleguen
  * las alertas de sus pacientes que autorizaron el aviso.
  */
-export function AlertasCrisisEnVivo() {
+export function AlertasCrisisEnVivo({
+  habilitado = true,
+}: {
+  /** Ajustes → Mis notificaciones → Alertas de crisis. */
+  habilitado?: boolean;
+}) {
   const [alertas, setAlertas] = useState<AlertaViva[]>([]);
 
   const supabase = createBrowserClient(
@@ -28,6 +33,10 @@ export function AlertasCrisisEnVivo() {
   );
 
   useEffect(() => {
+    // El terapeuta puede apagarlas en Ajustes (la alerta igual queda registrada
+    // en la campana). El "no molestar" NO aplica aquí: una crisis siempre pasa.
+    if (!habilitado) return;
+
     const canal = supabase
       .channel('alertas-crisis-terapeuta')
       .on(
@@ -54,7 +63,7 @@ export function AlertasCrisisEnVivo() {
       supabase.removeChannel(canal);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [habilitado]);
 
   if (alertas.length === 0) return null;
 
