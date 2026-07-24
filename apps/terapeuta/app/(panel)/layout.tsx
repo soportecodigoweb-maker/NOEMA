@@ -3,6 +3,7 @@ import { Sidebar } from '@/components/nav/Sidebar';
 import { AlertasCrisisEnVivo } from '@/components/crisis/AlertasCrisisEnVivo';
 import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
+import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -28,7 +29,7 @@ export default async function PanelLayout({
     await Promise.all([
     supabase
       .from('profiles')
-      .select('id, nombre, avatar_url, rol, onboarding_completo')
+      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz')
       .eq('id', user.id)
       .single(),
     supabase
@@ -83,6 +84,9 @@ export default async function PanelLayout({
 
       {/* Registros emocionales llegando en vivo (#6) */}
       <RegistrosEnVivo />
+
+      {/* Tour guiado (modo aprendiz) */}
+      <GuiaAprendiz activo={profile.modo_aprendiz} />
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion

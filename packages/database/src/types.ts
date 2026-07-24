@@ -1325,6 +1325,7 @@ export type Database = {
           creado_at: string
           email: string
           id: string
+          modo_aprendiz: boolean
           locale: string
           nombre: string
           onboarding_completo: boolean
@@ -1361,6 +1362,7 @@ export type Database = {
           creado_at?: string
           email?: string
           id?: string
+          modo_aprendiz?: boolean
           locale?: string
           nombre?: string
           onboarding_completo?: boolean
@@ -1391,6 +1393,7 @@ export type Database = {
           completado_at?: string | null
           creado_at?: string
           id?: string
+          modo_aprendiz?: boolean
           nota?: string | null
           paciente_id: string
           recordar_at?: string | null
@@ -1403,6 +1406,7 @@ export type Database = {
           completado_at?: string | null
           creado_at?: string
           id?: string
+          modo_aprendiz?: boolean
           nota?: string | null
           paciente_id?: string
           recordar_at?: string | null
@@ -1435,6 +1439,7 @@ export type Database = {
           contenido_id: string
           creado_at?: string
           id?: string
+          modo_aprendiz?: boolean
           mensaje_terapeuta?: string | null
           prioridad?: number
           vinculacion_id: string
@@ -1445,6 +1450,7 @@ export type Database = {
           contenido_id?: string
           creado_at?: string
           id?: string
+          modo_aprendiz?: boolean
           mensaje_terapeuta?: string | null
           prioridad?: number
           vinculacion_id?: string

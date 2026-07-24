@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { SosTab } from '@/components/paciente/SosTab';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
+import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -22,7 +23,7 @@ export default async function PacienteLayout({
 
   // Profile, aviso y vinculación dependen solo de user.id → en paralelo.
   const [{ data: profile }, { data: aviso }, { data: vinculacion }] = await Promise.all([
-    supabase.from('profiles').select('id, nombre, avatar_url, rol').eq('id', user.id).single(),
+    supabase.from('profiles').select('id, nombre, avatar_url, rol, modo_aprendiz').eq('id', user.id).single(),
     supabase
       .from('consentimientos')
       .select('id')
@@ -98,6 +99,9 @@ export default async function PacienteLayout({
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />
+
+      {/* Tour guiado (modo aprendiz) */}
+      <GuiaAprendiz activo={profile.modo_aprendiz} />
     </div>
   );
 }

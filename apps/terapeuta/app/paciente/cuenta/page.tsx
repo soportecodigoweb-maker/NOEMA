@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
+import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mi cuenta' };
@@ -15,7 +16,7 @@ export default async function CuentaPacientePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('nombre, avatar_url')
+    .select('nombre, avatar_url, modo_aprendiz')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -32,6 +33,10 @@ export default async function CuentaPacientePage() {
           avatarUrl={profile?.avatar_url ?? null}
           nombre={profile?.nombre ?? ''}
         />
+      </div>
+
+      <div className="mt-4">
+        <ToggleAprendiz inicial={profile?.modo_aprendiz ?? true} />
       </div>
 
       <div className="mt-4">
