@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
+import { Cormorant_Garamond, DM_Sans, Caveat } from 'next/font/google';
 import './globals.css';
 
 const cormorant = Cormorant_Garamond({
@@ -14,6 +14,14 @@ const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '700'],
   variable: '--font-dm-sans',
+  display: 'swap',
+});
+
+// Fuente manuscrita para el diario (se siente como escribir a mano).
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-manuscrita',
   display: 'swap',
 });
 
@@ -46,7 +54,7 @@ export default function RootLayout({
   return (
     <html
       lang="es-MX"
-      className={`${cormorant.variable} ${dmSans.variable}`}
+      className={`${cormorant.variable} ${dmSans.variable} ${caveat.variable}`}
     >
       <body className="min-h-screen bg-paper text-ink antialiased">
         {children}
