@@ -11,23 +11,49 @@ import {
   BookOpen,
   TrendingUp,
 } from 'lucide-react';
+import { History, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Sparkline, Dona, Anillo, Tendencia } from '@/components/charts/Charts';
-import { formatFecha } from '@/lib/utils';
-import { generarResumenAction, type ResumenData } from './resumen-actions';
+import { formatFecha, formatHora } from '@/lib/utils';
+import {
+  generarResumenAction,
+  listarResumenesAction,
+  obtenerResumenAction,
+  type ResumenData,
+  type ResumenGuardado,
+} from './resumen-actions';
 
 export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ResumenData | null>(null);
+  const [vista, setVista] = useState<'resumen' | 'historial'>('resumen');
+  const [historial, setHistorial] = useState<ResumenGuardado[]>([]);
+
+  const cargarHistorial = async () => {
+    setHistorial(await listarResumenesAction(vinculacionId));
+  };
 
   const generar = async () => {
     setLoading(true);
     setData(null);
+    setVista('resumen');
     try {
       setData(await generarResumenAction(vinculacionId, 14));
+      cargarHistorial();
     } catch {
       setData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verGuardado = async (id: string) => {
+    setLoading(true);
+    setVista('resumen');
+    try {
+      const d = await obtenerResumenAction(id);
+      setData(d);
     } finally {
       setLoading(false);
     }
@@ -58,18 +84,61 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
             <Sparkles className="size-5 text-noema-sage" strokeWidth={1.8} />
             <h2 className="font-serif text-2xl text-ink">Resumen pre-sesión</h2>
           </div>
-          <button
-            onClick={() => {
-              setOpen(false);
-              setData(null);
-            }}
-            className="text-foreground-muted hover:text-ink"
-          >
-            <X className="size-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                if (vista === 'historial') {
+                  setVista('resumen');
+                } else {
+                  cargarHistorial();
+                  setVista('historial');
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-noema-sage hover:bg-noema-sage/10"
+            >
+              {vista === 'historial' ? <ArrowLeft className="size-4" /> : <History className="size-4" />}
+              {vista === 'historial' ? 'Volver' : 'Historial'}
+            </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                setData(null);
+                setVista('resumen');
+              }}
+              className="text-foreground-muted hover:text-ink"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
         </div>
 
         <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
+          {vista === 'historial' ? (
+            historial.length === 0 ? (
+              <p className="py-10 text-center text-sm text-foreground-muted">
+                Aún no hay resúmenes guardados. Cada resumen que generes queda aquí.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {historial.map((h) => (
+                  <li key={h.id}>
+                    <button
+                      onClick={() => verGuardado(h.id)}
+                      className="w-full rounded-xl border border-noema-deep/10 bg-white px-4 py-3 text-left transition-colors hover:border-noema-sage"
+                    >
+                      <p className="text-sm font-medium text-ink">
+                        {formatFecha(h.generado_at)} · {formatHora(h.generado_at)}
+                      </p>
+                      {h.narrativa && (
+                        <p className="mt-0.5 line-clamp-2 text-xs text-foreground-muted">{h.narrativa}</p>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+          <>
           {loading && (
             <div className="space-y-3 py-16 text-center">
               <Loader2 className="mx-auto size-8 animate-spin text-noema-sage" />
@@ -89,6 +158,8 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
           )}
 
           {data?.ok && <Contenido data={data} />}
+          </>
+          )}
         </div>
       </div>
     </div>

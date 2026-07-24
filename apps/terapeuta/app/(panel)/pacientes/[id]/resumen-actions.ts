@@ -1,6 +1,7 @@
 'use server';
 
 import { crearNoemaAi } from '@noema/ai';
+import type { Json } from '@noema/database';
 import { createClient } from '@/lib/supabase/server';
 
 export interface PuntoSerie {
@@ -235,7 +236,7 @@ export async function generarResumenAction(
     if (r.ok) narrativa = r.texto;
   }
 
-  return {
+  const resultado: ResumenData = {
     ok: true,
     nombre,
     dias,
@@ -257,6 +258,49 @@ export async function generarResumenAction(
     planPrevio,
     narrativa,
   };
+
+  // Guardar en el historial (solo si hay algo que resumir).
+  if (resultado.metricas.registros > 0 || resultado.metricas.diario > 0 || resultado.metricas.tareasTotal > 0) {
+    await supabase.from('resumenes_sesion').insert({
+      vinculacion_id: vinculacionId,
+      terapeuta_id: user.id,
+      datos: resultado as unknown as Json,
+      narrativa,
+      dias,
+    });
+  }
+
+  return resultado;
+}
+
+export interface ResumenGuardado {
+  id: string;
+  generado_at: string;
+  narrativa: string | null;
+}
+
+/** Lista los resúmenes guardados de un paciente (historial). */
+export async function listarResumenesAction(vinculacionId: string): Promise<ResumenGuardado[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('resumenes_sesion')
+    .select('id, generado_at, narrativa')
+    .eq('vinculacion_id', vinculacionId)
+    .order('generado_at', { ascending: false })
+    .limit(30);
+  return (data as ResumenGuardado[] | null) ?? [];
+}
+
+/** Recupera un resumen guardado por id para volver a mostrarlo. */
+export async function obtenerResumenAction(id: string): Promise<ResumenData | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('resumenes_sesion')
+    .select('datos')
+    .eq('id', id)
+    .maybeSingle();
+  if (!data?.datos) return null;
+  return data.datos as unknown as ResumenData;
 }
 
 function baseVacia(dias: number): ResumenData {

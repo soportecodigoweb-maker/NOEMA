@@ -1728,6 +1728,36 @@ export type Database = {
           },
         ]
       }
+      resumenes_sesion: {
+        Row: {
+          datos: Json
+          dias: number
+          generado_at: string
+          id: string
+          narrativa: string | null
+          terapeuta_id: string
+          vinculacion_id: string
+        }
+        Insert: {
+          datos: Json
+          dias?: number
+          generado_at?: string
+          id?: string
+          narrativa?: string | null
+          terapeuta_id: string
+          vinculacion_id: string
+        }
+        Update: {
+          datos?: Json
+          dias?: number
+          generado_at?: string
+          id?: string
+          narrativa?: string | null
+          terapeuta_id?: string
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
       sesiones: {
         Row: {
           actualizado_at: string
