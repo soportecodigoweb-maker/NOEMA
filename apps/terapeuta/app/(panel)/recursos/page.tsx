@@ -24,15 +24,21 @@ const CATEGORIAS_TERAPEUTA = new Set(['formato_nom004', 'formato_terapeuta']);
 export default async function RecursosPage() {
   const supabase = await createClient();
 
-  const [{ data: plantillas }, { data: { user } }] = await Promise.all([
-    supabase
-      .from('plantillas_ejercicios')
-      .select('id, titulo, descripcion, categoria, duracion_min, tipo, terapeuta_id, usos_count, recursos')
-      .order('categoria')
-      .order('usos_count', { ascending: false })
-      .limit(80),
-    supabase.auth.getUser(),
-  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Asegura que el terapeuta tenga su copia editable de cada plantilla oficial,
+  // de forma transparente (idempotente). Así todo lo que ve es suyo y editable.
+  if (user) await supabase.rpc('asegurar_plantillas_terapeuta');
+
+  const { data: plantillas } = await supabase
+    .from('plantillas_ejercicios')
+    .select('id, titulo, descripcion, categoria, duracion_min, tipo, terapeuta_id, usos_count, recursos')
+    .eq('terapeuta_id', user?.id ?? '')
+    .order('categoria')
+    .order('usos_count', { ascending: false })
+    .limit(120);
 
   const lista = (plantillas ?? []) as Plantilla[];
   const formatosTerapeuta = lista.filter((p) => CATEGORIAS_TERAPEUTA.has(p.categoria));

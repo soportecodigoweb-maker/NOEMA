@@ -31,6 +31,11 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) await supabase.rpc('asegurar_plantillas_terapeuta');
+
   const [{ data: tareas }, { data: plantillas }] = await Promise.all([
     supabase
       .from('tareas')
@@ -43,8 +48,9 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
     supabase
       .from('plantillas_ejercicios')
       .select('id, titulo, descripcion, categoria, duracion_min')
+      .eq('terapeuta_id', user?.id ?? '')
       .order('titulo')
-      .limit(50),
+      .limit(80),
   ]);
 
   const lista = (tareas as Tarea[] | null) ?? [];

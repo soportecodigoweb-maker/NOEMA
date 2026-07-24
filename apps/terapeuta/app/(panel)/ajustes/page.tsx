@@ -4,6 +4,7 @@ import { PerfilEditor } from './PerfilEditor';
 import { PlanCard } from './PlanCard';
 import { PanelConfiguracion } from '@/components/ajustes/PanelConfiguracion';
 import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
+import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import type { ConfigTerapeuta } from './config-actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -26,7 +27,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     { count: pacientesActivos },
     { data: config },
   ] = await Promise.all([
-    supabase.from('profiles').select('nombre, email, ciudad').eq('id', user.id).single(),
+    supabase.from('profiles').select('nombre, email, ciudad, avatar_url').eq('id', user.id).single(),
     supabase
       .from('terapeutas')
       .select('titulo, descripcion, cedula_profesional, especialidades, enfoques, estado_verificacion, plan_estado, trial_termina_at, stripe_subscription_id')
@@ -99,6 +100,13 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
               )}
             </CardDescription>
           </CardHeader>
+          <div className="mb-5">
+            <SubirAvatar
+              userId={user.id}
+              avatarUrl={profile?.avatar_url ?? null}
+              nombre={profile?.nombre ?? ''}
+            />
+          </div>
           <PerfilEditor
             profile={{
               nombre: profile?.nombre ?? '',
