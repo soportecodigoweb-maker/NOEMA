@@ -1,26 +1,13 @@
-import Link from 'next/link';
-import { Calendar, Video, MapPin } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { perfilesPorId } from '@/lib/perfiles-lookup';
 import { NuevaSesion, type PacienteOption } from '@/components/sesiones/NuevaSesion';
+import { VistaSesiones } from '@/components/sesiones/VistaSesiones';
+import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
+import type { SesionCal } from '@/components/sesiones/CalendarioSesiones';
 
 export const metadata = { title: 'Sesiones' };
 export const dynamic = 'force-dynamic';
-
-interface SesionRow {
-  id: string;
-  numero: number | null;
-  fecha_programada: string;
-  duracion_min: number;
-  modalidad: string;
-  estado: string;
-  vinculacion_id: string;
-  vinculacion: {
-    id: string;
-    paciente: { nombre: string } | null;
-  } | null;
-}
 
 export default async function SesionesPage() {
   const supabase = await createClient();
@@ -71,106 +58,34 @@ export default async function SesionesPage() {
 
   const { data: sesiones } = await supabase
     .from('sesiones')
-    .select(`
-      id, numero, fecha_programada, duracion_min, modalidad, estado, vinculacion_id
-    `)
+    .select('id, fecha_programada, duracion_min, modalidad, estado, vinculacion_id')
     .in('vinculacion_id', vincIds)
     .order('fecha_programada', { ascending: true });
 
-  const ahora = Date.now();
-  const lista: SesionRow[] = (sesiones ?? []).map((s) => ({
-    ...s,
-    vinculacion: {
-      id: s.vinculacion_id,
-      paciente: pacientePorVinc.get(s.vinculacion_id) ?? null,
-    },
+  const sesionesCal: SesionCal[] = (sesiones ?? []).map((s) => ({
+    id: s.id,
+    vinculacionId: s.vinculacion_id,
+    paciente: pacientePorVinc.get(s.vinculacion_id)?.nombre ?? 'Paciente',
+    fecha: s.fecha_programada,
+    duracion: s.duracion_min,
+    modalidad: s.modalidad,
+    estado: s.estado,
   }));
-  const proximas = lista.filter(
-    (s) => new Date(s.fecha_programada).getTime() > ahora && s.estado === 'programada',
-  );
-  const recientes = lista
-    .filter(
-      (s) =>
-        new Date(s.fecha_programada).getTime() <= ahora || s.estado !== 'programada',
-    )
-    .reverse();
 
   return (
-    <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-6xl mx-auto space-y-10">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+      <RefrescarEnVivo tabla="sesiones" canal="sesiones-terapeuta" />
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Sesiones</h1>
+          <h1 className="mb-2 font-serif text-4xl leading-tight text-ink">Sesiones</h1>
           <p className="text-foreground-muted">
-            Tu agenda completa, organizada por fecha.
+            Toda tu agenda en un calendario, para planear la semana de un vistazo.
           </p>
         </div>
         <NuevaSesion pacientes={opcionesPaciente} />
       </div>
 
-      <section>
-        <h2 className="caption mb-3">Próximas ({proximas.length})</h2>
-        {proximas.length === 0 ? (
-          <Card variant="flat" className="text-center py-8">
-            <p className="text-sm text-foreground-muted">Sin sesiones programadas.</p>
-          </Card>
-        ) : (
-          <ul className="space-y-3">
-            {proximas.map((s) => (
-              <SesionItem key={s.id} sesion={s} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section>
-        <h2 className="caption mb-3">Recientes ({recientes.length})</h2>
-        {recientes.length === 0 ? (
-          <Card variant="flat" className="text-center py-8">
-            <p className="text-sm text-foreground-muted">Sin sesiones realizadas todavía.</p>
-          </Card>
-        ) : (
-          <ul className="space-y-3">
-            {recientes.slice(0, 30).map((s) => (
-              <SesionItem key={s.id} sesion={s} />
-            ))}
-          </ul>
-        )}
-      </section>
+      <VistaSesiones sesiones={sesionesCal} />
     </div>
-  );
-}
-
-function SesionItem({ sesion }: { sesion: SesionRow }) {
-  const f = new Date(sesion.fecha_programada);
-  if (!sesion.vinculacion) return null;
-  return (
-    <Link
-      href={`/pacientes/${sesion.vinculacion.id}/sesiones/${sesion.id}`}
-      className="block"
-    >
-      <Card variant="flat" className="hover:bg-paper/30 transition-colors">
-        <div className="flex items-center gap-4">
-          <div className="text-center shrink-0 w-14">
-            <p className="font-serif text-2xl text-ink leading-none">{f.getDate()}</p>
-            <p className="caption mt-1">{f.toLocaleDateString('es-MX', { month: 'short' })}</p>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-ink truncate">
-              {sesion.vinculacion.paciente?.nombre ?? 'Paciente'}
-            </p>
-            <p className="text-xs text-foreground-muted flex items-center gap-1">
-              {f.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
-              {' · '}
-              {sesion.duracion_min} min
-              {' · '}
-              {sesion.modalidad === 'online' ? <Video className="size-3" /> :
-                sesion.modalidad === 'presencial' ? <MapPin className="size-3" /> :
-                <Calendar className="size-3" />}
-              {sesion.modalidad}
-            </p>
-          </div>
-        </div>
-      </Card>
-    </Link>
   );
 }
