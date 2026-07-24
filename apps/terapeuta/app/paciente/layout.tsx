@@ -94,15 +94,15 @@ export default async function PacienteLayout({
       />
       <main className="min-w-0 flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
 
-      {/* Botón de crisis flotante — solo si su terapeuta lo habilitó (#10) */}
+      {/* Botón de apoyo flotante — verde, visible; solo si el terapeuta lo habilitó */}
       {funciones.sos && (
         <Link
           href="/paciente/crisis"
-          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-noema-clay px-5 py-3 text-sm font-medium text-white shadow-lg transition-transform hover:scale-105"
+          className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-full bg-noema-sage px-5 py-3.5 text-sm font-semibold text-bone shadow-[0_8px_24px_-6px_rgba(61,77,62,0.6)] ring-4 ring-noema-sage/20 transition-transform hover:scale-105 lg:bottom-5"
           aria-label="Necesito apoyo ahora"
         >
-          <LifeBuoy className="size-5" strokeWidth={1.9} />
-          <span className="hidden sm:inline">Necesito apoyo</span>
+          <LifeBuoy className="size-5" strokeWidth={2} />
+          Necesito apoyo
         </Link>
       )}
 

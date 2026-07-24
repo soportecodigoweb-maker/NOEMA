@@ -91,48 +91,52 @@ export function MensajesThread({
     });
   };
 
+  const inicial = terapeutaNombre
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? '')
+    .join('');
+
   return (
-    <div className="mx-auto flex h-screen max-w-3xl flex-col px-8 py-10">
-      <header className="mb-6 shrink-0">
-        <p className="text-sm text-noema-sage/70">Mensajes con</p>
-        <h1 className="mt-1 font-serif text-2xl text-ink">{terapeutaNombre}</h1>
-        <p className="mt-1 text-xs text-ink/50">
-          Comunicación asíncrona · Tu terapeuta responde en horas de consulta.
-        </p>
+    // Pantalla completa tipo WhatsApp. -mb-24 cancela el padding inferior del
+    // main (reservado para el botón flotante) para que el composer quede abajo.
+    <div className="-mb-24 flex h-[calc(100dvh-3.25rem)] flex-col bg-paper lg:mb-0 lg:h-screen">
+      {/* Cabecera compacta */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-white px-4 py-3">
+        <span className="flex size-10 items-center justify-center rounded-full bg-noema-sage/15 text-sm font-medium text-noema-deep/70">
+          {inicial}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-medium text-ink">{terapeutaNombre}</p>
+          <p className="text-[11px] text-ink/50">Responde en horas de consulta</p>
+        </div>
       </header>
 
-      <div
-        ref={scrollRef}
-        className="flex-1 space-y-3 overflow-y-auto rounded-2xl border-[0.5px] border-ink/10 bg-white p-6"
-      >
+      {/* Mensajes */}
+      <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
         {mensajes.length === 0 ? (
-          <p className="pt-8 text-center text-sm text-ink/50">
+          <p className="pt-10 text-center text-sm text-ink/50">
             Aún no hay mensajes. Escribe uno para comenzar.
           </p>
         ) : (
           mensajes.map((m) => {
             const esMio = m.autor_id === userId;
             return (
-              <div
-                key={m.id}
-                className={`flex ${esMio ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={m.id} className={`flex ${esMio ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                  className={`max-w-[80%] rounded-2xl px-3.5 py-2 shadow-sm ${
                     esMio
-                      ? 'bg-noema-deep text-bone'
-                      : 'border-[0.5px] border-ink/10 bg-paper text-ink'
+                      ? 'rounded-br-sm bg-noema-deep text-bone'
+                      : 'rounded-bl-sm border-[0.5px] border-ink/10 bg-white text-ink'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap text-sm">{m.contenido}</p>
-                  <p
-                    className={`mt-1 text-[10px] ${
-                      esMio ? 'text-bone/50' : 'text-ink/40'
-                    }`}
-                  >
+                  <p className="whitespace-pre-wrap break-words text-sm">{m.contenido}</p>
+                  <p className={`mt-0.5 text-right text-[10px] ${esMio ? 'text-bone/50' : 'text-ink/40'}`}>
                     {new Date(m.creado_at).toLocaleTimeString('es-MX', {
                       hour: '2-digit',
                       minute: '2-digit',
+                      timeZone: 'America/Mexico_City',
                     })}
                   </p>
                 </div>
@@ -142,7 +146,8 @@ export function MensajesThread({
         )}
       </div>
 
-      <div className="mt-4 shrink-0">
+      {/* Composer fijo abajo */}
+      <div className="shrink-0 border-t border-ink/10 bg-white px-3 py-2.5">
         <div className="flex items-end gap-2">
           <textarea
             value={texto}
@@ -153,22 +158,19 @@ export function MensajesThread({
                 enviar();
               }
             }}
-            placeholder="Escribe un mensaje..."
-            rows={2}
-            className="flex-1 resize-none rounded-xl border-[0.5px] border-ink/15 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink/40 focus:border-noema-sage focus:outline-none"
+            placeholder="Escribe un mensaje…"
+            rows={1}
+            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border-[0.5px] border-ink/15 bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink/40 focus:border-noema-sage focus:outline-none"
           />
           <button
             onClick={enviar}
             disabled={pending || !texto.trim()}
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-noema-deep text-bone transition-opacity hover:bg-noema-deep/90 disabled:opacity-40"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-deep text-bone transition-opacity hover:bg-noema-deep/90 disabled:opacity-40"
             aria-label="Enviar mensaje"
           >
             <Send className="size-4" strokeWidth={1.8} />
           </button>
         </div>
-        <p className="mt-2 text-center text-[11px] text-ink/40">
-          Enter para enviar · Shift+Enter para nueva línea
-        </p>
       </div>
     </div>
   );

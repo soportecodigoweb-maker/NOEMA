@@ -1,21 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Plus } from 'lucide-react';
 import { crearRegistroAction } from '../../../app/paciente/actions';
+import { iconoDeEmocion } from './IconoEmocion';
 
 interface Emocion {
   key: string;
   nombre_es: string;
   familia: string;
 }
-
-const FAMILIA_COLOR: Record<string, string> = {
-  tranquilo: 'bg-emerald-500',
-  feliz: 'bg-sky-400',
-  ansioso: 'bg-amber-400',
-  triste: 'bg-rose-400',
-  cansado: 'bg-orange-300',
-};
 
 export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
   const [abierto, setAbierto] = useState(false);
@@ -46,9 +40,10 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
     return (
       <button
         onClick={() => setAbierto(true)}
-        className="rounded-md bg-noema-deep px-4 py-2.5 text-sm font-medium text-bone hover:bg-noema-deep/90"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-noema-deep px-5 py-4 text-base font-medium text-bone shadow-sm transition-colors hover:bg-noema-deep/90"
       >
-        + Nuevo registro
+        <Plus className="size-5" strokeWidth={2} />
+        Registrar cómo me siento
       </button>
     );
   }
@@ -60,21 +55,24 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <div>
         <label className="mb-2 block text-sm text-ink/70">Emoción</label>
         <div className="flex flex-wrap gap-2">
-          {emociones.map((e) => (
-            <button
-              key={e.key}
-              type="button"
-              onClick={() => setEmocion(e.key)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                emocion === e.key
-                  ? 'border-noema-deep bg-noema-deep text-bone'
-                  : 'border-ink/15 text-ink/70 hover:border-noema-sage'
-              }`}
-            >
-              <span className={`size-2 rounded-full ${FAMILIA_COLOR[e.familia] ?? 'bg-ink/30'}`} />
-              {e.nombre_es}
-            </button>
-          ))}
+          {emociones.map((e) => {
+            const Icono = iconoDeEmocion(e.key, e.familia);
+            return (
+              <button
+                key={e.key}
+                type="button"
+                onClick={() => setEmocion(e.key)}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                  emocion === e.key
+                    ? 'border-noema-deep bg-noema-deep text-bone'
+                    : 'border-ink/15 text-ink/70 hover:border-noema-sage'
+                }`}
+              >
+                <Icono className="size-4" strokeWidth={1.7} />
+                {e.nombre_es}
+              </button>
+            );
+          })}
         </div>
       </div>
 

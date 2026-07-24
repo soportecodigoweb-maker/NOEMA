@@ -27,26 +27,26 @@ export function HojaMembretada({
   return (
     <article className="overflow-hidden rounded-2xl border border-noema-deep/12 bg-white shadow-[0_1px_0_rgba(43,54,47,0.04),0_18px_40px_-28px_rgba(43,54,47,0.35)]">
       {/* Membrete */}
-      <header className="flex items-center justify-between gap-4 border-b border-noema-deep/10 bg-gradient-to-b from-bone/60 to-white px-6 py-5 sm:px-9 sm:py-6">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-noema-deep/10 bg-gradient-to-b from-bone/60 to-white px-4 py-4 sm:px-9 sm:py-6">
         <div className="flex items-center gap-3">
-          <Vesica size={30} color="#2E3B2E" strokeWidth={1.4} />
+          <Vesica size={28} color="#2E3B2E" strokeWidth={1.4} />
           <div className="leading-none">
-            <p className="font-serif text-lg tracking-[0.34em] text-noema-deep">NOEMA</p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-noema-sage/80">
+            <p className="font-serif text-base tracking-[0.28em] text-noema-deep sm:text-lg sm:tracking-[0.34em]">NOEMA</p>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.24em] text-noema-sage/80">
               Acompañamiento terapéutico
             </p>
           </div>
         </div>
         {etiqueta && (
-          <span className="shrink-0 rounded-full border border-noema-deep/12 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-noema-deep/60">
+          <span className="max-w-full shrink-0 truncate rounded-full border border-noema-deep/12 bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-noema-deep/60">
             {etiqueta}
           </span>
         )}
       </header>
 
       {/* Título del documento */}
-      <div className="px-6 pt-6 sm:px-9 sm:pt-8">
-        <h2 className="font-serif text-2xl leading-tight text-ink sm:text-[1.7rem]">
+      <div className="px-4 pt-5 sm:px-9 sm:pt-8">
+        <h2 className="font-serif text-xl leading-tight text-ink break-words sm:text-[1.7rem]">
           {titulo}
         </h2>
         {subtitulo && (
@@ -56,10 +56,10 @@ export function HojaMembretada({
       </div>
 
       {/* Cuerpo */}
-      <div className="px-6 py-6 sm:px-9 sm:py-7">{children}</div>
+      <div className="min-w-0 break-words px-4 py-5 sm:px-9 sm:py-7">{children}</div>
 
       {/* Pie */}
-      <footer className="border-t border-noema-deep/8 bg-bone/40 px-6 py-3.5 sm:px-9">
+      <footer className="border-t border-noema-deep/8 bg-bone/40 px-4 py-3.5 sm:px-9">
         {pie ?? (
           <p className="text-[11px] leading-relaxed text-foreground-muted">
             Documento generado en NOEMA · La información marcada como privada por el

@@ -153,9 +153,9 @@ export function CentroNotificaciones({
 
       {abierto && (
         <div
-          className={`absolute z-[60] mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-noema-deep/10 bg-white shadow-xl ${
-            // En el menú lateral se despliega hacia el contenido (no se sale de pantalla).
-            tono === 'oscuro' ? 'left-0' : 'right-0'
+          className={`fixed inset-x-3 top-16 z-[60] overflow-hidden rounded-xl border border-noema-deep/10 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:top-full sm:mt-2 sm:w-[22rem] ${
+            // En móvil ocupa el ancho de la pantalla; en desktop se ancla al botón.
+            tono === 'oscuro' ? 'sm:left-0' : 'sm:right-0'
           }`}
         >
           <div className="flex items-center justify-between border-b border-noema-deep/8 px-4 py-2.5">
