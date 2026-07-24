@@ -11,6 +11,7 @@ interface TabsNavProps {
 const tabs = [
   { slug: '', label: 'Resumen' },
   { slug: 'registros', label: 'Registros' },
+  { slug: 'diario', label: 'Diario' },
   { slug: 'sesiones', label: 'Sesiones' },
   { slug: 'ejercicios', label: 'Ejercicios' },
   { slug: 'notas', label: 'Notas' },

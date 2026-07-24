@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { cdmxALocalISO } from '@/lib/utils';
 
 export interface ProgramarResult {
   ok: boolean;
@@ -24,8 +25,8 @@ export async function programarSesionAction(
     return { ok: false, error: 'Indica fecha y hora.' };
   }
 
-  // Construye timestamptz local
-  const fechaProgramada = new Date(`${fecha}T${hora}:00`).toISOString();
+  // La hora la escribe el terapeuta en hora de CDMX → convertir a UTC bien.
+  const fechaProgramada = cdmxALocalISO(fecha, hora);
 
   const supabase = await createClient();
   const { error } = await supabase.from('sesiones').insert({

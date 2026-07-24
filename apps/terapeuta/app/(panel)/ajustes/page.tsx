@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { PerfilEditor } from './PerfilEditor';
 import { PlanCard } from './PlanCard';
 import { PanelConfiguracion } from '@/components/ajustes/PanelConfiguracion';
+import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import type { ConfigTerapeuta } from './config-actions';
-import { signOutAction } from '../../(auth)/actions';
 
 export const metadata = { title: 'Ajustes' };
 export const dynamic = 'force-dynamic';
@@ -128,13 +127,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sesión</CardTitle>
+            <CardTitle>Cuenta</CardTitle>
           </CardHeader>
-          <form action={signOutAction}>
-            <Button type="submit" variant="ghost" size="md">
-              Cerrar sesión
-            </Button>
-          </form>
+          <ZonaCuenta />
         </Card>
       </div>
     </div>

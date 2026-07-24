@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { AsignarEjercicioDialog } from './AsignarEjercicioDialog';
 import { RetroalimentarRespuesta } from '@/components/pacientes/RetroalimentarRespuesta';
+import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 import { formatFecha, tiempoRelativo } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,9 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {/* Tiempo real: cuando el paciente responde una tarea, se ve al instante */}
+      <RefrescarEnVivo tabla="tarea_respuestas" canal={`respuestas-terapeuta-${id}`} />
+      <RefrescarEnVivo tabla="tareas" filtro={`vinculacion_id=eq.${id}`} canal={`tareas-terapeuta-${id}`} />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-serif text-2xl text-ink mb-1">Ejercicios y tareas</h2>

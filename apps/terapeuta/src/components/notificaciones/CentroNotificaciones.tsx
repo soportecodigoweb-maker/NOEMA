@@ -10,6 +10,7 @@ import {
   LifeBuoy,
   ClipboardCheck,
   Link2,
+  BookOpen,
   Check,
 } from 'lucide-react';
 import { tiempoRelativo } from '@/lib/utils';
@@ -222,6 +223,8 @@ function IconoTipo({ tipo }: { tipo: string }) {
     return <MessageCircle className={`${cls} text-noema-sage`} strokeWidth={1.8} />;
   if (tipo === 'registro')
     return <Activity className={`${cls} text-noema-sage`} strokeWidth={1.8} />;
+  if (tipo === 'diario')
+    return <BookOpen className={`${cls} text-noema-sage`} strokeWidth={1.8} />;
   if (tipo === 'crisis')
     return <LifeBuoy className={`${cls} text-noema-clay`} strokeWidth={1.9} />;
   if (tipo === 'tarea_completada')

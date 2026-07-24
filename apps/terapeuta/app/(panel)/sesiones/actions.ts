@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { cdmxALocalISO } from '@/lib/utils';
 
 export interface AgendarResult {
   ok: boolean;
@@ -21,17 +22,13 @@ export async function agendarSesionAction(formData: FormData): Promise<AgendarRe
     return { ok: false, error: 'Falta paciente, fecha u hora.' };
   }
 
-  // Construir timestamp local. El input datetime del navegador manda hora local;
-  // la convertimos a ISO. Para México asumimos la zona del servidor del cliente.
-  const fechaProgramada = new Date(`${fecha}T${hora}:00`);
-  if (Number.isNaN(fechaProgramada.getTime())) {
-    return { ok: false, error: 'Fecha u hora inválida.' };
-  }
+  // La hora se escribe en hora de CDMX → convertir a UTC correctamente.
+  const fechaProgramada = cdmxALocalISO(fecha, hora);
 
   const supabase = await createClient();
   const { error } = await supabase.from('sesiones').insert({
     vinculacion_id: vinculacionId,
-    fecha_programada: fechaProgramada.toISOString(),
+    fecha_programada: fechaProgramada,
     duracion_min: duracion,
     modalidad: modalidad as 'online' | 'presencial' | 'hibrida',
     link_videollamada: modalidad !== 'presencial' && link ? link : null,

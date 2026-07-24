@@ -16,6 +16,7 @@ import {
   BarChart3,
   Menu,
   X,
+  UserCog,
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
@@ -50,6 +51,7 @@ const items: NavItem[] = [
   { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3, requiere: 'progreso' },
   { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle, requiere: 'chat' },
   { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar },
+  { href: '/paciente/cuenta', label: 'Mi cuenta', icon: UserCog },
 ];
 
 const TODAS_ACTIVAS: FuncionesPaciente = {

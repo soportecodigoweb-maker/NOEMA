@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ResponderTarea } from '@/components/paciente/ResponderTarea';
 import { HojaMembretada } from '@/components/ui/HojaMembretada';
 import { ListaMateriales } from '@/components/recursos/ListaMateriales';
+import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
@@ -54,6 +55,8 @@ export default async function TareasPacientePage() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
+      {/* Tiempo real: aparece al instante lo que el terapeuta asigne */}
+      <RefrescarEnVivo tabla="tareas" filtro={`vinculacion_id=eq.${vinc.id}`} canal={`tareas-paciente-${vinc.id}`} />
       <h1 className="font-serif text-3xl text-ink">Tareas</h1>
       <p className="mt-1 text-sm text-ink/60">Lo que tu terapeuta te asignó. Respóndelas a tu ritmo.</p>
 

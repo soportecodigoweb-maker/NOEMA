@@ -1,14 +1,14 @@
 'use client';
 
-import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, X } from 'lucide-react';
 
 export type TipoCampo = 'text' | 'scale' | 'choice';
 
 export interface PreguntaBorrador {
   label: string;
   type: TipoCampo;
-  /** Opciones separadas por coma (solo type='choice'). */
-  options: string;
+  /** Opciones (solo type='choice'). Una por entrada. */
+  options: string[];
   required: boolean;
 }
 
@@ -24,7 +24,7 @@ export interface CampoGuardado {
 }
 
 export function nuevaPregunta(): PreguntaBorrador {
-  return { label: '', type: 'text', options: '', required: false };
+  return { label: '', type: 'text', options: ['', ''], required: false };
 }
 
 /** Convierte los campos guardados en borradores editables. */
@@ -32,7 +32,7 @@ export function aBorradores(campos: CampoGuardado[]): PreguntaBorrador[] {
   return campos.map((c) => ({
     label: c.label ?? '',
     type: (['text', 'scale', 'choice'] as const).includes(c.type) ? c.type : 'text',
-    options: Array.isArray(c.options) ? c.options.join(', ') : '',
+    options: Array.isArray(c.options) && c.options.length ? c.options : ['', ''],
     required: c.required === true,
   }));
 }
@@ -47,7 +47,7 @@ export function aCamposGuardados(preguntas: PreguntaBorrador[]): CampoGuardado[]
       type: q.type,
       required: q.required,
       ...(q.type === 'choice'
-        ? { options: q.options.split(',').map((o) => o.trim()).filter(Boolean) }
+        ? { options: q.options.map((o) => o.trim()).filter(Boolean) }
         : {}),
       ...(q.type === 'scale' ? { min: 1, max: 5 } : {}),
     }));
@@ -56,6 +56,7 @@ export function aCamposGuardados(preguntas: PreguntaBorrador[]): CampoGuardado[]
 /**
  * Constructor de preguntas tipo Google Forms: añadir, reordenar, borrar,
  * elegir tipo (texto / escala / opción múltiple) y marcar obligatoria.
+ * Las opciones de "opción múltiple" son un campo por opción (como Google Forms).
  * Se usa tanto al crear un recurso como al editarlo.
  */
 export function EditorPreguntas({
@@ -79,6 +80,29 @@ export function EditorPreguntas({
     copia[i] = b;
     copia[j] = a;
     onChange(copia);
+  };
+
+  // Opciones de una pregunta de opción múltiple
+  const setOpcion = (qi: number, oi: number, valor: string) => {
+    const q = preguntas[qi];
+    if (!q) return;
+    const options = q.options.map((o, idx) => (idx === oi ? valor : o));
+    set(qi, { options });
+  };
+  const addOpcion = (qi: number) => {
+    const q = preguntas[qi];
+    if (!q) return;
+    set(qi, { options: [...q.options, ''] });
+  };
+  const quitarOpcion = (qi: number, oi: number) => {
+    const q = preguntas[qi];
+    if (!q || q.options.length <= 1) return;
+    set(qi, { options: q.options.filter((_, idx) => idx !== oi) });
+  };
+
+  // Evita que Enter dentro de un input envíe el formulario del modal.
+  const sinSubmit = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') e.preventDefault();
   };
 
   return (
@@ -110,6 +134,7 @@ export function EditorPreguntas({
                 <input
                   value={q.label}
                   onChange={(e) => set(i, { label: e.target.value })}
+                  onKeyDown={sinSubmit}
                   placeholder="Escribe la pregunta o indicación"
                   className="mt-1 flex-1 rounded-md border border-noema-deep/15 bg-bone px-2.5 py-1.5 text-sm focus:border-noema-sage focus:outline-none"
                 />
@@ -143,6 +168,7 @@ export function EditorPreguntas({
                 </button>
               </div>
 
+              {/* Tipo + obligatoria */}
               <div className="mt-2 flex flex-wrap items-center gap-2 pl-10">
                 <select
                   value={q.type}
@@ -154,15 +180,6 @@ export function EditorPreguntas({
                   <option value="choice">Opción múltiple</option>
                 </select>
 
-                {q.type === 'choice' && (
-                  <input
-                    value={q.options}
-                    onChange={(e) => set(i, { options: e.target.value })}
-                    placeholder="Opciones separadas por coma"
-                    className="min-w-[12rem] flex-1 rounded-md border border-noema-deep/15 bg-bone px-2.5 py-1 text-xs focus:border-noema-sage focus:outline-none"
-                  />
-                )}
-
                 <label className="flex items-center gap-1.5 text-xs text-ink/70">
                   <input
                     type="checkbox"
@@ -173,6 +190,49 @@ export function EditorPreguntas({
                   Obligatoria
                 </label>
               </div>
+
+              {/* Opciones (una por campo, tipo Google Forms) */}
+              {q.type === 'choice' && (
+                <div className="mt-2.5 space-y-1.5 pl-10">
+                  <p className="text-[11px] uppercase tracking-wider text-foreground-muted">
+                    Opciones de respuesta
+                  </p>
+                  {q.options.map((op, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <span className="size-3 shrink-0 rounded-full border-2 border-noema-deep/25" />
+                      <input
+                        value={op}
+                        onChange={(e) => setOpcion(i, oi, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addOpcion(i); // Enter añade otra opción, como Google Forms
+                          }
+                        }}
+                        placeholder={`Opción ${oi + 1}`}
+                        className="flex-1 rounded-md border border-noema-deep/15 bg-bone px-2.5 py-1.5 text-sm focus:border-noema-sage focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => quitarOpcion(i, oi)}
+                        disabled={q.options.length <= 1}
+                        aria-label="Quitar opción"
+                        className="shrink-0 text-foreground-muted hover:text-noema-clay disabled:opacity-25"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addOpcion(i)}
+                    className="inline-flex items-center gap-1 pl-5 text-xs font-medium text-noema-sage hover:underline"
+                  >
+                    <Plus className="size-3.5" strokeWidth={2} />
+                    Añadir opción
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

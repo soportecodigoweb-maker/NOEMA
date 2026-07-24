@@ -2407,6 +2407,10 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       soy_parte_de_sesion: { Args: { p_sesion_id: string }; Returns: boolean }
+      transferir_paciente: {
+        Args: { p_vinculacion_id: string; p_cedula_destino: string; p_motivo?: string }
+        Returns: Json
+      }
     }
     Enums: {
       accion_auditoria:

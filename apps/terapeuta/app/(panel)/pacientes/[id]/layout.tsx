@@ -4,6 +4,7 @@ import { ChevronLeft, MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { TabsNav } from '@/components/pacientes/TabsNav';
 import { ConfigVinculacion } from '@/components/pacientes/ConfigVinculacion';
+import { TransferirPaciente } from '@/components/pacientes/TransferirPaciente';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -80,6 +81,12 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
               <MessageCircle className="size-4" strokeWidth={1.8} />
               Enviar mensaje
             </Link>
+            {vinc.paciente_id && (
+              <TransferirPaciente
+                vinculacionId={vinc.id}
+                nombrePaciente={paciente?.nombre ?? 'este paciente'}
+              />
+            )}
             <ConfigVinculacion
               vinculacionId={vinc.id}
               nivelRiesgo={vinc.nivel_riesgo}

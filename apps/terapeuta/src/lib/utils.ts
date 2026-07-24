@@ -17,6 +17,32 @@ export function cn(...inputs: ClassValue[]) {
 export const TZ_MX = 'America/Mexico_City';
 
 /**
+ * Convierte una fecha y hora ESCRITAS EN HORA DE CDMX (por ej. desde un
+ * formulario) a un ISO string en UTC para guardar en la BD.
+ *
+ * Por qué existe: `new Date("2026-07-22T08:07:00")` interpreta la hora en la
+ * zona del SERVIDOR, que en Vercel es UTC. Así, "8:07" se guardaba como 8:07
+ * UTC y al paciente en CDMX le aparecía a las 2:07 (−6h). Aquí forzamos el
+ * offset de CDMX.
+ *
+ * México quitó el horario de verano en 2022, así que CDMX es UTC−6 fijo todo el
+ * año. El offset se calcula igual de forma robusta con Intl por si eso cambiara.
+ *
+ * @param fecha "YYYY-MM-DD"  @param hora "HH:MM"
+ */
+export function cdmxALocalISO(fecha: string, hora: string): string {
+  const naive = `${fecha}T${hora.length === 5 ? hora + ':00' : hora}`;
+  // Interpretamos la fecha/hora "ingenua" como si fuera UTC…
+  const comoUtc = new Date(`${naive}Z`);
+  // …y medimos cuánto se desvía CDMX de UTC en ese instante (en minutos).
+  const enCdmx = new Date(comoUtc.toLocaleString('en-US', { timeZone: TZ_MX }));
+  const enUtc = new Date(comoUtc.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const offsetMin = Math.round((enUtc.getTime() - enCdmx.getTime()) / 60000);
+  // Corregimos: hora real UTC = hora ingenua + offset.
+  return new Date(comoUtc.getTime() + offsetMin * 60000).toISOString();
+}
+
+/**
  * Formato de fecha en español MX (hora de Ciudad de México).
  */
 export function formatFecha(date: Date | string): string {
