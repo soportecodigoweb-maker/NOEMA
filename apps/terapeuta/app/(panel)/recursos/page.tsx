@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FolderLock, FolderHeart, FileText } from 'lucide-react';
+import { FolderLock, FolderHeart, FileText, Paperclip } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { NuevaPlantilla } from '@/components/recursos/NuevaPlantilla';
 
@@ -15,6 +15,7 @@ interface Plantilla {
   tipo: string;
   terapeuta_id: string | null;
   usos_count: number | null;
+  recursos: unknown;
 }
 
 // Categorías que son documentos de uso del terapeuta (no se envían al paciente).
@@ -23,12 +24,15 @@ const CATEGORIAS_TERAPEUTA = new Set(['formato_nom004', 'formato_terapeuta']);
 export default async function RecursosPage() {
   const supabase = await createClient();
 
-  const { data: plantillas } = await supabase
-    .from('plantillas_ejercicios')
-    .select('id, titulo, descripcion, categoria, duracion_min, tipo, terapeuta_id, usos_count')
-    .order('categoria')
-    .order('usos_count', { ascending: false })
-    .limit(80);
+  const [{ data: plantillas }, { data: { user } }] = await Promise.all([
+    supabase
+      .from('plantillas_ejercicios')
+      .select('id, titulo, descripcion, categoria, duracion_min, tipo, terapeuta_id, usos_count, recursos')
+      .order('categoria')
+      .order('usos_count', { ascending: false })
+      .limit(80),
+    supabase.auth.getUser(),
+  ]);
 
   const lista = (plantillas ?? []) as Plantilla[];
   const formatosTerapeuta = lista.filter((p) => CATEGORIAS_TERAPEUTA.has(p.categoria));
@@ -40,11 +44,11 @@ export default async function RecursosPage() {
         <div>
           <h1 className="mb-2 font-serif text-4xl leading-tight text-ink">Biblioteca</h1>
           <p className="text-foreground-muted">
-            Plantillas, formatos y recursos, organizados en carpetas. Ábrelos para verlos
-            y asignarlos.
+            Plantillas, formatos y materiales (lecturas, PDF, audios, enlaces),
+            organizados en carpetas.
           </p>
         </div>
-        <NuevaPlantilla />
+        <NuevaPlantilla terapeutaId={user?.id ?? ''} />
       </div>
 
       {/* Carpeta: formatos del terapeuta (uso interno) */}
@@ -129,7 +133,15 @@ function Carpeta({
                   {p.descripcion}
                 </p>
               )}
-              <div className="mt-3 text-xs text-noema-sage">Abrir →</div>
+              <div className="mt-3 flex items-center gap-3 text-xs text-noema-sage">
+                <span>Abrir →</span>
+                {Array.isArray(p.recursos) && p.recursos.length > 0 && (
+                  <span className="inline-flex items-center gap-1 text-foreground-muted">
+                    <Paperclip className="size-3" strokeWidth={1.8} />
+                    {p.recursos.length}
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </div>

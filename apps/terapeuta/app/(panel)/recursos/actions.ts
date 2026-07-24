@@ -48,6 +48,14 @@ export async function crearPlantillaAction(formData: FormData): Promise<{ ok: bo
 
   if (!titulo) return { ok: false, error: 'Ponle un título.' };
 
+  // Materiales (lecturas, PDF, audios, enlaces) — aplican a ambas carpetas.
+  let materiales: Json = [];
+  try {
+    materiales = normalizarMateriales(JSON.parse(String(formData.get('materiales') ?? '[]')));
+  } catch {
+    materiales = [];
+  }
+
   const { data, error } = await supabase
     .from('plantillas_ejercicios')
     .insert({
@@ -57,6 +65,7 @@ export async function crearPlantillaAction(formData: FormData): Promise<{ ok: bo
       categoria,
       contenido_md: contenido || null,
       campos_respuesta: campos,
+      recursos: materiales,
       tipo: esFormatoTerapeuta ? 'lectura' : 'ejercicio',
     })
     .select('id')
@@ -88,6 +97,34 @@ function normalizarCampos(raw: unknown): Json {
 }
 
 /**
+ * Normaliza los materiales (archivos del bucket 'recursos' y enlaces).
+ * Descarta cualquier entrada sin su referencia correspondiente.
+ */
+function normalizarMateriales(raw: unknown): Json {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (m) =>
+        m &&
+        typeof m.titulo === 'string' &&
+        m.titulo.trim() &&
+        ((m.tipo === 'archivo' && typeof m.ruta === 'string' && m.ruta) ||
+          (m.tipo === 'enlace' && typeof m.url === 'string' && m.url)),
+    )
+    .map((m) => ({
+      tipo: m.tipo as 'archivo' | 'enlace',
+      titulo: String(m.titulo).trim(),
+      ...(m.tipo === 'archivo'
+        ? {
+            ruta: String(m.ruta),
+            ...(m.mime ? { mime: String(m.mime) } : {}),
+            ...(typeof m.tamano === 'number' ? { tamano: m.tamano } : {}),
+          }
+        : { url: String(m.url) }),
+    }));
+}
+
+/**
  * Guarda los cambios de un formulario propio del terapeuta (editor tipo
  * Google Forms). La RLS `plantillas_propias_all` impide editar las oficiales
  * de NOEMA o las de otro terapeuta — para esas se usa duplicarPlantillaAction.
@@ -99,6 +136,7 @@ export async function actualizarPlantillaAction(
     descripcion: string;
     contenido: string;
     campos: unknown;
+    materiales?: unknown;
   },
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient();
@@ -117,6 +155,7 @@ export async function actualizarPlantillaAction(
       descripcion: datos.descripcion.trim() || null,
       contenido_md: datos.contenido.trim() || null,
       campos_respuesta: normalizarCampos(datos.campos),
+      recursos: normalizarMateriales(datos.materiales),
     })
     .eq('id', id)
     .eq('terapeuta_id', user.id);

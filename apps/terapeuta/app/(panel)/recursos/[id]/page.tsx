@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EditorPlantilla } from '@/components/recursos/EditorPlantilla';
 import type { CampoGuardado } from '@/components/recursos/EditorPreguntas';
+import type { Material } from '@/components/recursos/EditorMateriales';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export default async function RecursoDetallePage({ params }: PageProps) {
   const [{ data: p }, { data: { user } }] = await Promise.all([
     supabase
       .from('plantillas_ejercicios')
-      .select('id, titulo, descripcion, categoria, contenido_md, campos_respuesta, duracion_min, tipo, terapeuta_id')
+      .select('id, titulo, descripcion, categoria, contenido_md, campos_respuesta, recursos, duracion_min, tipo, terapeuta_id')
       .eq('id', id)
       .maybeSingle(),
     supabase.auth.getUser(),
@@ -29,6 +30,7 @@ export default async function RecursoDetallePage({ params }: PageProps) {
   if (!p) notFound();
 
   const campos = (Array.isArray(p.campos_respuesta) ? p.campos_respuesta : []) as unknown as CampoGuardado[];
+  const materiales = (Array.isArray(p.recursos) ? p.recursos : []) as unknown as Material[];
   const esFormatoTerapeuta = CATEGORIAS_TERAPEUTA.has(p.categoria);
   const esMia = !!user && p.terapeuta_id === user.id;
   const etiqueta =
@@ -50,9 +52,11 @@ export default async function RecursoDetallePage({ params }: PageProps) {
         descripcion={p.descripcion}
         contenido={p.contenido_md}
         campos={campos}
+        materiales={materiales}
         etiqueta={etiqueta}
         esMia={esMia}
         esFormatoTerapeuta={esFormatoTerapeuta}
+        terapeutaId={user?.id ?? ''}
       />
 
       <p className="mt-5 text-xs text-foreground-muted">

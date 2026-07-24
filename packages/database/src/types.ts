@@ -1705,6 +1705,7 @@ export type Database = {
           id: string
           plantilla_id: string | null
           recordatorios: Json
+          recursos: Json
           respuestas_visibles_terapeuta: boolean
           titulo: string
           vinculacion_id: string
@@ -1725,6 +1726,7 @@ export type Database = {
           id?: string
           plantilla_id?: string | null
           recordatorios?: Json
+          recursos?: Json
           respuestas_visibles_terapeuta?: boolean
           titulo: string
           vinculacion_id: string
@@ -1745,6 +1747,7 @@ export type Database = {
           id?: string
           plantilla_id?: string | null
           recordatorios?: Json
+          recursos?: Json
           respuestas_visibles_terapeuta?: boolean
           titulo?: string
           vinculacion_id?: string

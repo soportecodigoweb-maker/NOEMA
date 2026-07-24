@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ResponderTarea } from '@/components/paciente/ResponderTarea';
 import { HojaMembretada } from '@/components/ui/HojaMembretada';
+import { ListaMateriales } from '@/components/recursos/ListaMateriales';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Tareas' };
@@ -40,7 +41,7 @@ export default async function TareasPacientePage() {
   const { data: tareas } = await supabase
     .from('tareas')
     .select(`
-      id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta,
+      id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta, recursos,
       respuestas:tarea_respuestas(
         id, retroalimentacion, retroalimentacion_at,
         respuestas, texto_libre, dificultad_percibida, creado_at
@@ -81,6 +82,13 @@ export default async function TareasPacientePage() {
                       {t.contenido_md}
                     </div>
                   )}
+
+                  {/* Materiales que le pasó el terapeuta (lecturas, PDF, audios, enlaces) */}
+                  <ListaMateriales
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    materiales={(Array.isArray(t.recursos) ? t.recursos : []) as any}
+                    titulo="Material de apoyo"
+                  />
 
                   {feedback?.retroalimentacion && (
                     <div className="mt-4 rounded-lg bg-noema-sage/10 p-3 text-sm">

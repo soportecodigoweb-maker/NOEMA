@@ -8,17 +8,20 @@ import {
   aCamposGuardados,
   type PreguntaBorrador,
 } from './EditorPreguntas';
+import { EditorMateriales, type Material } from './EditorMateriales';
 
-export function NuevaPlantilla() {
+export function NuevaPlantilla({ terapeutaId }: { terapeutaId: string }) {
   const [open, setOpen] = useState(false);
   const [destino, setDestino] = useState<'paciente' | 'terapeuta'>('paciente');
   const [preguntas, setPreguntas] = useState<PreguntaBorrador[]>([]);
+  const [materiales, setMateriales] = useState<Material[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const reset = () => {
     setDestino('paciente');
     setPreguntas([]);
+    setMateriales([]);
     setError(null);
   };
 
@@ -26,6 +29,7 @@ export function NuevaPlantilla() {
     setError(null);
     formData.set('destino', destino);
     formData.set('campos', JSON.stringify(aCamposGuardados(preguntas)));
+    formData.set('materiales', JSON.stringify(materiales));
     startTransition(async () => {
       const res = await crearPlantillaAction(formData);
       // Si tiene éxito, la action redirige; si falla, muestra error.
@@ -136,6 +140,13 @@ export function NuevaPlantilla() {
               {destino === 'paciente' && (
                 <EditorPreguntas preguntas={preguntas} onChange={setPreguntas} />
               )}
+
+              {/* Lecturas, PDF, audios, enlaces */}
+              <EditorMateriales
+                materiales={materiales}
+                onChange={setMateriales}
+                terapeutaId={terapeutaId}
+              />
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 

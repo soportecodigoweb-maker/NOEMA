@@ -21,13 +21,14 @@ export async function asignarPlantillaAction(
   // el paciente conteste cada pregunta dentro de la misma tarea — punto #8).
   const { data: plantilla } = await supabase
     .from('plantillas_ejercicios')
-    .select('titulo, descripcion, contenido_md, categoria, campos_respuesta')
+    .select('titulo, descripcion, contenido_md, categoria, campos_respuesta, recursos')
     .eq('id', plantillaId)
     .single();
 
   if (!plantilla) return { ok: false, error: 'Plantilla no encontrada.' };
 
-  // Insertar tarea
+  // Insertar tarea. Copiamos campos_respuesta (para que conteste cada pregunta)
+  // y recursos (lecturas, PDF, audios y enlaces) para que le lleguen al paciente.
   await supabase.from('tareas').insert({
     vinculacion_id: vinculacionId,
     plantilla_id: plantillaId,
@@ -36,6 +37,7 @@ export async function asignarPlantillaAction(
     descripcion: plantilla.descripcion,
     contenido_md: plantilla.contenido_md,
     campos_respuesta: plantilla.campos_respuesta ?? [],
+    recursos: plantilla.recursos ?? [],
     fecha_limite: fechaLimite || null,
     comentarios_terapeuta: mensaje || null,
     estado: 'pendiente',

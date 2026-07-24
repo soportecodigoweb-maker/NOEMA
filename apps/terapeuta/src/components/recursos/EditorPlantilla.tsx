@@ -11,6 +11,8 @@ import {
   type CampoGuardado,
   type PreguntaBorrador,
 } from './EditorPreguntas';
+import { EditorMateriales, type Material } from './EditorMateriales';
+import { ListaMateriales } from './ListaMateriales';
 import {
   actualizarPlantillaAction,
   duplicarPlantillaAction,
@@ -22,10 +24,13 @@ export interface EditorPlantillaProps {
   descripcion: string | null;
   contenido: string | null;
   campos: CampoGuardado[];
+  materiales: Material[];
   etiqueta: string;
   /** true si la plantilla pertenece al terapeuta (puede editarla directo). */
   esMia: boolean;
   esFormatoTerapeuta: boolean;
+  /** id del terapeuta en sesión — carpeta donde se suben los archivos. */
+  terapeutaId: string;
 }
 
 /**
@@ -39,9 +44,11 @@ export function EditorPlantilla({
   descripcion,
   contenido,
   campos,
+  materiales,
   etiqueta,
   esMia,
   esFormatoTerapeuta,
+  terapeutaId,
 }: EditorPlantillaProps) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -53,12 +60,14 @@ export function EditorPlantilla({
   const [vDescripcion, setVDescripcion] = useState(descripcion ?? '');
   const [vContenido, setVContenido] = useState(contenido ?? '');
   const [preguntas, setPreguntas] = useState<PreguntaBorrador[]>(() => aBorradores(campos));
+  const [vMateriales, setVMateriales] = useState<Material[]>(materiales);
 
   const cancelar = () => {
     setVTitulo(titulo);
     setVDescripcion(descripcion ?? '');
     setVContenido(contenido ?? '');
     setPreguntas(aBorradores(campos));
+    setVMateriales(materiales);
     setError(null);
     setEditando(false);
   };
@@ -71,6 +80,7 @@ export function EditorPlantilla({
         descripcion: vDescripcion,
         contenido: vContenido,
         campos: aCamposGuardados(preguntas),
+        materiales: vMateriales,
       });
       if (res.ok) {
         setEditando(false);
@@ -130,6 +140,12 @@ export function EditorPlantilla({
             {!esFormatoTerapeuta && (
               <EditorPreguntas preguntas={preguntas} onChange={setPreguntas} />
             )}
+
+            <EditorMateriales
+              materiales={vMateriales}
+              onChange={setVMateriales}
+              terapeutaId={terapeutaId}
+            />
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -207,6 +223,8 @@ export function EditorPlantilla({
             </p>
           </div>
         )}
+
+        <ListaMateriales materiales={materiales} />
 
         {campos.length > 0 && (
           <div className="mt-7 border-t border-noema-deep/8 pt-5">
