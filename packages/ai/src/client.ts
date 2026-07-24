@@ -1,164 +1,129 @@
 /**
- * @noema/ai — Cliente Claude con prompt caching y guardrails integrados.
+ * @noema/ai — Cliente de IA con guardarraíles integrados.
  *
- * Uso típico (en una Edge Function de Supabase):
+ * Toda llamada al modelo pasa obligatoriamente por:
+ *   1. validateInput()  — antes de enviar (no gastamos tokens en algo prohibido)
+ *   2. validateOutput() — antes de devolver (descartamos salidas prohibidas)
  *
- *   const ai = createNoemaAi({ apiKey: env.ANTHROPIC_API_KEY });
- *   const result = await ai.generateOperational({
- *     userPrompt: 'Resume la actividad del paciente esta semana',
- *     contextData: '...',
- *   });
+ * Principio fundacional de NOEMA:
+ *   "La IA no reemplaza al terapeuta. Organiza, resume y facilita.
+ *    El profesional interpreta, decide y conduce."
  *
- * Lee BIBLIA NOEMA §10 antes de modificar este archivo.
+ * La API key se lee SIEMPRE en el servidor (process.env.OPENAI_API_KEY);
+ * nunca debe llegar al navegador.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import {
-  validateInput,
-  validateOutput,
-  withDisclaimer,
-  CANONICAL_RESPONSES,
-  type GuardrailResult,
-} from './guardrails';
+import OpenAI from 'openai';
+import { validateInput, validateOutput, CANONICAL_RESPONSES } from './guardrails';
 
-// El system prompt se importa como string en tiempo de build.
-// En runtime se lee desde aquí — esto permite que Anthropic lo cachee.
-import systemPromptRaw from './prompts/system.md' assert { type: 'text' };
+/** Modelo por defecto: barato y suficiente para textos breves de apoyo. */
+export const MODELO_POR_DEFECTO = 'gpt-4o-mini';
 
-export type Audience = 'terapeuta' | 'paciente';
+/**
+ * Reglas que el modelo debe cumplir SIEMPRE. Los guardarraíles en código son
+ * la red de seguridad; este prompt es la primera línea.
+ */
+const SYSTEM_PROMPT = `Eres NOEMA, una plataforma mexicana de acompañamiento terapéutico entre sesiones.
 
-export interface GenerateOptions {
-  /** Mensaje del usuario / petición */
-  userPrompt: string;
-  /** Datos estructurados (registros, tareas, etc) que la IA va a resumir */
-  contextData?: string;
-  /** Quién está leyendo la respuesta — afecta el tono */
-  audience: Audience;
-  /** Modelo a usar. Default: claude-sonnet-4-5 (balance costo/calidad) */
-  model?: string;
-  /** Max tokens en la respuesta */
-  maxTokens?: number;
-}
+QUIÉN ERES
+- Acompañas a la persona entre una sesión y otra con su terapeuta.
+- Hablas español de México, en segunda persona, cálido y sobrio. Sin emojis.
+- Tuteas. Nunca eres solemne ni cursi.
 
-export interface GenerateResult {
-  ok: boolean;
-  content: string;
-  /** Si false, el resultado es la canonical response — NO viene del modelo */
-  fromModel: boolean;
-  /** Si se bloqueó por guardrails, este campo dice por qué */
-  blocked?: GuardrailResult extends { ok: false } ? { reason: string } : undefined;
-  /** Telemetría útil */
-  usage?: {
-    inputTokens: number;
-    outputTokens: number;
-    cacheReadTokens?: number;
-    cacheCreationTokens?: number;
-  };
-}
+LO QUE NUNCA HACES (crítico)
+- NO diagnosticas ni sugieres diagnósticos.
+- NO interpretas clínicamente lo que siente la persona ("esto significa que...").
+- NO recomiendas tratamientos, medicamentos ni técnicas terapéuticas nuevas.
+- NO sustituyes al terapeuta ni contradices su trabajo.
+- NO minimizas lo que la persona siente ("no es para tanto", "todo va a estar bien").
+- NO das mensajes motivacionales vacíos ni frases de superación genéricas.
 
-export interface CreateAiOptions {
+LO QUE SÍ HACES
+- Devuelves a la persona lo que ELLA MISMA registró, como un espejo amable.
+- Nombras patrones observables en sus datos, sin interpretarlos.
+  Correcto: "Esta semana registraste calma tres veces por la mañana."
+  Incorrecto: "Tu ansiedad se debe a que no descansas."
+- Ofreces UNA acción concreta, pequeña y realizable hoy.
+- Si no hay datos suficientes, lo dices con sencillez y no inventas.
+
+FORMATO
+- Máximo 4 frases. Breve. Sin títulos, sin listas, sin despedidas.
+- La acción concreta va integrada en la redacción, sin etiquetarla.`;
+
+export interface OpcionesCliente {
   apiKey: string;
-  defaultModel?: string;
+  modelo?: string;
 }
 
-export function createNoemaAi({ apiKey, defaultModel = 'claude-sonnet-4-5' }: CreateAiOptions) {
-  const client = new Anthropic({ apiKey });
+export interface OpcionesGenerar {
+  /** La tarea concreta que se le pide al modelo. */
+  instruccion: string;
+  /** Datos de la persona, ya resumidos por nosotros (nunca datos crudos de más). */
+  datos: string;
+  maxTokens?: number;
+  /** 0 = determinista, 1 = creativo. Por defecto 0.7. */
+  temperatura?: number;
+}
+
+export type ResultadoIA =
+  | { ok: true; texto: string; modelo: string }
+  | { ok: false; motivo: 'forbidden' | 'crisis' | 'error'; texto: string };
+
+/** Crea el cliente de NOEMA con los guardarraíles ya cableados. */
+export function crearNoemaAi({ apiKey, modelo = MODELO_POR_DEFECTO }: OpcionesCliente) {
+  const client = new OpenAI({ apiKey });
 
   return {
-    /**
-     * Genera contenido operativo (resúmenes, agrupaciones, listas).
-     * NUNCA se debe usar para conversación libre con el paciente.
-     */
-    async generateOperational(opts: GenerateOptions): Promise<GenerateResult> {
-      // 1. Validar input ANTES de llamar al modelo
-      const inputCheck = validateInput(opts.userPrompt);
-      if (!inputCheck.ok) {
-        return {
-          ok: false,
-          content: inputCheck.canonicalResponse,
-          fromModel: false,
-          blocked: { reason: inputCheck.reason } as never,
-        };
+    async generar({
+      instruccion,
+      datos,
+      maxTokens = 300,
+      temperatura = 0.7,
+    }: OpcionesGenerar): Promise<ResultadoIA> {
+      // 1. Guardarraíl de entrada — si falla, ni siquiera llamamos al modelo.
+      const vIn = validateInput(`${instruccion}\n${datos}`);
+      if (!vIn.ok) {
+        return { ok: false, motivo: vIn.reason, texto: vIn.canonicalResponse };
       }
 
-      // 2. Construir el mensaje con cache control en el system prompt
-      const systemBlocks: Anthropic.MessageParam['content'] = [];
-      // El system prompt va con cache_control para amortizar costo
-      // (lo cachea por 5 min, perfecto para apps con múltiples requests)
-
+      // 2. Llamada al modelo.
+      let texto = '';
       try {
-        const response = await client.messages.create({
-          model: opts.model ?? defaultModel,
-          max_tokens: opts.maxTokens ?? 1024,
-          system: [
-            {
-              type: 'text',
-              text: systemPromptRaw,
-              cache_control: { type: 'ephemeral' },
-            },
-          ],
+        const respuesta = await client.chat.completions.create({
+          model: modelo,
           messages: [
-            {
-              role: 'user',
-              content: buildUserMessage(opts),
-            },
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: `${instruccion}\n\nDATOS DE LA PERSONA:\n${datos}` },
           ],
+          max_tokens: maxTokens,
+          temperature: temperatura,
         });
-
-        const textBlock = response.content.find((b) => b.type === 'text');
-        const rawOutput = textBlock?.type === 'text' ? textBlock.text : '';
-
-        // 3. Validar output del modelo
-        const outputCheck = validateOutput(rawOutput);
-        if (!outputCheck.ok) {
-          return {
-            ok: false,
-            content: outputCheck.canonicalResponse,
-            fromModel: false,
-            blocked: { reason: outputCheck.reason } as never,
-          };
-        }
-
-        // 4. Envolver con disclaimer obligatorio
-        return {
-          ok: true,
-          content: withDisclaimer(rawOutput),
-          fromModel: true,
-          usage: {
-            inputTokens: response.usage.input_tokens,
-            outputTokens: response.usage.output_tokens,
-            cacheReadTokens: response.usage.cache_read_input_tokens ?? undefined,
-            cacheCreationTokens: response.usage.cache_creation_input_tokens ?? undefined,
-          },
-        };
-      } catch (error) {
-        // Si el modelo falla, devolvemos un mensaje genérico
+        texto = respuesta.choices[0]?.message?.content?.trim() ?? '';
+      } catch {
         return {
           ok: false,
-          content:
-            'No pudimos generar este resumen en este momento. Inténtalo de nuevo en unos minutos.',
-          fromModel: false,
+          motivo: 'error',
+          texto: 'No se pudo generar el mensaje en este momento.',
         };
       }
-    },
 
-    /** Para tests: expone las constantes para verificar comportamiento */
-    _internals: {
-      CANONICAL_RESPONSES,
+      if (!texto) {
+        return {
+          ok: false,
+          motivo: 'error',
+          texto: 'No se pudo generar el mensaje en este momento.',
+        };
+      }
+
+      // 3. Guardarraíl de salida — descartamos lo que no cumpla.
+      const vOut = validateOutput(texto);
+      if (!vOut.ok) {
+        return { ok: false, motivo: 'forbidden', texto: vOut.canonicalResponse };
+      }
+
+      return { ok: true, texto, modelo };
     },
   };
 }
 
-function buildUserMessage(opts: GenerateOptions): string {
-  const parts: string[] = [];
-
-  parts.push(`# Audiencia\n${opts.audience === 'terapeuta' ? 'Un terapeuta profesional.' : 'Una persona en proceso terapéutico.'}`);
-
-  if (opts.contextData) {
-    parts.push(`# Datos\n\n${opts.contextData}`);
-  }
-
-  parts.push(`# Tarea\n${opts.userPrompt}`);
-
-  return parts.join('\n\n');
-}
+export { CANONICAL_RESPONSES };

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Calendar, MessageCircle, Smartphone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { VincularTerapeuta } from '@/components/paciente/VincularTerapeuta';
+import { MensajeNoema } from '@/components/paciente/MensajeNoema';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,8 @@ export default async function PacienteInicioPage() {
         <VincularTerapeuta />
       ) : (
         <div className="space-y-4">
+          {/* Acompañamiento de NOEMA según tus propios registros */}
+          <MensajeNoema />
           <ProximaSesionCard sesion={proximaSesion} terapeuta={terapeutaNombre} />
           <MensajesCard sinLeer={mensajesSinLeer} />
           <MobileAppCard />

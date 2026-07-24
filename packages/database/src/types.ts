@@ -800,6 +800,47 @@ export type Database = {
           },
         ]
       }
+      mensajes_noema: {
+        Row: {
+          basado_en: Json
+          generado_at: string
+          id: string
+          modelo: string | null
+          origen: string
+          paciente_id: string
+          texto: string
+          visto_at: string | null
+        }
+        Insert: {
+          basado_en?: Json
+          generado_at?: string
+          id?: string
+          modelo?: string | null
+          origen?: string
+          paciente_id: string
+          texto: string
+          visto_at?: string | null
+        }
+        Update: {
+          basado_en?: Json
+          generado_at?: string
+          id?: string
+          modelo?: string | null
+          origen?: string
+          paciente_id?: string
+          texto?: string
+          visto_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensajes_noema_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       mensajes_rapidos: {
         Row: {
           creado_at: string
