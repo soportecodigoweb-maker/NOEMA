@@ -4,6 +4,7 @@ import { AlertasCrisisEnVivo } from '@/components/crisis/AlertasCrisisEnVivo';
 import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
+import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -85,8 +86,9 @@ export default async function PanelLayout({
       {/* Registros emocionales llegando en vivo (#6) */}
       <RegistrosEnVivo />
 
-      {/* Tour guiado (modo aprendiz) */}
+      {/* Tour guiado (modo aprendiz) + aviso de dónde activarlo */}
       <GuiaAprendiz activo={profile.modo_aprendiz} />
+      <AvisoModoAprendiz />
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion

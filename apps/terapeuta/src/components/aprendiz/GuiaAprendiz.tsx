@@ -306,18 +306,52 @@ export function GuiaAprendiz({ activo }: { activo: boolean }) {
     setMarco({ top: r.top, left: r.left, width: r.width, height: r.height });
   }, [pasos, idx]);
 
-  // Al entrar a un paso: llevar el elemento a la vista y medir varias veces
-  // para atrapar el reflow del scroll.
+  // Al entrar a un paso: en móvil abrir/cerrar el menú según el objetivo, llevar
+  // el elemento a la vista y medir varias veces para atrapar el reflow.
   useEffect(() => {
     if (cerrado || !pasos) return;
     const paso = pasos[idx];
-    if (paso?.target) {
+    const esNav = !!paso?.target?.startsWith('nav-');
+    const movil = typeof window !== 'undefined' && window.innerWidth < 1024;
+
+    // Los ítems del menú viven en un cajón que en móvil está oculto: lo abrimos
+    // para poder resaltarlos, y lo cerramos cuando el paso apunta a la página.
+    if (movil) {
+      window.dispatchEvent(new CustomEvent('noema:menu', { detail: { abrir: esNav } }));
+    }
+
+    const enfocar = () => {
+      if (!paso?.target) return;
       const el = document.querySelector<HTMLElement>(`[data-tour="${paso.target}"]`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    const t = [60, 260, 520].map((ms) => window.setTimeout(medir, ms));
-    return () => t.forEach(clearTimeout);
+    };
+    // Si abrimos el menú, esperamos su animación (~300ms) antes de enfocar/medir.
+    const espera = esNav && movil ? 340 : 0;
+    const t0 = window.setTimeout(enfocar, espera);
+    const t = [espera + 60, espera + 320, espera + 640].map((ms) =>
+      window.setTimeout(medir, ms),
+    );
+    return () => {
+      clearTimeout(t0);
+      t.forEach(clearTimeout);
+    };
   }, [idx, cerrado, pasos, medir]);
+
+  // Al cerrar el tour, asegurarnos de cerrar el menú en móvil.
+  useEffect(() => {
+    if (cerrado && typeof window !== 'undefined' && window.innerWidth < 1024) {
+      window.dispatchEvent(new CustomEvent('noema:menu', { detail: { abrir: false } }));
+    }
+  }, [cerrado]);
+
+  // Si el modo aprendiz se apaga (se desmonta), cerrar el menú.
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        window.dispatchEvent(new CustomEvent('noema:menu', { detail: { abrir: false } }));
+      }
+    };
+  }, []);
 
   // Recalcular al hacer scroll o cambiar de tamaño mientras el tour está abierto.
   useEffect(() => {

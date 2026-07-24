@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -51,14 +51,29 @@ export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
 
+  // El modo aprendiz puede pedir abrir/cerrar el menú para resaltar sus ítems.
+  useEffect(() => {
+    const onMenu = (e: Event) => {
+      const abrir = (e as CustomEvent<{ abrir: boolean }>).detail?.abrir;
+      setAbierto(!!abrir);
+    };
+    window.addEventListener('noema:menu', onMenu);
+    return () => window.removeEventListener('noema:menu', onMenu);
+  }, []);
+
   return (
     <>
       {/* Barra superior — solo móvil */}
       <header className="sticky top-0 z-40 flex items-center justify-between bg-noema-deep px-4 py-3 text-bone lg:hidden">
-        <div className="flex items-center gap-2.5">
+        <Link
+          href="/inicio"
+          onClick={() => setAbierto(false)}
+          className="flex items-center gap-2.5"
+          aria-label="Ir al inicio"
+        >
           <Vesica size={24} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
           <span className="font-serif text-lg tracking-[0.3em]">NOEMA</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-1">
           <CentroNotificaciones tono="oscuro" />
           <button
@@ -95,10 +110,15 @@ export function Sidebar({ user }: SidebarProps) {
       >
         {/* Logo */}
         <div className="flex items-center justify-between px-6 py-7">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/inicio"
+            onClick={() => setAbierto(false)}
+            className="flex items-center gap-3"
+            aria-label="Ir al inicio"
+          >
             <Vesica size={28} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
             <span className="font-serif text-xl tracking-[0.34em]">NOEMA</span>
-          </div>
+          </Link>
           {/* Campana: en desktop vive aquí; en móvil está en la barra superior */}
           <div className="hidden lg:block">
             <CentroNotificaciones tono="oscuro" />

@@ -3,6 +3,7 @@ import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { SosTab } from '@/components/paciente/SosTab';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
+import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -100,8 +101,9 @@ export default async function PacienteLayout({
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />
 
-      {/* Tour guiado (modo aprendiz) */}
+      {/* Tour guiado (modo aprendiz) + aviso de dónde activarlo */}
       <GuiaAprendiz activo={profile.modo_aprendiz} />
+      <AvisoModoAprendiz />
     </div>
   );
 }
