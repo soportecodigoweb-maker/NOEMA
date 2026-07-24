@@ -99,9 +99,10 @@ export function MensajesThread({
     .join('');
 
   return (
-    // Pantalla completa tipo WhatsApp. -mb-24 cancela el padding inferior del
-    // main (reservado para el botón flotante) para que el composer quede abajo.
-    <div className="-mb-24 flex h-[calc(100dvh-3.25rem)] flex-col bg-paper lg:mb-0 lg:h-screen">
+    // Pantalla completa tipo WhatsApp. En móvil se fija al viewport bajo la barra
+    // superior (top-[52px]) para que NO se mueva al hacer scroll y el composer
+    // quede pegado abajo. En desktop es una columna normal de altura completa.
+    <div className="fixed inset-x-0 bottom-0 top-[52px] z-30 flex flex-col bg-paper lg:static lg:inset-auto lg:top-auto lg:z-auto lg:h-screen">
       {/* Cabecera compacta */}
       <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-white px-4 py-3">
         <span className="flex size-10 items-center justify-center rounded-full bg-noema-sage/15 text-sm font-medium text-noema-deep/70">

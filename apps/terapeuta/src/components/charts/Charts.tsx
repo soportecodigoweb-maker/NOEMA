@@ -17,12 +17,15 @@ export function Sparkline({
   height = 44,
   width = 140,
   strokeWidth = 2,
+  fluid = false,
 }: {
   data: number[];
   color?: string;
   height?: number;
   width?: number;
   strokeWidth?: number;
+  /** Ocupa el 100% del ancho del contenedor (no se sale en móvil). */
+  fluid?: boolean;
 }) {
   if (data.length < 2) {
     return <div style={{ height }} className="flex items-center text-xs text-foreground-muted">—</div>;
@@ -42,8 +45,14 @@ export function Sparkline({
   const areaPath = `${linePath} L${pts[pts.length - 1]![0].toFixed(1)},${(height - pad).toFixed(1)} L${pts[0]![0].toFixed(1)},${(height - pad).toFixed(1)} Z`;
   const gid = `spark-${color.replace('#', '')}-${width}-${height}`;
 
+  // fluid: el SVG llena el ancho disponible; con vector-effect el trazo no se
+  // distorsiona al escalar. Así la línea nunca se sale del recuadro.
+  const dims = fluid
+    ? { width: '100%' as const, preserveAspectRatio: 'none' as const, className: 'block max-w-full' }
+    : { width, className: 'block max-w-full overflow-visible' };
+
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+    <svg height={height} viewBox={`0 0 ${width} ${height}`} {...dims}>
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.18" />
@@ -51,8 +60,18 @@ export function Sparkline({
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gid})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={pts[pts.length - 1]![0]} cy={pts[pts.length - 1]![1]} r={strokeWidth + 1} fill={color} />
+      <path
+        d={linePath}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect={fluid ? 'non-scaling-stroke' : undefined}
+      />
+      {!fluid && (
+        <circle cx={pts[pts.length - 1]![0]} cy={pts[pts.length - 1]![1]} r={strokeWidth + 1} fill={color} />
+      )}
     </svg>
   );
 }

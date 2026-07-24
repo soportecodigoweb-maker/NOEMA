@@ -221,6 +221,7 @@ function Contenido({ data }: { data: ResumenData }) {
               height={70}
               color="#3D4D3E"
               strokeWidth={2}
+              fluid
             />
           ) : (
             <p className="py-6 text-center text-xs text-foreground-muted">Sin registros con intensidad.</p>

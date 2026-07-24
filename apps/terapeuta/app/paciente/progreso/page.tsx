@@ -152,7 +152,7 @@ export default async function ProgresoPage() {
             <Tendencia delta={deltaBienestar} />
           </div>
           {serieBienestar.some((x) => x > 0) ? (
-            <Sparkline data={serieBienestar} width={440} height={64} color={CHART_COLORS.SAGE} />
+            <Sparkline data={serieBienestar} width={440} height={64} color={CHART_COLORS.SAGE} fluid />
           ) : (
             <p className="py-6 text-center text-xs text-foreground-muted">
               Registra emociones para ver cómo evoluciona tu bienestar.

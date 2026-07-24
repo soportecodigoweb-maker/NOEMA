@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
-import { LifeBuoy } from 'lucide-react';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
+import { SosTab } from '@/components/paciente/SosTab';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
@@ -94,17 +93,8 @@ export default async function PacienteLayout({
       />
       <main className="min-w-0 flex-1 overflow-x-hidden pb-24 lg:pb-0">{children}</main>
 
-      {/* Botón de apoyo flotante — verde, visible; solo si el terapeuta lo habilitó */}
-      {funciones.sos && (
-        <Link
-          href="/paciente/crisis"
-          className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-full bg-noema-sage px-5 py-3.5 text-sm font-semibold text-bone shadow-[0_8px_24px_-6px_rgba(61,77,62,0.6)] ring-4 ring-noema-sage/20 transition-transform hover:scale-105 lg:bottom-5"
-          aria-label="Necesito apoyo ahora"
-        >
-          <LifeBuoy className="size-5" strokeWidth={2} />
-          Necesito apoyo
-        </Link>
-      )}
+      {/* Botón de apoyo como pestaña lateral escondida (solo si está habilitado) */}
+      {funciones.sos && <SosTab />}
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />
