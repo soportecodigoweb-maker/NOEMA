@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { SosTab } from '@/components/paciente/SosTab';
-import { SonidosRelajantes } from '@/components/paciente/SonidosRelajantes';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { createClient } from '@/lib/supabase/server';
@@ -97,9 +96,6 @@ export default async function PacienteLayout({
 
       {/* Botón de apoyo como pestaña lateral escondida (solo si está habilitado) */}
       {funciones.sos && <SosTab />}
-
-      {/* Sonidos relajantes ambientales */}
-      <SonidosRelajantes />
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />

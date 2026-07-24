@@ -24,17 +24,19 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Clave para el tour del modo aprendiz (data-tour). */
+  tour?: string;
 }
 
 const items: NavItem[] = [
-  { href: '/inicio', label: 'Inicio', icon: Home },
-  { href: '/pacientes', label: 'Pacientes', icon: Users },
-  { href: '/sesiones', label: 'Sesiones', icon: Calendar },
-  { href: '/mensajes', label: 'Mensajes', icon: MessageCircle },
-  { href: '/recursos', label: 'Recursos', icon: Library },
-  { href: '/finanzas', label: 'Finanzas', icon: Wallet },
-  { href: '/analiticas', label: 'Analíticas', icon: BarChart3 },
-  { href: '/ajustes', label: 'Ajustes', icon: Settings },
+  { href: '/inicio', label: 'Inicio', icon: Home, tour: 'nav-inicio' },
+  { href: '/pacientes', label: 'Pacientes', icon: Users, tour: 'nav-pacientes' },
+  { href: '/sesiones', label: 'Sesiones', icon: Calendar, tour: 'nav-sesiones' },
+  { href: '/mensajes', label: 'Mensajes', icon: MessageCircle, tour: 'nav-mensajes' },
+  { href: '/recursos', label: 'Recursos', icon: Library, tour: 'nav-recursos' },
+  { href: '/finanzas', label: 'Finanzas', icon: Wallet, tour: 'nav-finanzas' },
+  { href: '/analiticas', label: 'Analíticas', icon: BarChart3, tour: 'nav-analiticas' },
+  { href: '/ajustes', label: 'Ajustes', icon: Settings, tour: 'nav-ajustes' },
 ];
 
 export interface SidebarProps {
@@ -122,6 +124,7 @@ export function Sidebar({ user }: SidebarProps) {
                   <Link
                     href={item.href}
                     onClick={() => setAbierto(false)}
+                    data-tour={item.tour}
                     className={cn(
                       'group flex items-center gap-3 rounded-md px-3 py-2.5',
                       'text-sm font-medium transition-colors',

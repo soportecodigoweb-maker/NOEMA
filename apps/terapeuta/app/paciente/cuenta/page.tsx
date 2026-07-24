@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
+import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mi cuenta' };
@@ -37,6 +38,10 @@ export default async function CuentaPacientePage() {
 
       <div className="mt-4">
         <ToggleAprendiz inicial={profile?.modo_aprendiz ?? true} />
+      </div>
+
+      <div className="mt-4">
+        <ToggleSonidosUI />
       </div>
 
       <div className="mt-4">

@@ -40,18 +40,20 @@ interface NavItem {
   icon: LucideIcon;
   /** Función que debe estar habilitada para mostrarlo (undefined = siempre). */
   requiere?: keyof FuncionesPaciente;
+  /** Clave para el tour del modo aprendiz (data-tour). */
+  tour?: string;
 }
 
 const items: NavItem[] = [
-  { href: '/paciente', label: 'Inicio', icon: Home },
-  { href: '/paciente/registros', label: 'Mis registros', icon: HeartPulse, requiere: 'registros' },
-  { href: '/paciente/diario', label: 'Diario', icon: BookOpen, requiere: 'diario' },
-  { href: '/paciente/tareas', label: 'Tareas', icon: ClipboardList, requiere: 'tareas' },
-  { href: '/paciente/metas', label: 'Mis metas', icon: Target },
-  { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3, requiere: 'progreso' },
-  { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle, requiere: 'chat' },
-  { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar },
-  { href: '/paciente/cuenta', label: 'Mi cuenta', icon: UserCog },
+  { href: '/paciente', label: 'Inicio', icon: Home, tour: 'nav-inicio' },
+  { href: '/paciente/registros', label: 'Mis registros', icon: HeartPulse, requiere: 'registros', tour: 'nav-registros' },
+  { href: '/paciente/diario', label: 'Diario', icon: BookOpen, requiere: 'diario', tour: 'nav-diario' },
+  { href: '/paciente/tareas', label: 'Tareas', icon: ClipboardList, requiere: 'tareas', tour: 'nav-tareas' },
+  { href: '/paciente/metas', label: 'Mis metas', icon: Target, tour: 'nav-metas' },
+  { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3, requiere: 'progreso', tour: 'nav-progreso' },
+  { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle, requiere: 'chat', tour: 'nav-mensajes' },
+  { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar, tour: 'nav-sesiones' },
+  { href: '/paciente/cuenta', label: 'Mi cuenta', icon: UserCog, tour: 'nav-cuenta' },
 ];
 
 const TODAS_ACTIVAS: FuncionesPaciente = {
@@ -149,6 +151,7 @@ export function PacienteNav({ user, funciones = TODAS_ACTIVAS }: PacienteNavProp
                   <Link
                     href={item.href}
                     onClick={() => setAbierto(false)}
+                    data-tour={item.tour}
                     className={cn(
                       'group flex items-center gap-3 rounded-md px-3 py-2.5',
                       'text-sm font-medium transition-colors',
@@ -175,6 +178,7 @@ export function PacienteNav({ user, funciones = TODAS_ACTIVAS }: PacienteNavProp
             <Link
               href="/paciente/crisis"
               onClick={() => setAbierto(false)}
+              data-tour="nav-sos"
               className={cn(
                 'group flex items-center gap-3 rounded-md px-3 py-2.5',
                 'text-sm font-medium transition-colors',

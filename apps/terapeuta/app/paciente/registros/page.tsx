@@ -44,7 +44,9 @@ export default async function RegistrosPage() {
       </div>
 
       {/* Botón largo estilo NOEMA, debajo del texto */}
-      <CrearRegistro emociones={emociones ?? []} />
+      <div data-tour="pac-registrar">
+        <CrearRegistro emociones={emociones ?? []} />
+      </div>
 
       {!registros || registros.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-ink/15 bg-white p-10 text-center text-ink/50">

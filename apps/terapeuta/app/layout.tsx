@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans, Caveat } from 'next/font/google';
 import './globals.css';
+import { SonidosUI } from '@/components/sonidos/SonidosUI';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -46,6 +47,9 @@ export const viewport: Viewport = {
   themeColor: '#F1ECE0',
   width: 'device-width',
   initialScale: 1,
+  // App con tamaño fijo: sin zoom con los dedos.
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -56,8 +60,10 @@ export default function RootLayout({
       lang="es-MX"
       className={`${cormorant.variable} ${dmSans.variable} ${caveat.variable}`}
     >
-      <body className="min-h-screen bg-paper text-ink antialiased">
+      <body className="min-h-screen touch-manipulation bg-paper text-ink antialiased">
         {children}
+        {/* Sonidos de interacción (toques, teclas, interruptores) — ambos roles */}
+        <SonidosUI />
       </body>
     </html>
   );

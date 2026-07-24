@@ -37,7 +37,9 @@ export default async function DiarioPage() {
         </p>
       </div>
 
-      <CrearDiario />
+      <div data-tour="pac-diario-escribir">
+        <CrearDiario />
+      </div>
 
       {!entradas || entradas.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-ink/15 bg-white p-10 text-center text-ink/50">

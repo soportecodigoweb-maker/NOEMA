@@ -6,6 +6,7 @@ import { PanelConfiguracion } from '@/components/ajustes/PanelConfiguracion';
 import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
+import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
 import type { ConfigTerapeuta } from './config-actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -126,6 +127,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
         {/* Modo aprendiz */}
         <ToggleAprendiz inicial={profile?.modo_aprendiz ?? true} />
+
+        {/* Sonidos de interacción */}
+        <ToggleSonidosUI />
 
         {/* Funciones del paciente y notificaciones */}
         <PanelConfiguracion inicial={configInicial} />
