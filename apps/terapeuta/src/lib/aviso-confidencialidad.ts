@@ -10,7 +10,7 @@
  * antes de producción real. Marcado como borrador en el reporte.
  */
 
-export const VERSION_AVISO = '2026-07-v1';
+export const VERSION_AVISO = '2026-07-v2';
 
 export interface SeccionAviso {
   titulo: string;
@@ -53,7 +53,22 @@ export const AVISO_CONFIDENCIALIDAD_TERAPEUTA: SeccionAviso[] = [
       'En caso de terminar la relación terapéutica, conservarás o entregarás el expediente conforme a tus obligaciones profesionales y legales.',
     ],
   },
+  {
+    titulo: 'Uso lícito y prohibición de material ilícito o pirata',
+    parrafos: [
+      'Declaras que cuentas con la formación, cédula y facultades legales para ejercer la práctica psicológica o terapéutica, y que ejercerás dentro del marco de la ley y de la ética profesional aplicable.',
+      'Te obligas a NO subir, compartir ni utilizar dentro de NOEMA material protegido por derechos de autor sin licencia, software o contenidos piratas, tests o instrumentos sin la debida autorización, ni a realizar prácticas ilegales, fraudulentas o contrarias a la ética profesional. NOEMA no autoriza ni facilita el uso de material ilícito.',
+    ],
+  },
+  {
+    titulo: 'Descargo de responsabilidad de NOEMA',
+    parrafos: [
+      'NOEMA es únicamente una herramienta de organización y seguimiento. La relación terapéutica, las decisiones clínicas y los servicios que prestas a tus pacientes son de tu exclusiva responsabilidad profesional.',
+      'Eres el único responsable por cualquier mala práctica, negligencia, daño, incumplimiento legal o uso indebido derivado de tu ejercicio profesional o del uso que des a la plataforma. Liberas a NOEMA, sus creadores y operadores de toda responsabilidad por tus actos u omisiones, así como por el contenido que tú ingreses. NOEMA no responde por el resultado clínico de tus intervenciones.',
+      'El incumplimiento de este acuerdo puede dar lugar a la suspensión o cancelación de tu cuenta, sin perjuicio de las responsabilidades legales que correspondan.',
+    ],
+  },
 ];
 
 export const RESUMEN_ACEPTACION_TERAPEUTA =
-  'He leído y acepto el Aviso de Confidencialidad y Responsabilidad Profesional de NOEMA. Me comprometo a resguardar la información de mis pacientes con estricta confidencialidad conforme a la LFPDPPP y la NOM-004-SSA3-2012, a respetar la decisión del paciente sobre qué información comparte, y a usar la plataforma únicamente para fines terapéuticos legítimos.';
+  'He leído y acepto el Acuerdo de Confidencialidad, Uso Lícito y Descargo de Responsabilidad de NOEMA. Me comprometo a resguardar la información de mis pacientes con estricta confidencialidad conforme a la LFPDPPP y la NOM-004-SSA3-2012, a no usar material ilícito o pirata, y reconozco que soy el único responsable de mi práctica profesional y de cualquier mala práctica, liberando a NOEMA de responsabilidad por mis actos.';
