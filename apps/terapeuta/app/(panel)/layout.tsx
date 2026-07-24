@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/nav/Sidebar';
 import { AlertasCrisisEnVivo } from '@/components/crisis/AlertasCrisisEnVivo';
 import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
+import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -74,6 +75,9 @@ export default async function PanelLayout({
 
       {/* Registros emocionales llegando en vivo (#6) */}
       <RegistrosEnVivo />
+
+      {/* Aviso emergente de mensajes y demás notificaciones */}
+      <AvisoNotificacion />
     </div>
   );
 }

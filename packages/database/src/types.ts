@@ -842,6 +842,57 @@ export type Database = {
           },
         ]
       }
+      notificaciones: {
+        Row: {
+          creada_at: string
+          cuerpo: string | null
+          destinatario_id: string
+          id: string
+          leida_at: string | null
+          tipo: string
+          titulo: string
+          url: string | null
+          vinculacion_id: string | null
+        }
+        Insert: {
+          creada_at?: string
+          cuerpo?: string | null
+          destinatario_id: string
+          id?: string
+          leida_at?: string | null
+          tipo: string
+          titulo: string
+          url?: string | null
+          vinculacion_id?: string | null
+        }
+        Update: {
+          creada_at?: string
+          cuerpo?: string | null
+          destinatario_id?: string
+          id?: string
+          leida_at?: string | null
+          tipo?: string
+          titulo?: string
+          url?: string | null
+          vinculacion_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificaciones_destinatario_id_fkey"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificaciones_vinculacion_id_fkey"
+            columns: ["vinculacion_id"]
+            isOneToOne: false
+            referencedRelation: "vinculaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           actualizado_at: string

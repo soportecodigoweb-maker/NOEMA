@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { Plus, Bell, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { tiempoRelativo } from '@/lib/utils';
 import { perfilesPorId } from '@/lib/perfiles-lookup';
+import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 
 export const metadata = { title: 'Inicio' };
 export const dynamic = 'force-dynamic';
@@ -81,12 +82,7 @@ export default async function InicioPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            className="size-10 rounded-md hover:bg-bone flex items-center justify-center text-noema-deep/70 hover:text-noema-deep"
-            aria-label="Notificaciones"
-          >
-            <Bell size={18} strokeWidth={1.6} />
-          </button>
+          <CentroNotificaciones />
           <Link href="/sesiones">
             <Button variant="primary" size="md">
               <Plus className="size-4" strokeWidth={2} />

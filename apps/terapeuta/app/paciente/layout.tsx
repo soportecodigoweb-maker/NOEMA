@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { LifeBuoy } from 'lucide-react';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
+import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -87,6 +88,9 @@ export default async function PacienteLayout({
         <LifeBuoy className="size-5" strokeWidth={1.9} />
         <span className="hidden sm:inline">Necesito apoyo</span>
       </Link>
+
+      {/* Aviso emergente de mensajes del terapeuta */}
+      <AvisoNotificacion />
     </div>
   );
 }

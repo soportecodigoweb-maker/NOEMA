@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
+import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -56,13 +57,16 @@ export function Sidebar({ user }: SidebarProps) {
           <Vesica size={24} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
           <span className="font-serif text-lg tracking-[0.3em]">NOEMA</span>
         </div>
-        <button
-          onClick={() => setAbierto(true)}
-          aria-label="Abrir menú"
-          className="rounded-md p-1.5 hover:bg-bone/10"
-        >
-          <Menu className="size-6" strokeWidth={1.8} />
-        </button>
+        <div className="flex items-center gap-1">
+          <CentroNotificaciones tono="oscuro" />
+          <button
+            onClick={() => setAbierto(true)}
+            aria-label="Abrir menú"
+            className="rounded-md p-1.5 hover:bg-bone/10"
+          >
+            <Menu className="size-6" strokeWidth={1.8} />
+          </button>
+        </div>
       </header>
 
       {/* Overlay móvil */}
@@ -92,6 +96,10 @@ export function Sidebar({ user }: SidebarProps) {
           <div className="flex items-center gap-3">
             <Vesica size={28} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
             <span className="font-serif text-xl tracking-[0.34em]">NOEMA</span>
+          </div>
+          {/* Campana: en desktop vive aquí; en móvil está en la barra superior */}
+          <div className="hidden lg:block">
+            <CentroNotificaciones tono="oscuro" />
           </div>
           <button
             onClick={() => setAbierto(false)}
