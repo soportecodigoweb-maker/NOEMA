@@ -744,6 +744,99 @@ export type Database = {
           },
         ]
       }
+      finanzas_activos: {
+        Row: {
+          categoria: string | null
+          creado_at: string
+          fecha_adquisicion: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          terapeuta_id: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          creado_at?: string
+          fecha_adquisicion?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          terapeuta_id: string
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          creado_at?: string
+          fecha_adquisicion?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          terapeuta_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      finanzas_config: {
+        Row: {
+          actualizado_at: string
+          notas: string | null
+          tasa_impuesto_pct: number
+          terapeuta_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          notas?: string | null
+          tasa_impuesto_pct?: number
+          terapeuta_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          notas?: string | null
+          tasa_impuesto_pct?: number
+          terapeuta_id?: string
+        }
+        Relationships: []
+      }
+      finanzas_movimientos: {
+        Row: {
+          categoria: string | null
+          concepto: string
+          creado_at: string
+          fecha: string
+          id: string
+          monto: number
+          notas: string | null
+          recurrente: boolean
+          terapeuta_id: string
+          tipo: Database["public"]["Enums"]["tipo_movimiento_fin"]
+        }
+        Insert: {
+          categoria?: string | null
+          concepto: string
+          creado_at?: string
+          fecha?: string
+          id?: string
+          monto: number
+          notas?: string | null
+          recurrente?: boolean
+          terapeuta_id: string
+          tipo: Database["public"]["Enums"]["tipo_movimiento_fin"]
+        }
+        Update: {
+          categoria?: string | null
+          concepto?: string
+          creado_at?: string
+          fecha?: string
+          id?: string
+          monto?: number
+          notas?: string | null
+          recurrente?: boolean
+          terapeuta_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_movimiento_fin"]
+        }
+        Relationships: []
+      }
       mensajes: {
         Row: {
           archivos: Json
@@ -2414,6 +2507,7 @@ export type Database = {
       }
     }
     Enums: {
+      tipo_movimiento_fin: "ingreso_otro" | "gasto_fijo" | "gasto_variable" | "impuesto"
       accion_auditoria:
         | "insert"
         | "update"
