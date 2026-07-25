@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
+import { GoogleButton } from '../GoogleButton';
 import { signUpAction } from '../actions';
 
 export function SignUpForm() {
@@ -55,6 +56,7 @@ export function SignUpForm() {
       >
         Crear cuenta
       </Button>
+      <GoogleButton texto="Registrarme con Google" />
     </form>
   );
 }

@@ -4,12 +4,13 @@ import { SignInForm } from './SignInForm';
 export const metadata = { title: 'Inicia sesión' };
 
 interface PageProps {
-  searchParams: Promise<{ type?: string; rol?: string }>;
+  searchParams: Promise<{ type?: string; rol?: string; error?: string }>;
 }
 
 export default async function SignInPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const wrongRole = params.type === 'wrong-role';
+  const errorConfirmacion = params.error === 'confirmacion';
   const rol = params.rol;
 
   const subtitulo =
@@ -36,6 +37,16 @@ export default async function SignInPage({ searchParams }: PageProps) {
           <p className="text-sm text-foreground-muted leading-relaxed">
             El panel web es solo para terapeutas. Si eres paciente, descarga la
             app NOEMA en tu celular para acceder a tu proceso.
+          </p>
+        </div>
+      )}
+
+      {errorConfirmacion && (
+        <div className="rounded-md border border-emotion-ansioso/40 bg-emotion-ansioso/15 p-4">
+          <p className="mb-1 text-sm font-medium text-ink">No pudimos confirmar tu enlace</p>
+          <p className="text-sm leading-relaxed text-foreground-muted">
+            El enlace pudo haber vencido o ya se usó. Inicia sesión; si tu cuenta aún no está
+            confirmada, te reenviaremos el correo.
           </p>
         </div>
       )}

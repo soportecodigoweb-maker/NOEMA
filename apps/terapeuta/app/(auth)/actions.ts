@@ -88,6 +88,33 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
   redirect('/perfil');
 }
 
+/**
+ * Inicia sesión / registro con Google (OAuth).
+ *
+ * Redirige a Google; al volver, /auth/callback canjea el código por sesión. Los
+ * usuarios existentes entran con su rol; los nuevos quedan como paciente
+ * (sin_terapeuta) y podrán completar sus datos después.
+ *
+ * Requiere configurar el proveedor Google en Supabase → Authentication →
+ * Providers (Client ID y Secret). Sin eso, Supabase responde con error.
+ */
+export async function signInWithGoogleAction(): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const origin = await origenActual();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${origin}/auth/callback?next=/inicio`,
+    },
+  });
+
+  if (error || !data?.url) {
+    return { ok: false, error: 'No pudimos conectar con Google. Intenta con tu correo.' };
+  }
+
+  redirect(data.url);
+}
+
 export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();

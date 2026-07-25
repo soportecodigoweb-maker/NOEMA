@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/Input';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
+import { GoogleButton } from '../GoogleButton';
 import { signInAction } from '../actions';
 
 export function SignInForm() {
@@ -46,6 +47,7 @@ export function SignInForm() {
       >
         Iniciar sesión
       </Button>
+      <GoogleButton texto="Iniciar sesión con Google" />
     </form>
   );
 }
