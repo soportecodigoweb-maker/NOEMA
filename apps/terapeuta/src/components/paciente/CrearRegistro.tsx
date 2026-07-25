@@ -13,14 +13,43 @@ interface Emocion {
 
 export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
   const [abierto, setAbierto] = useState(false);
-  const [emocion, setEmocion] = useState('');
+  // Ahora se pueden elegir varias emociones a la vez.
+  const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [otroActivo, setOtroActivo] = useState(false);
+  const [otroTexto, setOtroTexto] = useState('');
   const [intensidad, setIntensidad] = useState(3);
   const [privacidad, setPrivacidad] = useState('privado');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const toggleEmocion = (key: string) => {
+    setSeleccion((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const limpiar = () => {
+    setSeleccion([]);
+    setOtroActivo(false);
+    setOtroTexto('');
+    setIntensidad(3);
+    setPrivacidad('privado');
+  };
+
   const enviar = (formData: FormData) => {
-    formData.set('emocion', emocion);
+    // Emoción principal = la primera elegida; si solo hay "Otro", usamos 'otro'.
+    const otroTxt = otroActivo ? otroTexto.trim() : '';
+    const principal = seleccion[0] ?? (otroTxt ? 'otro' : '');
+    if (!principal) {
+      setError('Elige al menos una emoción.');
+      return;
+    }
+    const secundarias = seleccion.slice(principal === 'otro' ? 0 : 1);
+    if (otroTxt && principal !== 'otro') secundarias.push('otro');
+
+    formData.set('emocion', principal);
+    formData.set('emociones_secundarias', secundarias.join(','));
+    formData.set('emocion_otro', otroTxt);
     formData.set('intensidad', String(intensidad));
     formData.set('privacidad', privacidad);
     setError(null);
@@ -28,8 +57,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       const res = await crearRegistroAction(formData);
       if (res.ok) {
         setAbierto(false);
-        setEmocion('');
-        setIntensidad(3);
+        limpiar();
       } else {
         setError(res.error ?? 'Error');
       }
@@ -53,17 +81,21 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <h3 className="font-serif text-lg text-ink">¿Cómo te sientes?</h3>
 
       <div>
-        <label className="mb-2 block text-sm text-ink/70">Emoción</label>
+        <label className="mb-2 block text-sm text-ink/70">
+          Emoción <span className="text-ink/45">— puedes elegir varias</span>
+        </label>
         <div className="flex flex-wrap gap-2">
           {emociones.map((e) => {
             const Icono = iconoDeEmocion(e.key, e.familia);
+            const activa = seleccion.includes(e.key);
             return (
               <button
                 key={e.key}
                 type="button"
-                onClick={() => setEmocion(e.key)}
+                onClick={() => toggleEmocion(e.key)}
+                aria-pressed={activa}
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                  emocion === e.key
+                  activa
                     ? 'border-noema-deep bg-noema-deep text-bone'
                     : 'border-ink/15 text-ink/70 hover:border-noema-sage'
                 }`}
@@ -73,7 +105,31 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
               </button>
             );
           })}
+
+          {/* Opción "Otro" */}
+          <button
+            type="button"
+            onClick={() => setOtroActivo((v) => !v)}
+            aria-pressed={otroActivo}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+              otroActivo
+                ? 'border-noema-deep bg-noema-deep text-bone'
+                : 'border-dashed border-ink/25 text-ink/70 hover:border-noema-sage'
+            }`}
+          >
+            <Plus className="size-4" strokeWidth={1.9} />
+            Otro
+          </button>
         </div>
+
+        {otroActivo && (
+          <input
+            value={otroTexto}
+            onChange={(e) => setOtroTexto(e.target.value)}
+            placeholder="¿Qué emoción sentías? Escríbela…"
+            className="mt-2 w-full rounded-md border border-ink/15 bg-bone px-3 py-2 text-sm focus:border-noema-sage focus:outline-none"
+          />
+        )}
       </div>
 
       <div>
@@ -136,7 +192,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={pending || !emocion}
+          disabled={pending || (seleccion.length === 0 && !(otroActivo && otroTexto.trim()))}
           className="rounded-md bg-noema-deep px-4 py-2 text-sm font-medium text-bone hover:bg-noema-deep/90 disabled:opacity-40"
         >
           {pending ? 'Guardando…' : 'Guardar registro'}

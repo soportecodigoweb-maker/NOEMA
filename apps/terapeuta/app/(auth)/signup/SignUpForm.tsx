@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/Input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/Button';
 import { signUpAction } from '../actions';
 
@@ -36,8 +37,7 @@ export function SignUpForm() {
         autoComplete="email"
         required
       />
-      <Input
-        type="password"
+      <PasswordInput
         name="password"
         label="Contraseña"
         autoComplete="new-password"

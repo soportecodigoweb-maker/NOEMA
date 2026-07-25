@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Link2, KeyRound } from 'lucide-react';
+import { Link2, KeyRound, CheckCircle2 } from 'lucide-react';
 import { redimirCodigoAction } from '../../../app/paciente/actions';
 
 export function VincularTerapeuta() {
@@ -10,6 +10,7 @@ export function VincularTerapeuta() {
   const [abierto, setAbierto] = useState(false);
   const [codigo, setCodigo] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [vinculado, setVinculado] = useState<{ terapeuta?: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const vincular = () => {
@@ -17,12 +18,38 @@ export function VincularTerapeuta() {
     startTransition(async () => {
       const res = await redimirCodigoAction(codigo);
       if (res.ok) {
-        router.refresh();
+        setVinculado({ terapeuta: res.terapeutaNombre });
       } else {
         setError(res.error ?? 'No se pudo vincular.');
       }
     });
   };
+
+  // Pestaña de éxito: ya quedó vinculado.
+  if (vinculado) {
+    return (
+      <div className="rounded-2xl border border-noema-sage/30 bg-gradient-to-br from-noema-sage/[0.12] to-transparent p-8 text-center">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-noema-sage/20">
+          <CheckCircle2 className="size-8 text-noema-sage" strokeWidth={1.7} />
+        </div>
+        <h2 className="mt-4 font-serif text-2xl text-ink">¡Listo, ya estás vinculado!</h2>
+        <p className="mt-2 text-sm text-ink/70">
+          {vinculado.terapeuta
+            ? `Tu cuenta quedó conectada con ${vinculado.terapeuta}.`
+            : 'Tu cuenta quedó conectada con tu terapeuta.'}{' '}
+          Ya pueden acompañarte entre sesiones.
+        </p>
+        <button
+          onClick={() => {
+            router.refresh();
+          }}
+          className="mt-5 inline-flex items-center gap-2 rounded-md bg-noema-deep px-5 py-2.5 text-sm font-medium text-bone transition-colors hover:bg-noema-deep/90"
+        >
+          Ir a mi inicio
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl border-[0.5px] border-ink/10 bg-white p-8">

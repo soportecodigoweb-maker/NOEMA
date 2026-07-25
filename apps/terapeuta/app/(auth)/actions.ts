@@ -2,7 +2,17 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+
+/** URL base real de esta petición (funciona en Vercel sin depender de env). */
+async function origenActual(): Promise<string> {
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host');
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  if (host) return `${proto}://${host}`;
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3006';
+}
 
 export interface ActionResult {
   ok: boolean;
@@ -57,13 +67,16 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
   }
 
   const supabase = await createClient();
+  const origin = await origenActual();
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { rol: 'terapeuta', nombre },
-      // En producción, esto debe ser tu dominio real
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3006'}/inicio`,
+      // El correo de confirmación aterriza en /auth/callback, que canjea el
+      // código por sesión y luego manda a /inicio. Usamos el origin real de la
+      // petición para que el enlace no apunte a localhost en producción.
+      emailRedirectTo: `${origin}/auth/callback?next=/inicio`,
     },
   });
 

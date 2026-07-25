@@ -15,7 +15,6 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { tiempoRelativo, formatHora } from '@/lib/utils';
 import { perfilesPorId } from '@/lib/perfiles-lookup';
-import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 import { Sparkline, Anillo, Barras, Tendencia, CHART_COLORS } from '@/components/charts/Charts';
 
@@ -157,7 +156,7 @@ export default async function InicioPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CentroNotificaciones />
+          {/* La campana vive en el menú lateral (una sola en toda la app). */}
           <Link href="/sesiones">
             <Button variant="primary" size="md">
               <Plus className="size-4" strokeWidth={2} />

@@ -25,7 +25,7 @@ export default async function RegistrosPage() {
     supabase.from('emociones_catalogo').select('key, nombre_es, familia').eq('activa', true).order('orden'),
     supabase
       .from('registros_emocionales')
-      .select('id, fecha, hora, emocion_principal_key, intensidad, descripcion, situacion_detonante, privacidad')
+      .select('id, fecha, hora, emocion_principal_key, emociones_secundarias, intensidad, descripcion, situacion_detonante, privacidad')
       .eq('paciente_id', user.id)
       .order('fecha', { ascending: false })
       .order('hora', { ascending: false })
@@ -62,7 +62,20 @@ export default async function RegistrosPage() {
                   <IconoEmocion emocionKey={r.emocion_principal_key} familia={emo?.familia} size={40} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="font-medium text-ink">{emo?.nombre_es ?? r.emocion_principal_key}</span>
+                      <span className="font-medium text-ink">
+                        {emo?.nombre_es ?? (r.emocion_principal_key === 'otro' ? 'Otro' : r.emocion_principal_key)}
+                      </span>
+                      {/* Emociones adicionales del mismo registro */}
+                      {(r.emociones_secundarias ?? [])
+                        .filter((k: string) => k && k !== r.emocion_principal_key)
+                        .map((k: string) => (
+                          <span
+                            key={k}
+                            className="rounded-full bg-noema-sage/12 px-2 py-0.5 text-[11px] text-noema-deep"
+                          >
+                            {nombrePorKey.get(k)?.nombre_es ?? (k === 'otro' ? 'Otro' : k)}
+                          </span>
+                        ))}
                       <span className="text-xs text-ink/50">intensidad {r.intensidad}/5</span>
                       <span className="ml-auto rounded bg-ink/5 px-2 py-0.5 text-[11px] text-ink/50">
                         {PRIVACIDAD_LABEL[r.privacidad] ?? r.privacidad}
