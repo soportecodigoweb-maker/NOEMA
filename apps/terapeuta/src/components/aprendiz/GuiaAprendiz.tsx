@@ -156,7 +156,7 @@ const GUIAS: Record<string, Paso[]> = {
     {
       titulo: 'Tu progreso',
       texto:
-        'Aquí ves tu avance real: tu constancia registrando, tu bienestar y tus tareas cumplidas. Celebramos lo que va bien y, si algo puede mejorar, te damos una recomendación amable.',
+        'Aquí ves tu avance real: tu constancia registrando, tu bienestar y tus tareas cumplidas. También refleja el seguimiento que llevas con tu terapeuta. Celebramos lo que va bien y, si algo puede mejorar, te damos una recomendación amable.',
     },
   ],
   '/paciente/metas': [
@@ -170,7 +170,7 @@ const GUIAS: Record<string, Paso[]> = {
     {
       titulo: 'Mensajes',
       texto:
-        'Escríbete con tu terapeuta. La ventana se abre a pantalla completa, como un chat. Tu terapeuta responde en sus horas de consulta.',
+        'Escríbete con tu terapeuta. La ventana se abre a pantalla completa, como un chat. Tu terapeuta responderá cuando pueda atender tu mensaje.',
     },
   ],
   '/paciente/sesiones': [

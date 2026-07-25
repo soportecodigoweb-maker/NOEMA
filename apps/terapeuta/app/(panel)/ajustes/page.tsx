@@ -55,7 +55,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
   // Si aún no tiene fila de configuración, mostramos los valores por defecto.
   const configInicial: ConfigTerapeuta = {
-    sos_habilitado: config?.sos_habilitado ?? true,
+    sos_habilitado: config?.sos_habilitado ?? false,
     chat_habilitado: config?.chat_habilitado ?? true,
     agenda_habilitada: config?.agenda_habilitada ?? false,
     diario_habilitado: config?.diario_habilitado ?? true,

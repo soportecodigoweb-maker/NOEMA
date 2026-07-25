@@ -34,7 +34,7 @@ export default function AvisoConfidencialidadPage() {
           </section>
         ))}
         <p className="border-t border-noema-deep/8 pt-4 text-xs text-foreground-muted">
-          Versión del aviso: {VERSION_AVISO}. Documento borrador sujeto a revisión legal.
+          Versión del aviso: {VERSION_AVISO}.
         </p>
       </div>
 

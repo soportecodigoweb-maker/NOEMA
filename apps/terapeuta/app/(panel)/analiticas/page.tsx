@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 
@@ -73,23 +75,39 @@ export default async function AnaliticasPage() {
         </p>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — cada uno lleva a su detalle */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Pacientes activos" value={conteoEstados.activa ?? 0} />
-        <Kpi label="Sesiones realizadas" value={sesionesRealizadas ?? 0} />
-        <Kpi label="Registros recibidos" value={registrosTotal ?? 0} hint="Compartidos por pacientes" />
+        <Kpi label="Pacientes activos" value={conteoEstados.activa ?? 0} href="/pacientes" />
+        <Kpi label="Sesiones realizadas" value={sesionesRealizadas ?? 0} href="/sesiones" />
+        <Kpi
+          label="Registros recibidos"
+          value={registrosTotal ?? 0}
+          hint="Compartidos por pacientes"
+          href="/pacientes"
+        />
         <Kpi
           label="Adherencia a tareas"
           value={`${tasaCompletado}%`}
           hint={`${tareasCompletadas ?? 0} de ${tareasAsignadas ?? 0}`}
+          href="/pacientes"
         />
       </div>
 
       {/* Distribución de estados de vinculación */}
       <Card>
         <CardHeader>
-          <CardTitle>Estado de tu consulta</CardTitle>
-          <CardDescription>Distribución de tus vinculaciones.</CardDescription>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>Estado de tu consulta</CardTitle>
+              <CardDescription>Distribución de tus vinculaciones.</CardDescription>
+            </div>
+            <Link
+              href="/pacientes"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-noema-sage hover:text-noema-deep"
+            >
+              Ver pacientes <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </CardHeader>
         <ul className="space-y-3">
           {[
@@ -167,12 +185,43 @@ export default async function AnaliticasPage() {
   );
 }
 
-function Kpi({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
+function Kpi({
+  label,
+  value,
+  hint,
+  href,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  href?: string;
+}) {
+  const contenido = (
+    <>
+      <div className="mb-2 flex items-center justify-between">
+        <p className="caption">{label}</p>
+        {href && (
+          <ArrowRight className="size-4 text-noema-sage opacity-0 transition-opacity group-hover:opacity-100" />
+        )}
+      </div>
+      <p className="font-serif text-4xl text-ink">{value}</p>
+      {hint && <p className="mt-1 text-xs text-foreground-muted">{hint}</p>}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="group block rounded-2xl border border-noema-deep/[0.06] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-noema-sage/40"
+      >
+        {contenido}
+      </Link>
+    );
+  }
   return (
     <Card variant="flat" className="p-5">
-      <p className="caption mb-2">{label}</p>
-      <p className="font-serif text-4xl text-ink">{value}</p>
-      {hint && <p className="text-xs text-foreground-muted mt-1">{hint}</p>}
+      {contenido}
     </Card>
   );
 }

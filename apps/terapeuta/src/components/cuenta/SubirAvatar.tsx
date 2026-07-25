@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { Camera, Loader2 } from 'lucide-react';
 import { guardarAvatarUrlAction } from '../../../app/(auth)/avatar-actions';
+import { EditorAvatar } from './EditorAvatar';
 
 /**
  * Foto de perfil para cualquier usuario. Sube al bucket público 'avatares'
@@ -26,13 +27,15 @@ export function SubirAvatar({
   const [url, setUrl] = useState(avatarUrl);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editando, setEditando] = useState<File | null>(null);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  const subir = async (file: File) => {
+  // Al elegir una imagen, primero se abre el editor para acomodarla.
+  const elegir = (file: File) => {
     setError(null);
     if (!file.type.startsWith('image/')) {
       setError('Elige una imagen.');
@@ -42,13 +45,17 @@ export function SubirAvatar({
       setError('La imagen debe pesar menos de 5 MB.');
       return;
     }
+    setEditando(file);
+  };
+
+  // Sube el recorte final (blob del editor).
+  const subir = async (blob: Blob) => {
     setSubiendo(true);
-    const ext = file.name.split('.').pop() ?? 'jpg';
-    const ruta = `${userId}/perfil-${Date.now()}.${ext}`;
+    const ruta = `${userId}/perfil-${Date.now()}.jpg`;
 
     const { error: errSubida } = await supabase.storage
       .from('avatares')
-      .upload(ruta, file, { contentType: file.type, upsert: true });
+      .upload(ruta, blob, { contentType: 'image/jpeg', upsert: true });
 
     if (errSubida) {
       setError('No se pudo subir la imagen.');
@@ -61,6 +68,7 @@ export function SubirAvatar({
     await guardarAvatarUrlAction(nuevaUrl);
     setUrl(nuevaUrl);
     setSubiendo(false);
+    setEditando(null);
     router.refresh();
   };
 
@@ -114,9 +122,21 @@ export function SubirAvatar({
         ref={inputRef}
         type="file"
         accept="image/*"
-        onChange={(e) => e.target.files?.[0] && subir(e.target.files[0])}
+        onChange={(e) => {
+          if (e.target.files?.[0]) elegir(e.target.files[0]);
+          e.target.value = ''; // permite reelegir el mismo archivo
+        }}
         className="hidden"
       />
+
+      {editando && (
+        <EditorAvatar
+          file={editando}
+          guardando={subiendo}
+          onCancel={() => setEditando(null)}
+          onSave={subir}
+        />
+      )}
     </div>
   );
 }

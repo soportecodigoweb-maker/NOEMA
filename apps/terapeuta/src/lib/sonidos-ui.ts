@@ -74,41 +74,45 @@ type Nota = {
  * protagonistas. La app de salud mental pide discreción.
  */
 const PATRONES: Record<SonidoUI, Nota[]> = {
-  // Toque de botón: un solo "tick" cálido y breve.
-  tap: [{ f: 420, t: 0, dur: 0.055, vol: 0.05, tipo: 'triangle' }],
+  // Toque de botón: "tick" moderno y redondo (senos, nada chiptune).
+  // Un golpe grave breve con un armónico más alto muy sutil.
+  tap: [
+    { f: 330, t: 0, dur: 0.06, vol: 0.18, tipo: 'sine' },
+    { f: 210, t: 0.012, dur: 0.07, vol: 0.13, tipo: 'sine' },
+  ],
 
-  // Tecla al escribir: casi imperceptible, muy agudo y muy corto.
-  tecla: [{ f: 660, t: 0, dur: 0.03, vol: 0.025, tipo: 'sine' }],
+  // Tecla (ya no se usa por defecto; se conserva por compatibilidad).
+  tecla: [{ f: 320, t: 0, dur: 0.03, vol: 0.06, tipo: 'sine' }],
 
   // Interruptor encendido: dos notas ascendentes.
   toggleOn: [
-    { f: 523.25, t: 0, dur: 0.06, vol: 0.05, tipo: 'sine' },
-    { f: 783.99, t: 0.05, dur: 0.09, vol: 0.05, tipo: 'sine' },
+    { f: 523.25, t: 0, dur: 0.07, vol: 0.15, tipo: 'sine' },
+    { f: 783.99, t: 0.05, dur: 0.1, vol: 0.15, tipo: 'sine' },
   ],
 
   // Interruptor apagado: dos notas descendentes.
   toggleOff: [
-    { f: 587.33, t: 0, dur: 0.06, vol: 0.05, tipo: 'sine' },
-    { f: 392.0, t: 0.05, dur: 0.09, vol: 0.05, tipo: 'sine' },
+    { f: 587.33, t: 0, dur: 0.07, vol: 0.15, tipo: 'sine' },
+    { f: 392.0, t: 0.05, dur: 0.1, vol: 0.15, tipo: 'sine' },
   ],
 
   // Enviar / confirmar acción: pequeño gesto ascendente y ligero.
   enviar: [
-    { f: 587.33, t: 0, dur: 0.06, vol: 0.055, tipo: 'sine' },
-    { f: 880.0, t: 0.06, dur: 0.12, vol: 0.055, tipo: 'sine' },
+    { f: 587.33, t: 0, dur: 0.07, vol: 0.17, tipo: 'sine' },
+    { f: 880.0, t: 0.06, dur: 0.13, vol: 0.17, tipo: 'sine' },
   ],
 
   // Éxito: arpegio corto y agradable de tres notas.
   exito: [
-    { f: 523.25, t: 0, dur: 0.08, vol: 0.05, tipo: 'sine' },
-    { f: 659.25, t: 0.07, dur: 0.08, vol: 0.05, tipo: 'sine' },
-    { f: 1046.5, t: 0.14, dur: 0.16, vol: 0.05, tipo: 'sine' },
+    { f: 523.25, t: 0, dur: 0.09, vol: 0.15, tipo: 'sine' },
+    { f: 659.25, t: 0.07, dur: 0.09, vol: 0.15, tipo: 'sine' },
+    { f: 1046.5, t: 0.14, dur: 0.17, vol: 0.15, tipo: 'sine' },
   ],
 
   // Error suave: dos notas bajas, sin alarmar.
   error: [
-    { f: 311.13, t: 0, dur: 0.1, vol: 0.05, tipo: 'triangle' },
-    { f: 246.94, t: 0.09, dur: 0.16, vol: 0.05, tipo: 'triangle' },
+    { f: 311.13, t: 0, dur: 0.11, vol: 0.14, tipo: 'sine' },
+    { f: 246.94, t: 0.09, dur: 0.17, vol: 0.14, tipo: 'sine' },
   ],
 };
 

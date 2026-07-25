@@ -22,10 +22,11 @@ export function SonidosUI() {
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (prefiereQuieto) return;
 
-    /** ¿El elemento (o un ancestro cercano) es algo "presionable"? */
+    /** ¿El elemento (o un ancestro cercano) es un botón/control presionable?
+     * Solo botones y controles — NO cualquier toque de pantalla. */
     const esPresionable = (el: Element | null): 'toggle' | 'boton' | null => {
       const objetivo = el?.closest(
-        'button, a[href], [role="button"], [role="switch"], input[type="checkbox"], input[type="radio"], label',
+        'button, a[href], [role="button"], [role="switch"], input[type="checkbox"], input[type="radio"]',
       );
       if (!objetivo) return null;
       const rol = objetivo.getAttribute('role');
@@ -65,26 +66,12 @@ export function SonidosUI() {
       sonarUI(esEnvio ? 'enviar' : 'tap');
     };
 
-    const alEscribir = (e: KeyboardEvent) => {
-      const objetivo = e.target as HTMLElement | null;
-      if (!objetivo) return;
-      const editable =
-        objetivo.tagName === 'INPUT' ||
-        objetivo.tagName === 'TEXTAREA' ||
-        objetivo.isContentEditable;
-      if (!editable) return;
-      // Solo teclas que "escriben" o borran; ignoramos modificadores y flechas.
-      if (e.key.length === 1 || e.key === 'Backspace') {
-        sonarUI('tecla');
-      }
-    };
-
+    // Nota: a propósito NO hay sonido al escribir (antes sonaba en cada tecla,
+    // como Tetris). El sonido es solo al apretar botones y controles.
     document.addEventListener('pointerdown', alPresionar, { passive: true });
-    document.addEventListener('keydown', alEscribir, { passive: true });
 
     return () => {
       document.removeEventListener('pointerdown', alPresionar);
-      document.removeEventListener('keydown', alEscribir);
     };
   }, []);
 

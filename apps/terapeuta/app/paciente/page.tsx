@@ -12,9 +12,11 @@ import {
   ChevronRight,
   type LucideIcon,
 } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { VincularTerapeuta } from '@/components/paciente/VincularTerapeuta';
 import { MensajeNoema } from '@/components/paciente/MensajeNoema';
+import { obtenerFraseMotivacionalAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,9 @@ export default async function PacienteInicioPage() {
   ]);
 
   const primerNombre = (perfil?.nombre ?? '').trim().split(' ')[0] ?? '';
+
+  // Frase motivacional del día, elegida por algoritmo según su cuadro reciente.
+  const { frase } = await obtenerFraseMotivacionalAction();
 
   // Funciones (sin terapeuta, las propias del paciente van habilitadas).
   const f = {
@@ -101,6 +106,12 @@ export default async function PacienteInicioPage() {
           <p className="mt-1 text-sm text-ink/60">Vinculada con {terapeutaNombre}</p>
         )}
       </header>
+
+      {/* Frase motivacional del día (algorítmica, según su cuadro) */}
+      <div className="mb-4 flex items-start gap-3 rounded-2xl border border-noema-sage/25 bg-gradient-to-br from-noema-sage/[0.08] to-transparent p-4">
+        <Sparkles className="mt-0.5 size-5 shrink-0 text-noema-sage" strokeWidth={1.7} />
+        <p className="text-[0.95rem] leading-relaxed text-ink/85">{frase}</p>
+      </div>
 
       {/* 1 · Atajo a emociones: banner delgado que invita a registrar */}
       {f.registros && <BannerEmocion />}

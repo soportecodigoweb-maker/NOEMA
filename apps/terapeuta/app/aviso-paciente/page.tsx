@@ -39,7 +39,7 @@ export default async function AvisoPrivacidadPacientePage() {
           </section>
         ))}
         <p className="border-t border-ink/8 pt-3 text-xs text-ink/50">
-          Versión {VERSION_AVISO_PACIENTE}. Documento borrador sujeto a revisión legal.
+          Versión {VERSION_AVISO_PACIENTE}.
         </p>
       </div>
 

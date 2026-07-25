@@ -28,7 +28,33 @@ export function MensajesThread({
   const [mensajes, setMensajes] = useState<Mensaje[]>(mensajesIniciales);
   const [texto, setTexto] = useState('');
   const [pending, startTransition] = useTransition();
+  const [kbInset, setKbInset] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const irAlFondo = () => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    });
+  };
+
+  // El teclado móvil se superpone al viewport (no lo encoge), así que el
+  // composer quedaba tapado la primera vez. Con la VisualViewport API levantamos
+  // el contenedor justo por encima del teclado.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const ajustar = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKbInset(inset);
+      irAlFondo();
+    };
+    vv.addEventListener('resize', ajustar);
+    vv.addEventListener('scroll', ajustar);
+    return () => {
+      vv.removeEventListener('resize', ajustar);
+      vv.removeEventListener('scroll', ajustar);
+    };
+  }, []);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -102,7 +128,10 @@ export function MensajesThread({
     // Pantalla completa tipo WhatsApp. En móvil se fija al viewport bajo la barra
     // superior (top-[52px]) para que NO se mueva al hacer scroll y el composer
     // quede pegado abajo. En desktop es una columna normal de altura completa.
-    <div className="fixed inset-x-0 bottom-0 top-[52px] z-30 flex flex-col bg-paper lg:static lg:inset-auto lg:top-auto lg:z-auto lg:h-screen">
+    <div
+      className="fixed inset-x-0 bottom-0 top-[52px] z-30 flex flex-col bg-paper lg:static lg:inset-auto lg:top-auto lg:z-auto lg:h-screen"
+      style={kbInset ? { bottom: kbInset } : undefined}
+    >
       {/* Cabecera compacta */}
       <header className="flex shrink-0 items-center gap-3 border-b border-ink/10 bg-white px-4 py-3">
         <span className="flex size-10 items-center justify-center rounded-full bg-noema-sage/15 text-sm font-medium text-noema-deep/70">
@@ -110,7 +139,7 @@ export function MensajesThread({
         </span>
         <div className="min-w-0">
           <p className="truncate font-medium text-ink">{terapeutaNombre}</p>
-          <p className="text-[11px] text-ink/50">Responde en horas de consulta</p>
+          <p className="text-[11px] text-ink/50">Te responderá cuando pueda</p>
         </div>
       </header>
 
@@ -159,6 +188,7 @@ export function MensajesThread({
                 enviar();
               }
             }}
+            onFocus={() => setTimeout(irAlFondo, 300)}
             placeholder="Escribe un mensaje…"
             rows={1}
             className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border-[0.5px] border-ink/15 bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink/40 focus:border-noema-sage focus:outline-none"

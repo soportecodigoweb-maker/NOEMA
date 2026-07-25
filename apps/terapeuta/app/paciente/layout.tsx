@@ -74,7 +74,8 @@ export default async function PacienteLayout({
   // Funciones que su terapeuta le habilitó (Ajustes → Funciones del paciente).
   // Sin vinculación aún, se muestra todo lo que no depende del terapeuta.
   const funciones = {
-    sos: vinculacion?.sos_habilitado ?? true,
+    // SOS apagado por defecto: solo visible cuando el terapeuta lo activa.
+    sos: vinculacion?.sos_habilitado ?? false,
     chat: vinculacion?.chat_habilitado ?? true,
     diario: vinculacion?.diario_habilitado ?? true,
     registros: vinculacion?.registros_habilitados ?? true,

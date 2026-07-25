@@ -20,6 +20,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
   const [intensidad, setIntensidad] = useState(3);
   const [privacidad, setPrivacidad] = useState('privado');
   const [error, setError] = useState<string | null>(null);
+  const [frase, setFrase] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const toggleEmocion = (key: string) => {
@@ -58,6 +59,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       if (res.ok) {
         setAbierto(false);
         limpiar();
+        if (res.frase) setFrase(res.frase);
       } else {
         setError(res.error ?? 'Error');
       }
@@ -66,13 +68,26 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
 
   if (!abierto) {
     return (
-      <button
-        onClick={() => setAbierto(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-noema-deep px-5 py-4 text-base font-medium text-bone shadow-sm transition-colors hover:bg-noema-deep/90"
-      >
-        <Plus className="size-5" strokeWidth={2} />
-        Registrar cómo me siento
-      </button>
+      <div>
+        <button
+          onClick={() => {
+            setFrase(null);
+            setAbierto(true);
+          }}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-noema-deep px-5 py-4 text-base font-medium text-bone shadow-sm transition-colors hover:bg-noema-deep/90"
+        >
+          <Plus className="size-5" strokeWidth={2} />
+          Registrar cómo me siento
+        </button>
+
+        {/* Frase motivacional acorde a lo que acaba de registrar */}
+        {frase && (
+          <div className="mt-3 rounded-2xl border border-noema-sage/30 bg-gradient-to-br from-noema-sage/[0.1] to-transparent p-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-noema-sage">Para ti</p>
+            <p className="mt-1 text-[0.95rem] leading-relaxed text-ink/85">{frase}</p>
+          </div>
+        )}
+      </div>
     );
   }
 

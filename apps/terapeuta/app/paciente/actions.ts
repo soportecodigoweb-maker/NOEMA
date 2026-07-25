@@ -3,11 +3,40 @@
 import { revalidatePath } from 'next/cache';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import {
+  elegirFraseMotivacional,
+  fraseDeFamilia,
+  semillaDelDia,
+  type FamiliaFrase,
+} from '@/lib/frases-motivacionales';
 
 type Privacidad = 'privado' | 'compartido' | 'marcado_sesion';
 
+/**
+ * Asegura que exista la fila en `pacientes` (FK de registros/diario/metas).
+ *
+ * Un usuario nuevo entra como `sin_terapeuta` y la política RLS solo deja crear
+ * su fila si su rol ya es 'paciente' — así que antes de vincularse no podía
+ * registrar emociones (fallaba el FK). Aquí la creamos con el cliente de
+ * servicio para que pueda usar sus funciones desde el primer momento.
+ */
+async function asegurarFilaPaciente(userId: string): Promise<boolean> {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceKey || !url) return false;
+  const admin = createAdminClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const { error } = await admin
+    .from('pacientes')
+    .upsert({ profile_id: userId }, { onConflict: 'profile_id' });
+  return !error;
+}
+
 /** Crea un registro emocional del paciente. */
-export async function crearRegistroAction(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+export async function crearRegistroAction(
+  formData: FormData,
+): Promise<{ ok: boolean; error?: string; frase?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,6 +57,8 @@ export async function crearRegistroAction(formData: FormData): Promise<{ ok: boo
 
   if (!emocion) return { ok: false, error: 'Elige al menos una emoción.' };
 
+  await asegurarFilaPaciente(user.id);
+
   // La emoción "Otro" se guarda como texto libre dentro de la descripción, para
   // que el terapeuta la vea sin perder el detalle que escribió el paciente.
   if (otro) {
@@ -47,7 +78,50 @@ export async function crearRegistroAction(formData: FormData): Promise<{ ok: boo
   if (error) return { ok: false, error: 'No se pudo guardar el registro.' };
   revalidatePath('/paciente/registros');
   revalidatePath('/paciente/progreso');
-  return { ok: true };
+
+  // Frase motivacional acorde a lo que acaba de registrar (según su "cuadro").
+  const { data: emo } = await supabase
+    .from('emociones_catalogo')
+    .select('familia')
+    .eq('key', emocion)
+    .maybeSingle();
+  const familia = (emo?.familia as FamiliaFrase) ?? 'general';
+  const frase = fraseDeFamilia(FAMILIAS_VALIDAS.has(familia) ? familia : 'general', semillaDelDia() + intensidad);
+
+  return { ok: true, frase };
+}
+
+const FAMILIAS_VALIDAS = new Set<FamiliaFrase>(['tranquilo', 'ansioso', 'triste', 'cansado', 'feliz', 'general']);
+
+/**
+ * Frase motivacional del día para el paciente, elegida por algoritmo según el
+ * cuadro emocional que viene presentando (registros de los últimos 7 días).
+ */
+export async function obtenerFraseMotivacionalAction(): Promise<{ familia: FamiliaFrase; frase: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { familia: 'general', frase: fraseDeFamilia('general', semillaDelDia()) };
+
+  const desde = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const [{ data: registros }, { data: catalogo }] = await Promise.all([
+    supabase
+      .from('registros_emocionales')
+      .select('emocion_principal_key')
+      .eq('paciente_id', user.id)
+      .gte('fecha', desde),
+    supabase.from('emociones_catalogo').select('key, familia'),
+  ]);
+
+  const familiaPorKey = new Map((catalogo ?? []).map((e) => [e.key, e.familia as FamiliaFrase]));
+  const conteo: Partial<Record<FamiliaFrase, number>> = {};
+  for (const r of registros ?? []) {
+    const fam = familiaPorKey.get(r.emocion_principal_key) ?? 'general';
+    conteo[fam] = (conteo[fam] ?? 0) + 1;
+  }
+
+  return elegirFraseMotivacional(conteo, semillaDelDia());
 }
 
 /** Crea una entrada de diario. */
@@ -63,6 +137,8 @@ export async function crearDiarioAction(formData: FormData): Promise<{ ok: boole
   const privacidad = String(formData.get('privacidad') ?? 'privado') as Privacidad;
 
   if (!contenido) return { ok: false, error: 'Escribe algo en tu diario.' };
+
+  await asegurarFilaPaciente(user.id);
 
   const { error } = await supabase.from('diario_entradas').insert({
     paciente_id: user.id,
@@ -83,6 +159,8 @@ export async function crearMetaAction(titulo: string): Promise<{ ok: boolean }> 
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || !titulo.trim()) return { ok: false };
+
+  await asegurarFilaPaciente(user.id);
 
   const { error } = await supabase.from('recordatorios_personales').insert({
     paciente_id: user.id,
