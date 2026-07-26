@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   reactStrictMode: true,
+  // Salida standalone para imagen Docker mínima (self-hosted en VPS)
+  output: 'standalone',
   // Packages del monorepo que Next debe transpilar
   transpilePackages: [
     '@noema/ui',
@@ -20,6 +22,7 @@ const config: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: '*.agentecodigoweb.com' },
+      { protocol: 'https', hostname: '*.somosnoema.com' },
       { protocol: 'http', hostname: '127.0.0.1' },
     ],
   },
