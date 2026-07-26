@@ -112,7 +112,15 @@ export async function signInWithGoogleAction(): Promise<{ ok: boolean; error?: s
     return { ok: false, error: 'No pudimos conectar con Google. Intenta con tu correo.' };
   }
 
-  redirect(data.url);
+  // `data.url` se genera con el host INTERNO (SUPABASE_INTERNAL_URL, p.ej.
+  // http://supabase-kong:8000) que solo existe dentro de Docker. El navegador
+  // debe ir a la URL pública, así que reescribimos el host antes de redirigir.
+  const internal = process.env.SUPABASE_INTERNAL_URL;
+  const publica = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const destino =
+    internal && publica ? data.url.replace(internal, publica) : data.url;
+
+  redirect(destino);
 }
 
 export async function signOutAction() {
