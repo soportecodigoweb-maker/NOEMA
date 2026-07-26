@@ -26,15 +26,15 @@ export function SignUpForm() {
       <Input
         name="nombre"
         label="¿Cómo te llamas?"
-        placeholder="Dra. Andrea Ruiz"
+        placeholder="Tu nombre"
         autoComplete="name"
         required
       />
       <Input
         type="email"
         name="email"
-        label="Correo profesional"
-        placeholder="andrea@consultorio.com"
+        label="Correo"
+        placeholder="tucorreo@ejemplo.com"
         autoComplete="email"
         required
       />

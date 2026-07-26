@@ -46,6 +46,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Rol del usuario (para el gate de onboarding). Solo si hay sesión.
+  let rol: string | null = null;
+  if (user) {
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('rol')
+      .eq('id', user.id)
+      .single();
+    rol = perfil?.rol ?? null;
+  }
+
   const path = request.nextUrl.pathname;
 
   // Rutas públicas (los grupos (auth), (onboarding), (panel), (public) NO van en la URL)
@@ -70,10 +81,24 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthPage) {
-    // Con sesión y página de auth → mandar al panel
+  // Usuario nuevo sin rol definido → forzar onboarding (elige rol + datos).
+  if (user && rol === 'sin_terapeuta' && path !== '/onboarding' && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = '/inicio';
+    url.pathname = '/onboarding';
+    return NextResponse.redirect(url);
+  }
+
+  // Ya tiene rol pero entra al onboarding → mandarlo a su panel.
+  if (user && rol && rol !== 'sin_terapeuta' && path === '/onboarding') {
+    const url = request.nextUrl.clone();
+    url.pathname = rol === 'terapeuta' || rol === 'admin' ? '/inicio' : '/paciente';
+    return NextResponse.redirect(url);
+  }
+
+  if (user && isAuthPage) {
+    // Con sesión y página de auth → al onboarding si es nuevo, si no al panel.
+    const url = request.nextUrl.clone();
+    url.pathname = rol === 'sin_terapeuta' ? '/onboarding' : '/inicio';
     return NextResponse.redirect(url);
   }
 
