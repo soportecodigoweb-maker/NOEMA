@@ -53,11 +53,14 @@ export async function updateSession(request: NextRequest) {
   const isLegalPage = path === '/terminos' || path === '/privacidad';
   const isDirectorio = path === '/terapeutas' || path.startsWith('/terapeutas/');
   const isLanding = path === '/';
+  // El callback de auth debe cargar SIN sesión (ahí es donde se establece).
+  const isCallback = path === '/auth/callback';
   const isPublic =
     isAuthPage ||
     isLegalPage ||
     isLanding ||
     isDirectorio ||
+    isCallback ||
     path.startsWith('/_next');
 
   if (!user && !isPublic) {
