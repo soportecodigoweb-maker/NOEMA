@@ -3,7 +3,30 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+
+/**
+ * Promueve un usuario recién registrado a TERAPEUTA y crea su ficha profesional.
+ *
+ * El trigger `handle_new_auth_user` crea el perfil como 'sin_terapeuta' por
+ * seguridad (nadie se auto-asigna terapeuta vía metadata). Como el registro de
+ * /signup ES el de terapeuta, hacemos la promoción aquí con el cliente de
+ * servicio (bypassa RLS). La ficha `terapeutas` queda con valores por defecto
+ * (sin verificar); los datos profesionales se completan en el onboarding.
+ */
+async function promoverATerapeuta(userId: string, nombre: string): Promise<void> {
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) return;
+
+  const admin = createAdminClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  await admin.from('profiles').update({ rol: 'terapeuta', nombre }).eq('id', userId);
+  await admin.from('terapeutas').upsert({ profile_id: userId }, { onConflict: 'profile_id' });
+}
 
 /** URL base real de esta petición (funciona en Vercel sin depender de env). */
 async function origenActual(): Promise<string> {
@@ -68,7 +91,7 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
 
   const supabase = await createClient();
   const origin = await origenActual();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -84,8 +107,14 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: traducirError(error.message) };
   }
 
+  // Este es el registro de TERAPEUTA: promovemos el rol y creamos su ficha.
+  if (data.user?.id) {
+    await promoverATerapeuta(data.user.id, nombre);
+  }
+
   revalidatePath('/', 'layout');
-  redirect('/perfil');
+  // Entra al panel; el onboarding le pedirá los datos profesionales faltantes.
+  redirect('/inicio');
 }
 
 /**

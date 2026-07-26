@@ -13,6 +13,7 @@ import { eliminarCuentaAction } from '../../../app/(auth)/account-actions';
 export function ZonaCuenta() {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
   const [texto, setTexto] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -72,25 +73,54 @@ export function ZonaCuenta() {
                   className="w-full max-w-xs rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm focus:border-noema-clay focus:outline-none"
                 />
                 {error && <p className="text-xs text-red-600">{error}</p>}
-                <div className="flex gap-2">
-                  <button
-                    onClick={eliminar}
-                    disabled={pending || texto.trim().toUpperCase() !== 'ELIMINAR'}
-                    className="rounded-md bg-noema-clay px-4 py-2 text-sm font-medium text-white hover:bg-noema-clay/90 disabled:opacity-40"
-                  >
-                    {pending ? 'Eliminando…' : 'Eliminar definitivamente'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAbierto(false);
-                      setTexto('');
-                      setError(null);
-                    }}
-                    className="rounded-md px-3 py-2 text-sm text-foreground-muted hover:text-ink"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+
+                {!confirmando ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setConfirmando(true)}
+                      disabled={texto.trim().toUpperCase() !== 'ELIMINAR'}
+                      className="rounded-md bg-noema-clay px-4 py-2 text-sm font-medium text-white hover:bg-noema-clay/90 disabled:opacity-40"
+                    >
+                      Eliminar definitivamente
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAbierto(false);
+                        setTexto('');
+                        setError(null);
+                      }}
+                      className="rounded-md px-3 py-2 text-sm text-foreground-muted hover:text-ink"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-noema-clay/40 bg-noema-clay/[0.06] p-3">
+                    <p className="text-sm font-medium text-ink">
+                      ¿Seguro que quieres eliminar tu cuenta?
+                    </p>
+                    <p className="mt-0.5 text-xs text-foreground-muted">
+                      Se borrará tu cuenta y todos tus datos de forma permanente. Esta
+                      acción <span className="font-semibold">no se puede deshacer</span>.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        onClick={eliminar}
+                        disabled={pending}
+                        className="rounded-md bg-noema-clay px-4 py-2 text-sm font-medium text-white hover:bg-noema-clay/90 disabled:opacity-40"
+                      >
+                        {pending ? 'Eliminando…' : 'Sí, eliminar mi cuenta'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmando(false)}
+                        disabled={pending}
+                        className="rounded-md px-3 py-2 text-sm text-foreground-muted hover:text-ink"
+                      >
+                        No, volver
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
