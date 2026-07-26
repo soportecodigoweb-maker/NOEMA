@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { signInWithGoogleAction } from './actions';
+import { createClient } from '@/lib/supabase/client';
 
 /** Botón "Continuar con Google" con separador. Comparte estilo en login y registro. */
 export function GoogleButton({ texto = 'Continuar con Google' }: { texto?: string }) {
@@ -11,10 +11,17 @@ export function GoogleButton({ texto = 'Continuar con Google' }: { texto?: strin
   const entrar = () => {
     setError(null);
     startTransition(async () => {
-      // Si tiene éxito, la acción redirige a Google (no regresa). Si regresa,
-      // es porque hubo un error (p. ej. proveedor no configurado).
-      const r = await signInWithGoogleAction();
-      if (r && !r.ok) setError(r.error ?? 'No se pudo conectar con Google.');
+      // OAuth iniciado DESDE EL NAVEGADOR: así el code_verifier de PKCE se guarda
+      // como cookie de primera mano y sobrevive el viaje a Google y de vuelta.
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/inicio`,
+        },
+      });
+      // Si no hay error, el navegador ya se está yendo a Google (no regresa aquí).
+      if (err) setError('No se pudo conectar con Google. Intenta con tu correo.');
     });
   };
 

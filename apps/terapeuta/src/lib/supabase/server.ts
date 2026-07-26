@@ -21,6 +21,10 @@ export async function createClient() {
     url,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // storageKey FIJO (igual en cliente/servidor/middleware) para que el
+      // code_verifier de PKCE y las cookies de sesión tengan el mismo nombre
+      // aunque el navegador use la URL pública y el server la interna.
+      auth: { storageKey: 'sb-noema-auth', flowType: 'pkce' },
       cookieOptions: {
         // Forzar path / para que las cookies se manden en TODAS las rutas
         path: '/',

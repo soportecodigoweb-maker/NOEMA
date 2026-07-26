@@ -18,6 +18,7 @@ export async function updateSession(request: NextRequest) {
     url,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      auth: { storageKey: 'sb-noema-auth', flowType: 'pkce' },
       cookieOptions: {
         path: '/',
         sameSite: 'lax',

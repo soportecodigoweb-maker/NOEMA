@@ -18,6 +18,10 @@ export function createClient() {
         sameSite: 'lax',
         secure: true,
       },
+      // storageKey FIJO: el navegador usa la URL pública y el servidor la interna;
+      // sin una clave fija, el nombre de la cookie (incl. el code_verifier de PKCE)
+      // no coincidiría entre ambos y el login con Google fallaría al volver.
+      auth: { storageKey: 'sb-noema-auth', flowType: 'pkce' },
     },
   );
 }
