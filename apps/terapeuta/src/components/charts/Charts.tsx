@@ -33,7 +33,7 @@ export function Sparkline({
   const max = Math.max(...data);
   const min = Math.min(...data);
   const span = max - min || 1;
-  const pad = strokeWidth;
+  const pad = strokeWidth + 1; // deja margen para el punto final (r = strokeWidth+1)
   const w = width - pad * 2;
   const h = height - pad * 2;
   const pts = data.map((v, i) => {
@@ -49,7 +49,7 @@ export function Sparkline({
   // distorsiona al escalar. Así la línea nunca se sale del recuadro.
   const dims = fluid
     ? { width: '100%' as const, preserveAspectRatio: 'none' as const, className: 'block max-w-full' }
-    : { width, className: 'block max-w-full overflow-visible' };
+    : { width, className: 'block max-w-full overflow-hidden' };
 
   return (
     <svg height={height} viewBox={`0 0 ${width} ${height}`} {...dims}>

@@ -1374,6 +1374,36 @@ export type Database = {
         }
         Relationships: []
       }
+      notas_privadas: {
+        Row: {
+          actualizado_at: string
+          contenido: string
+          creado_at: string
+          id: string
+          terapeuta_id: string
+          titulo: string | null
+          vinculacion_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          contenido?: string
+          creado_at?: string
+          id?: string
+          terapeuta_id: string
+          titulo?: string | null
+          vinculacion_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          contenido?: string
+          creado_at?: string
+          id?: string
+          terapeuta_id?: string
+          titulo?: string | null
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
       recordatorios_personales: {
         Row: {
           actualizado_at: string
