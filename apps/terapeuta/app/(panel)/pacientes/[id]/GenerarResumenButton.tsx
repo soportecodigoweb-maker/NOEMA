@@ -11,7 +11,7 @@ import {
   BookOpen,
   TrendingUp,
 } from 'lucide-react';
-import { History, ArrowLeft } from 'lucide-react';
+import { History, ArrowLeft, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Sparkline, Dona, Anillo, Tendencia } from '@/components/charts/Charts';
 import { formatFecha, formatHora } from '@/lib/utils';
@@ -23,12 +23,18 @@ import {
   type ResumenGuardado,
 } from './resumen-actions';
 
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+const haceDias = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+
 export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ResumenData | null>(null);
   const [vista, setVista] = useState<'resumen' | 'historial'>('resumen');
   const [historial, setHistorial] = useState<ResumenGuardado[]>([]);
+  const [fase, setFase] = useState<'config' | 'ver'>('config');
+  const [desde, setDesde] = useState<string>(() => haceDias(6));
+  const [hasta, setHasta] = useState<string>(() => hoyISO());
 
   const cargarHistorial = async () => {
     setHistorial(await listarResumenesAction(vinculacionId));
@@ -38,8 +44,9 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
     setLoading(true);
     setData(null);
     setVista('resumen');
+    setFase('ver');
     try {
-      setData(await generarResumenAction(vinculacionId, 14));
+      setData(await generarResumenAction(vinculacionId, desde, hasta));
       cargarHistorial();
     } catch {
       setData(null);
@@ -66,7 +73,8 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
         size="md"
         onClick={() => {
           setOpen(true);
-          generar();
+          setFase('config');
+          setData(null);
         }}
       >
         <Sparkles className="size-4" strokeWidth={1.8} />
@@ -137,6 +145,14 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
                 ))}
               </ul>
             )
+          ) : fase === 'config' ? (
+            <SelectorFechas
+              desde={desde}
+              hasta={hasta}
+              setDesde={setDesde}
+              setHasta={setHasta}
+              onGenerar={generar}
+            />
           ) : (
           <>
           {loading && (
@@ -151,19 +167,128 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
           {data && !data.ok && (
             <div className="space-y-3 py-8 text-center">
               <p className="text-noema-clay">{data.error ?? 'No se pudo generar el resumen.'}</p>
-              <Button variant="secondary" size="sm" onClick={generar}>
-                Intentar de nuevo
+              <Button variant="secondary" size="sm" onClick={() => setFase('config')}>
+                Elegir otras fechas
               </Button>
             </div>
           )}
 
-          {data?.ok && <Contenido data={data} />}
+          {data?.ok && !loading && (
+            <>
+              <button
+                onClick={() => setFase('config')}
+                className="mb-3 inline-flex items-center gap-1.5 text-xs text-noema-sage hover:underline"
+              >
+                <ArrowLeft className="size-3.5" /> Cambiar fechas
+              </button>
+              <Contenido data={data} />
+            </>
+          )}
           </>
           )}
         </div>
       </div>
     </div>
   );
+}
+
+function SelectorFechas({
+  desde,
+  hasta,
+  setDesde,
+  setHasta,
+  onGenerar,
+}: {
+  desde: string;
+  hasta: string;
+  setDesde: (v: string) => void;
+  setHasta: (v: string) => void;
+  onGenerar: () => void;
+}) {
+  const hoy = hoyISO();
+  const presets = [
+    { label: 'Hoy', d: haceDias(0), h: haceDias(0) },
+    { label: 'Últimos 7 días', d: haceDias(6), h: hoy },
+    { label: 'Últimos 14 días', d: haceDias(13), h: hoy },
+    { label: 'Últimos 30 días', d: haceDias(29), h: hoy },
+  ];
+  const unDia = desde === hasta;
+  return (
+    <div className="space-y-5 py-4">
+      <div className="flex items-start gap-2">
+        <CalendarDays className="mt-0.5 size-5 shrink-0 text-noema-sage" strokeWidth={1.8} />
+        <div>
+          <p className="text-sm font-medium text-ink">¿Qué periodo quieres analizar?</p>
+          <p className="text-xs text-foreground-muted">
+            Por defecto, los últimos 7 días. Puedes elegir un rango o un solo día.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {presets.map((p) => {
+          const activo = p.d === desde && p.h === hasta;
+          return (
+            <button
+              key={p.label}
+              onClick={() => {
+                setDesde(p.d);
+                setHasta(p.h);
+              }}
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                activo
+                  ? 'border-noema-sage bg-noema-sage/10 text-noema-sage'
+                  : 'border-noema-deep/15 text-ink/70 hover:border-noema-sage/50'
+              }`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="block text-sm">
+          <span className="mb-1 block text-xs text-foreground-muted">Desde</span>
+          <input
+            type="date"
+            value={desde}
+            max={hasta}
+            onChange={(e) => setDesde(e.target.value)}
+            className="w-full rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm focus:border-noema-sage focus:outline-none"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="mb-1 block text-xs text-foreground-muted">Hasta</span>
+          <input
+            type="date"
+            value={hasta}
+            min={desde}
+            max={hoy}
+            onChange={(e) => setHasta(e.target.value)}
+            className="w-full rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm focus:border-noema-sage focus:outline-none"
+          />
+        </label>
+      </div>
+
+      <p className="text-xs text-foreground-muted">
+        {unDia ? 'Analizarás un solo día.' : 'Analizarás el rango seleccionado.'}
+      </p>
+
+      <Button variant="primary" size="lg" fullWidth onClick={onGenerar}>
+        <Sparkles className="size-4" strokeWidth={1.8} />
+        Generar análisis
+      </Button>
+    </div>
+  );
+}
+
+function rangoTexto(data: ResumenData): string {
+  if (data.desde && data.hasta) {
+    if (data.desde === data.hasta) return `el ${formatFecha(data.desde)}`;
+    return `del ${formatFecha(data.desde)} al ${formatFecha(data.hasta)}`;
+  }
+  return `últimos ${data.dias} días`;
 }
 
 function Contenido({ data }: { data: ResumenData }) {
@@ -173,8 +298,7 @@ function Contenido({ data }: { data: ResumenData }) {
   if (sinDatos) {
     return (
       <p className="py-10 text-center text-sm text-foreground-muted">
-        {data.nombre} no ha compartido registros ni marcado contenido para esta sesión en los
-        últimos {data.dias} días.
+        {data.nombre} no compartió registros ni marcó contenido en {rangoTexto(data)}.
       </p>
     );
   }
@@ -182,7 +306,7 @@ function Contenido({ data }: { data: ResumenData }) {
   return (
     <div className="space-y-6">
       <p className="caption">
-        {data.nombre} · últimos {data.dias} días
+        {data.nombre} · {rangoTexto(data)}
       </p>
 
       {/* Métricas */}

@@ -40,6 +40,8 @@ export interface ResumenData {
   error?: string;
   nombre: string;
   dias: number;
+  desde?: string; // YYYY-MM-DD
+  hasta?: string; // YYYY-MM-DD
   metricas: {
     registros: number;
     marcados: number;
@@ -64,9 +66,23 @@ const PALETA_EMOCION = ['#3D4D3E', '#D9B98C', '#E8B5AB', '#B9C9CC', '#C7D2BD', '
 
 export async function generarResumenAction(
   vinculacionId: string,
-  dias = 14,
+  desdeArg?: string,
+  hastaArg?: string,
 ): Promise<ResumenData> {
-  const vacio = baseVacia(dias);
+  // Rango de fechas (YYYY-MM-DD). Por defecto: últimos 7 días (incluye hoy).
+  // Acepta un solo día (desde === hasta).
+  let hasta = (hastaArg ?? new Date().toISOString().slice(0, 10)).slice(0, 10);
+  let desde = (
+    desdeArg ?? new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10)
+  ).slice(0, 10);
+  if (desde > hasta) [desde, hasta] = [hasta, desde];
+  const desdeD = new Date(desde + 'T00:00:00.000Z');
+  const hastaD = new Date(hasta + 'T00:00:00.000Z');
+  const dias = Math.max(1, Math.round((hastaD.getTime() - desdeD.getTime()) / 86400000) + 1);
+  const desdeISO = desde + 'T00:00:00.000Z';
+  const hastaISO = hasta + 'T23:59:59.999Z';
+
+  const vacio = baseVacia(dias, desde, hasta);
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,8 +97,6 @@ export async function generarResumenAction(
   if (!vinc?.paciente_id) return { ...vacio, error: 'No hay paciente vinculado.' };
 
   const pacienteId = vinc.paciente_id;
-  const desdeDate = new Date(Date.now() - dias * 86400000);
-  const desde = desdeDate.toISOString().slice(0, 10);
 
   const [
     { data: paciente },
@@ -95,10 +109,11 @@ export async function generarResumenAction(
     supabase.from('profiles').select('nombre').eq('id', pacienteId).maybeSingle(),
     supabase
       .from('registros_emocionales')
-      .select('fecha, registrado_at, emocion_principal_key, intensidad, situacion_detonante, descripcion, privacidad')
+      .select('fecha, hora, registrado_at, emocion_principal_key, intensidad, situacion_detonante, descripcion, privacidad')
       .eq('paciente_id', pacienteId)
       .in('privacidad', ['compartido', 'marcado_sesion'])
       .gte('fecha', desde)
+      .lte('fecha', hasta)
       .order('registrado_at', { ascending: true }),
     supabase
       .from('diario_entradas')
@@ -106,6 +121,7 @@ export async function generarResumenAction(
       .eq('paciente_id', pacienteId)
       .in('privacidad', ['compartido', 'marcado_sesion'])
       .gte('fecha', desde)
+      .lte('fecha', hasta)
       .order('fecha', { ascending: false }),
     supabase
       .from('tareas')
@@ -137,12 +153,12 @@ export async function generarResumenAction(
     e.n += 1;
     sumaPorDia.set(k, e);
   }
-  for (let i = dias - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86400000);
+  for (let i = 0; i < dias; i++) {
+    const d = new Date(desdeD.getTime() + i * 86400000);
     const key = d.toISOString().slice(0, 10);
     const e = sumaPorDia.get(key);
     serie.push({
-      dia: `${d.getDate()}/${d.getMonth() + 1}`,
+      dia: `${d.getUTCDate()}/${d.getUTCMonth() + 1}`,
       intensidad: e ? Math.round((e.suma / e.n) * 10) / 10 : 0,
       registros: e?.n ?? 0,
     });
@@ -217,11 +233,10 @@ export async function generarResumenAction(
       const admin = createAdminClient(urlAdmin, serviceKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
-      const desdeISO = desdeDate.toISOString();
       const [mTot, mOk, msg] = await Promise.all([
-        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).gte('creado_at', desdeISO),
-        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).eq('completado', true).gte('creado_at', desdeISO),
-        admin.from('mensajes').select('*', { count: 'exact', head: true }).eq('vinculacion_id', vinculacionId).eq('autor_id', pacienteId).eq('es_sistema', false).gte('creado_at', desdeISO),
+        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).gte('creado_at', desdeISO).lte('creado_at', hastaISO),
+        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).eq('completado', true).gte('creado_at', desdeISO).lte('creado_at', hastaISO),
+        admin.from('mensajes').select('*', { count: 'exact', head: true }).eq('vinculacion_id', vinculacionId).eq('autor_id', pacienteId).eq('es_sistema', false).gte('creado_at', desdeISO).lte('creado_at', hastaISO),
       ]);
       metasCreadas = mTot.count ?? 0;
       metasCompletadas = mOk.count ?? 0;
@@ -238,25 +253,35 @@ export async function generarResumenAction(
       .filter((t) => t.ultimoTexto)
       .map((t) => `"${(t.ultimoTexto ?? '').slice(0, 120)}"`)
       .join('; ');
+
+    // Detalle de CADA registro compartido, con hora y descripción íntegra: es el
+    // material más valioso para detectar personas, lugares, horarios, objetos,
+    // actividades y pensamientos que se repiten.
+    const registrosDetalle = regs
+      .map((r) => {
+        const hh = (r.hora ?? '').slice(0, 5);
+        const emo = nombreEmocion.get(r.emocion_principal_key) ?? r.emocion_principal_key;
+        return `- [${r.fecha}${hh ? ' ' + hh : ''}] ${emo} (int. ${r.intensidad}/5)${
+          r.situacion_detonante ? ` | situación: ${r.situacion_detonante}` : ''
+        }${r.descripcion ? ` | descripción: ${r.descripcion.slice(0, 500)}` : ''}`;
+      })
+      .join('\n');
+
     const datosIA = [
-      `Periodo analizado: últimos ${dias} días.`,
-      `Registros emocionales compartidos: ${regs.length}, repartidos en ${diasActivos} de ${dias} días. Intensidad promedio: ${intensidadProm ?? '—'}/5.`,
+      `Periodo analizado: del ${desde} al ${hasta} (${dias} día${dias > 1 ? 's' : ''}).`,
+      `Registros emocionales compartidos: ${regs.length}, en ${diasActivos} de ${dias} día(s). Intensidad promedio: ${intensidadProm ?? '—'}/5.`,
       deltaIntensidad !== null
         ? `Tendencia de intensidad (2da mitad vs 1ra): ${deltaIntensidad > 0 ? '+' : ''}${deltaIntensidad}%.`
         : '',
       `Emociones más frecuentes: ${distribucion.map((d) => `${d.label} (${d.valor})`).join(', ') || 'sin datos'}.`,
       `Intensidad por día (antiguo → reciente): ${serie.map((p) => p.intensidad).join(', ')}.`,
-      marcadosSesion.length
-        ? `El paciente MARCÓ para hablar en sesión: ${marcadosSesion
-            .map((r) => `${r.emocion} (int. ${r.intensidad}/5)${r.detonante ? `, detonante: "${r.detonante}"` : ''}${r.descripcion ? `, nota: "${r.descripcion.slice(0, 120)}"` : ''}`)
-            .join('; ')}.`
-        : 'El paciente no marcó registros específicos para sesión.',
+      `\nTODOS LOS REGISTROS, UNO POR UNO (revisa CADA descripción con máxima atención — no te quedes en la emoción; en la descripción hay personas, lugares, horarios, objetos, actividades, pensamientos y situaciones):\n${registrosDetalle || 'sin registros compartidos'}`,
       diarioSesion.length
-        ? `Diario compartido (${diarioSesion.length} entradas): ${diarioSesion
-            .map((d) => `[${d.fecha}] ${d.titulo ? d.titulo + ': ' : ''}${d.contenido.slice(0, 180)}`)
+        ? `\nDiario compartido (${diarioSesion.length} entradas): ${diarioSesion
+            .map((d) => `[${d.fecha}] ${d.titulo ? d.titulo + ': ' : ''}${d.contenido.slice(0, 300)}`)
             .join(' | ')}.`
         : '',
-      `Tareas: ${tareasCompletadas}/${tareasList.length} completadas${adherenciaPct !== null ? ` (adherencia ${adherenciaPct}%)` : ''}.${comentariosTareas ? ` Comentarios del paciente en tareas: ${comentariosTareas}.` : ''}`,
+      `\nTareas: ${tareasCompletadas}/${tareasList.length} completadas${adherenciaPct !== null ? ` (adherencia ${adherenciaPct}%)` : ''}.${comentariosTareas ? ` Comentarios del paciente en tareas: ${comentariosTareas}.` : ''}`,
       `Metas personales: creó ${metasCreadas} y completó ${metasCompletadas}${metasCreadas ? ` (${Math.round((metasCompletadas / metasCreadas) * 100)}%)` : ''}.`,
       `Comunicación: envió ${mensajesPaciente} mensaje(s) al terapeuta en el periodo.`,
     ]
@@ -267,13 +292,12 @@ export async function generarResumenAction(
     const r = await ai.generar({
       audiencia: 'clinico',
       instruccion:
-        'Analiza estos datos observables del paciente y prepara el análisis pre-sesión para el terapeuta. ' +
-        'Detecta emociones recurrentes, patrones, relaciones entre detonantes y emociones, tendencias, y señales de ' +
-        'conducta/compromiso (constancia de uso, metas creadas vs cumplidas, adherencia a tareas, frecuencia de mensajes). ' +
-        'Sé perspicaz: resalta lo que podría pasar desapercibido. No diagnostiques ni interpretes causas.',
+        'Genera un resumen objetivo de los registros del paciente. Identifica emociones predominantes, cambios relevantes y posibles observaciones de interés. Busca coincidencias repetidas entre emociones y situaciones, horarios, personas, lugares, objetos, actividades o pensamientos. No interpretes, no diagnostiques ni establezcas relaciones causales; únicamente describe patrones observados que puedan ser útiles para la exploración clínica y sugiere preguntas abiertas para la siguiente sesión.\n\n' +
+        'Antes de elaborar el resumen, revisa TODOS los registros uno por uno —sobre todo sus DESCRIPCIONES, donde suele haber la información más valiosa— e identifica cualquier elemento repetido. Cuenta explícitamente la frecuencia con la que aparecen personas, objetos, lugares, horarios, actividades, pensamientos y situaciones. Después utiliza ese conteo para generar las observaciones. No omitas elementos repetidos aunque parezcan poco relevantes.\n\n' +
+        'Considera también la actividad y el compromiso (constancia de registros, metas creadas vs. cumplidas, adherencia a tareas, frecuencia de mensajes) como observaciones, sin juzgar.',
       datos: datosIA,
-      maxTokens: 1000,
-      temperatura: 0.5,
+      maxTokens: 1200,
+      temperatura: 0.4,
     });
     if (r.ok) narrativa = r.texto;
   }
@@ -282,6 +306,8 @@ export async function generarResumenAction(
     ok: true,
     nombre,
     dias,
+    desde,
+    hasta,
     metricas: {
       registros: regs.length,
       marcados: marcadosSesion.length,
@@ -345,11 +371,13 @@ export async function obtenerResumenAction(id: string): Promise<ResumenData | nu
   return data.datos as unknown as ResumenData;
 }
 
-function baseVacia(dias: number): ResumenData {
+function baseVacia(dias: number, desde?: string, hasta?: string): ResumenData {
   return {
     ok: false,
     nombre: '',
     dias,
+    desde,
+    hasta,
     metricas: {
       registros: 0,
       marcados: 0,
