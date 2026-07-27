@@ -78,41 +78,8 @@ export async function crearRegistroAction(
   if (error) return { ok: false, error: 'No se pudo guardar el registro.' };
   revalidatePath('/paciente/registros');
   revalidatePath('/paciente/progreso');
-
-  // Notificar al terapeuta SOLO si el registro es compartido (lo privado no lo
-  // ve, así que no tiene caso avisarle). Buscamos su vinculación activa.
-  if (privacidad === 'compartido' || privacidad === 'marcado_sesion') {
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const adminUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (serviceKey && adminUrl) {
-      const admin = createAdminClient(adminUrl, serviceKey, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-      const { data: vinc } = await admin
-        .from('vinculaciones')
-        .select('id, terapeuta_id')
-        .eq('paciente_id', user.id)
-        .eq('estado', 'activa')
-        .maybeSingle();
-      if (vinc?.terapeuta_id) {
-        const { data: pac } = await admin
-          .from('profiles')
-          .select('nombre, apellidos')
-          .eq('id', user.id)
-          .maybeSingle();
-        const nombrePac =
-          [pac?.nombre, pac?.apellidos].filter(Boolean).join(' ') || 'Tu paciente';
-        await admin.from('notificaciones').insert({
-          destinatario_id: vinc.terapeuta_id,
-          tipo: 'registro_emocional',
-          titulo: 'Nuevo registro emocional',
-          cuerpo: `${nombrePac} registró "${emocion.replace(/_/g, ' ')}" (intensidad ${intensidad}/5).`,
-          vinculacion_id: vinc.id,
-          url: `/pacientes/${vinc.id}/registros`,
-        });
-      }
-    }
-  }
+  // Nota: la notificación al terapeuta la crea el trigger `trg_notificar_registro`
+  // en la BD (no hace falta crearla aquí; hacerlo duplicaría el aviso).
 
   // Frase motivacional acorde a lo que acaba de registrar (según su "cuadro").
   const { data: emo } = await supabase
