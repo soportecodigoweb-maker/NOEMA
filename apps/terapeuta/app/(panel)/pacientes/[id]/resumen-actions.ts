@@ -1,6 +1,7 @@
 'use server';
 
 import { crearNoemaAi } from '@noema/ai';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import type { Json } from '@noema/database';
 import { createClient } from '@/lib/supabase/server';
 
@@ -205,21 +206,59 @@ export async function generarResumenAction(
   const notaPrev = sesionPrev?.nota as { plan_proxima_sesion?: string }[] | { plan_proxima_sesion?: string } | null;
   const planPrevio = (Array.isArray(notaPrev) ? notaPrev[0]?.plan_proxima_sesion : notaPrev?.plan_proxima_sesion) ?? null;
 
-  // ── Narrativa IA (opcional; respeta guardarraíles clínicos) ──
+  // ── Señales de actividad/compromiso (agregados; sin exponer contenido privado) ──
+  let metasCreadas = 0;
+  let metasCompletadas = 0;
+  let mensajesPaciente = 0;
+  {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const urlAdmin = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (serviceKey && urlAdmin) {
+      const admin = createAdminClient(urlAdmin, serviceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const desdeISO = desdeDate.toISOString();
+      const [mTot, mOk, msg] = await Promise.all([
+        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).gte('creado_at', desdeISO),
+        admin.from('recordatorios_personales').select('*', { count: 'exact', head: true }).eq('paciente_id', pacienteId).eq('completado', true).gte('creado_at', desdeISO),
+        admin.from('mensajes').select('*', { count: 'exact', head: true }).eq('vinculacion_id', vinculacionId).eq('autor_id', pacienteId).eq('es_sistema', false).gte('creado_at', desdeISO),
+      ]);
+      metasCreadas = mTot.count ?? 0;
+      metasCompletadas = mOk.count ?? 0;
+      mensajesPaciente = msg.count ?? 0;
+    }
+  }
+  const diasActivos = serie.filter((p) => p.registros > 0).length;
+
+  // ── Análisis pre-sesión con IA (respeta guardarraíles clínicos) ──
   let narrativa: string | null = null;
   const apiKey = process.env.OPENAI_API_KEY;
   if (apiKey && regs.length >= 2) {
+    const comentariosTareas = tareasResumen
+      .filter((t) => t.ultimoTexto)
+      .map((t) => `"${(t.ultimoTexto ?? '').slice(0, 120)}"`)
+      .join('; ');
     const datosIA = [
-      `Periodo: últimos ${dias} días.`,
-      `Registros compartidos: ${regs.length}. Intensidad promedio: ${intensidadProm ?? '—'}/5.`,
-      `Emociones más frecuentes: ${distribucion.map((d) => `${d.label} (${d.valor})`).join(', ') || 'sin datos'}.`,
-      deltaIntensidad !== null ? `Cambio de intensidad en el periodo: ${deltaIntensidad}%.` : '',
-      marcadosSesion.length
-        ? `Marcado por el paciente para hablar en sesión: ${marcadosSesion
-            .map((r) => `${r.emocion} (int. ${r.intensidad}/5)${r.detonante ? `, detonante: ${r.detonante}` : ''}`)
-            .join('; ')}.`
+      `Periodo analizado: últimos ${dias} días.`,
+      `Registros emocionales compartidos: ${regs.length}, repartidos en ${diasActivos} de ${dias} días. Intensidad promedio: ${intensidadProm ?? '—'}/5.`,
+      deltaIntensidad !== null
+        ? `Tendencia de intensidad (2da mitad vs 1ra): ${deltaIntensidad > 0 ? '+' : ''}${deltaIntensidad}%.`
         : '',
-      adherenciaPct !== null ? `Adherencia a tareas: ${adherenciaPct}% (${tareasCompletadas}/${tareasList.length}).` : '',
+      `Emociones más frecuentes: ${distribucion.map((d) => `${d.label} (${d.valor})`).join(', ') || 'sin datos'}.`,
+      `Intensidad por día (antiguo → reciente): ${serie.map((p) => p.intensidad).join(', ')}.`,
+      marcadosSesion.length
+        ? `El paciente MARCÓ para hablar en sesión: ${marcadosSesion
+            .map((r) => `${r.emocion} (int. ${r.intensidad}/5)${r.detonante ? `, detonante: "${r.detonante}"` : ''}${r.descripcion ? `, nota: "${r.descripcion.slice(0, 120)}"` : ''}`)
+            .join('; ')}.`
+        : 'El paciente no marcó registros específicos para sesión.',
+      diarioSesion.length
+        ? `Diario compartido (${diarioSesion.length} entradas): ${diarioSesion
+            .map((d) => `[${d.fecha}] ${d.titulo ? d.titulo + ': ' : ''}${d.contenido.slice(0, 180)}`)
+            .join(' | ')}.`
+        : '',
+      `Tareas: ${tareasCompletadas}/${tareasList.length} completadas${adherenciaPct !== null ? ` (adherencia ${adherenciaPct}%)` : ''}.${comentariosTareas ? ` Comentarios del paciente en tareas: ${comentariosTareas}.` : ''}`,
+      `Metas personales: creó ${metasCreadas} y completó ${metasCompletadas}${metasCreadas ? ` (${Math.round((metasCompletadas / metasCreadas) * 100)}%)` : ''}.`,
+      `Comunicación: envió ${mensajesPaciente} mensaje(s) al terapeuta en el periodo.`,
     ]
       .filter(Boolean)
       .join('\n');
@@ -228,14 +267,12 @@ export async function generarResumenAction(
     const r = await ai.generar({
       audiencia: 'clinico',
       instruccion:
-        'Prepara un resumen pre-sesión COMPLETO para el terapeuta a partir de estos datos observables del paciente. ' +
-        'Estructúralo en: (1) Panorama general del periodo; (2) PATRONES que observes (emociones o detonantes recurrentes, ' +
-        'relación entre situaciones y emociones, tendencias de intensidad al alza o a la baja, adherencia a tareas); ' +
-        '(3) Puntos de atención y preguntas abiertas sugeridas para la sesión. ' +
-        'Presenta patrones y puntos como OBSERVACIONES basadas en los datos, sin diagnosticar ni interpretar causas clínicas. ' +
-        'Usa un tono profesional y claro.',
+        'Analiza estos datos observables del paciente y prepara el análisis pre-sesión para el terapeuta. ' +
+        'Detecta emociones recurrentes, patrones, relaciones entre detonantes y emociones, tendencias, y señales de ' +
+        'conducta/compromiso (constancia de uso, metas creadas vs cumplidas, adherencia a tareas, frecuencia de mensajes). ' +
+        'Sé perspicaz: resalta lo que podría pasar desapercibido. No diagnostiques ni interpretes causas.',
       datos: datosIA,
-      maxTokens: 700,
+      maxTokens: 1000,
       temperatura: 0.5,
     });
     if (r.ok) narrativa = r.texto;
