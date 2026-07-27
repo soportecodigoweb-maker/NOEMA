@@ -38,9 +38,38 @@ export function sonidosUIActivos(): boolean {
   }
 }
 
-/** Sincroniza el interruptor interno con la preferencia guardada (sin reescribir). */
+/** Volumen global de los sonidos de UI (0 a 1). Por defecto: máximo. */
+let volumen = 1;
+
+/** Ajusta el volumen global de los sonidos de UI (0 a 1) y lo guarda. */
+export function establecerVolumenUI(v: number): void {
+  volumen = Math.max(0, Math.min(1, v));
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem('noema:volumen-ui', String(volumen));
+    } catch {
+      /* almacenamiento no disponible: ignoramos */
+    }
+  }
+}
+
+/** Lee el volumen guardado (por defecto: 1 = máximo). */
+export function volumenUI(): number {
+  if (typeof window === 'undefined') return 1;
+  try {
+    const v = window.localStorage.getItem('noema:volumen-ui');
+    if (v === null) return 1;
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
+  } catch {
+    return 1;
+  }
+}
+
+/** Sincroniza el interruptor y el volumen internos con la preferencia guardada. */
 export function inicializarSonidosUI(): void {
   habilitado = sonidosUIActivos();
+  volumen = volumenUI();
 }
 
 function obtenerContexto(): AudioContext | null {
@@ -121,7 +150,7 @@ const PATRONES: Record<SonidoUI, Nota[]> = {
  * el navegador aún no permite audio (falta de interacción previa).
  */
 export function sonarUI(sonido: SonidoUI): void {
-  if (!habilitado) return;
+  if (!habilitado || volumen <= 0) return;
   const ctx = obtenerContexto();
   if (!ctx) return;
 
@@ -137,7 +166,8 @@ export function sonarUI(sonido: SonidoUI): void {
     osc.type = nota.tipo ?? 'sine';
     osc.frequency.value = nota.f;
 
-    const pico = nota.vol ?? 0.05;
+    // Volumen base ×2.4 (sonido más alto) × preferencia del usuario (0–1).
+    const pico = Math.min(0.6, (nota.vol ?? 0.05) * 2.4 * volumen);
     const t0 = ahora + nota.t;
     // Envolvente rápida de ataque y decaimiento suave para que no truene.
     gain.gain.setValueAtTime(0.0001, t0);

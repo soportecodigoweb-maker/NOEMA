@@ -1385,6 +1385,7 @@ export type Database = {
           paciente_id: string
           recordar_at: string | null
           recurrencia: string
+          tipo: 'diario' | 'corto' | 'mediano' | 'largo'
           titulo: string
         }
         Insert: {
@@ -1398,6 +1399,7 @@ export type Database = {
           paciente_id: string
           recordar_at?: string | null
           recurrencia?: string
+          tipo?: 'diario' | 'corto' | 'mediano' | 'largo'
           titulo: string
         }
         Update: {
@@ -1411,6 +1413,7 @@ export type Database = {
           paciente_id?: string
           recordar_at?: string | null
           recurrencia?: string
+          tipo?: 'diario' | 'corto' | 'mediano' | 'largo'
           titulo?: string
         }
         Relationships: [

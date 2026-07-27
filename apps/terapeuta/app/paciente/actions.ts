@@ -154,8 +154,16 @@ export async function crearDiarioAction(formData: FormData): Promise<{ ok: boole
   return { ok: true };
 }
 
-/** Crea una meta/recordatorio personal. */
-export async function crearMetaAction(titulo: string): Promise<{ ok: boolean }> {
+/**
+ * Crea una meta/objetivo personal.
+ * tipo: 'diario' (objetivo del día, se reinicia) | 'corto' | 'mediano' | 'largo'.
+ * recurrencia: para 'diario', 'diario' o letras de días 'L,M,X,J,V,S,D'.
+ */
+export async function crearMetaAction(
+  titulo: string,
+  tipo: 'diario' | 'corto' | 'mediano' | 'largo' = 'corto',
+  recurrencia: string | null = null,
+): Promise<{ ok: boolean; id?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -164,13 +172,19 @@ export async function crearMetaAction(titulo: string): Promise<{ ok: boolean }> 
 
   await asegurarFilaPaciente(user.id);
 
-  const { error } = await supabase.from('recordatorios_personales').insert({
-    paciente_id: user.id,
-    titulo: titulo.trim(),
-  });
+  const { data, error } = await supabase
+    .from('recordatorios_personales')
+    .insert({
+      paciente_id: user.id,
+      titulo: titulo.trim(),
+      tipo,
+      ...(recurrencia ? { recurrencia } : {}),
+    })
+    .select('id')
+    .single();
   if (error) return { ok: false };
   revalidatePath('/paciente/metas');
-  return { ok: true };
+  return { ok: true, id: data?.id };
 }
 
 export async function toggleMetaAction(id: string, completado: boolean): Promise<{ ok: boolean }> {
