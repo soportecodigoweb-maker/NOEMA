@@ -228,9 +228,14 @@ export async function generarResumenAction(
     const r = await ai.generar({
       audiencia: 'clinico',
       instruccion:
-        'Prepara el resumen pre-sesión para el terapeuta a partir de estos datos observables del paciente. Da un panorama y puntos de atención como observaciones y preguntas abiertas, sin diagnosticar ni interpretar causas.',
+        'Prepara un resumen pre-sesión COMPLETO para el terapeuta a partir de estos datos observables del paciente. ' +
+        'Estructúralo en: (1) Panorama general del periodo; (2) PATRONES que observes (emociones o detonantes recurrentes, ' +
+        'relación entre situaciones y emociones, tendencias de intensidad al alza o a la baja, adherencia a tareas); ' +
+        '(3) Puntos de atención y preguntas abiertas sugeridas para la sesión. ' +
+        'Presenta patrones y puntos como OBSERVACIONES basadas en los datos, sin diagnosticar ni interpretar causas clínicas. ' +
+        'Usa un tono profesional y claro.',
       datos: datosIA,
-      maxTokens: 320,
+      maxTokens: 700,
       temperatura: 0.5,
     });
     if (r.ok) narrativa = r.texto;

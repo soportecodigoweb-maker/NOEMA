@@ -16,11 +16,9 @@ export function SonidosUI() {
   useEffect(() => {
     inicializarSonidosUI();
 
-    // Si el usuario prefiere menos movimiento, no metemos sonidos por defecto.
-    const prefiereQuieto =
-      typeof window !== 'undefined' &&
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (prefiereQuieto) return;
+    // Nota: NO desactivamos por "prefers-reduced-motion" — esa preferencia es
+    // para animaciones VISUALES, no para audio. Los sonidos se controlan solo
+    // con el interruptor "Sonidos de la app" (localStorage noema:sonidos-ui).
 
     /** ¿El elemento (o un ancestro cercano) es un botón/control presionable?
      * Solo botones y controles — NO cualquier toque de pantalla. */
