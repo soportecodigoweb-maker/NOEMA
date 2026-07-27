@@ -36,9 +36,12 @@ export async function transferirPacienteAction(
 }
 
 // ===========================================================================
-// Canalización: enlazar al paciente con otro terapeuta de NOEMA, eligiendo qué
-// información se incluye en un informe (con IA si está disponible) que le llega
-// al terapeuta que recibe. Al canalizar, el paciente pasa a ese terapeuta.
+// Canalización: enlazar al paciente con otro terapeuta de NOEMA, adjuntando un
+// INFORME PSICOLÓGICO de canalización. El flujo es en dos pasos:
+//   1) generarInformeCanalizacionAction → arma un borrador (con IA), SIN mover
+//      al paciente. El terapeuta lo revisa y lo edita.
+//   2) confirmarCanalizacionAction → con el texto ya aprobado, canaliza al
+//      paciente y deja el informe en el historial del terapeuta que recibe.
 // ===========================================================================
 
 export interface IncluirCanalizacion {
@@ -49,12 +52,67 @@ export interface IncluirCanalizacion {
   metricas: boolean;
 }
 
-export async function canalizarPacienteAction(
+function admin(): SupabaseClient<Database> {
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  return createAdminClient<Database>(url, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+interface Destino {
+  vinc: { id: string; terapeuta_id: string; paciente_id: string };
+  destinoProfileId: string;
+  destinoNombre: string | null;
+}
+
+/** Valida que el terapeuta en sesión es dueño y resuelve el terapeuta destino. */
+async function resolverDestino(
+  db: SupabaseClient<Database>,
+  userId: string,
+  vinculacionId: string,
+  cedula: string,
+): Promise<{ ok: true; d: Destino } | { ok: false; error: string }> {
+  const { data: vinc } = await db
+    .from('vinculaciones')
+    .select('id, terapeuta_id, paciente_id')
+    .eq('id', vinculacionId)
+    .maybeSingle();
+  if (!vinc || vinc.terapeuta_id !== userId) {
+    return { ok: false, error: 'No tienes acceso a este paciente.' };
+  }
+  if (!vinc.paciente_id) return { ok: false, error: 'La vinculación no tiene paciente.' };
+
+  const { data: destino } = await db
+    .from('terapeutas')
+    .select('profile_id')
+    .eq('cedula_profesional', cedula)
+    .maybeSingle();
+  if (!destino) return { ok: false, error: 'No encontramos un terapeuta con esa cédula en NOEMA.' };
+  if (destino.profile_id === userId) return { ok: false, error: 'Esa es tu propia cédula.' };
+
+  const { data: perfil } = await db
+    .from('profiles')
+    .select('nombre')
+    .eq('id', destino.profile_id)
+    .maybeSingle();
+
+  return {
+    ok: true,
+    d: {
+      vinc: { id: vinc.id, terapeuta_id: vinc.terapeuta_id, paciente_id: vinc.paciente_id },
+      destinoProfileId: destino.profile_id,
+      destinoNombre: perfil?.nombre ?? null,
+    },
+  };
+}
+
+/** PASO 1 — Genera el borrador del informe psicológico. No mueve al paciente. */
+export async function generarInformeCanalizacionAction(
   vinculacionId: string,
   cedulaDestino: string,
   motivo: string,
   incluir: IncluirCanalizacion,
-): Promise<{ ok: boolean; error?: string; reporte?: string; terapeutaDestino?: string }> {
+): Promise<{ ok: boolean; error?: string; borrador?: string; terapeutaDestino?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -66,75 +124,78 @@ export async function canalizarPacienteAction(
   if (!incluir.registros && !incluir.diario && !incluir.tareas && !incluir.notas && !incluir.metricas) {
     return { ok: false, error: 'Elige al menos un tipo de información para el informe.' };
   }
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!serviceKey || !url) return { ok: false, error: 'Configuración incompleta del servidor.' };
-  const admin = createAdminClient<Database>(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  // 1. El terapeuta actual debe ser dueño de la vinculación.
-  const { data: vinc } = await admin
-    .from('vinculaciones')
-    .select('id, terapeuta_id, paciente_id')
-    .eq('id', vinculacionId)
-    .maybeSingle();
-  if (!vinc || vinc.terapeuta_id !== user.id) {
-    return { ok: false, error: 'No tienes acceso a este paciente.' };
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { ok: false, error: 'Configuración incompleta del servidor.' };
   }
-  if (!vinc.paciente_id) return { ok: false, error: 'La vinculación no tiene paciente.' };
 
-  // 2. Terapeuta destino por cédula.
-  const { data: destino } = await admin
-    .from('terapeutas')
-    .select('profile_id')
-    .eq('cedula_profesional', cedula)
-    .maybeSingle();
-  if (!destino) {
-    return { ok: false, error: 'No encontramos un terapeuta con esa cédula en NOEMA.' };
-  }
-  if (destino.profile_id === user.id) {
-    return { ok: false, error: 'Esa es tu propia cédula.' };
-  }
-  const { data: destinoPerfil } = await admin
-    .from('profiles')
-    .select('nombre')
-    .eq('id', destino.profile_id)
-    .maybeSingle();
+  const db = admin();
+  const r = await resolverDestino(db, user.id, vinculacionId, cedula);
+  if (!r.ok) return { ok: false, error: r.error };
 
-  // 3. Reunir la info elegida y armar el informe.
-  const reporte = await construirInformeCanalizacion(
-    admin,
-    vinc.paciente_id,
+  const informe = await construirInformeCanalizacion(
+    db,
+    r.d.vinc.paciente_id,
     vinculacionId,
     incluir,
     motivo.trim(),
   );
 
-  // 4. Canalizar: el paciente pasa al terapeuta destino.
-  const { error: eUpd } = await admin
+  return { ok: true, borrador: informe.texto, terapeutaDestino: r.d.destinoNombre ?? undefined };
+}
+
+/** PASO 2 — Con el informe ya revisado y aprobado, canaliza al paciente. */
+export async function confirmarCanalizacionAction(
+  vinculacionId: string,
+  cedulaDestino: string,
+  motivo: string,
+  texto: string,
+  incluir: IncluirCanalizacion,
+): Promise<{ ok: boolean; error?: string; terapeutaDestino?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Sesión expirada.' };
+
+  const cedula = cedulaDestino.trim();
+  if (!cedula) return { ok: false, error: 'Escribe la cédula del terapeuta destino.' };
+  if (!texto.trim()) return { ok: false, error: 'El informe no puede quedar vacío.' };
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { ok: false, error: 'Configuración incompleta del servidor.' };
+  }
+
+  const db = admin();
+  const r = await resolverDestino(db, user.id, vinculacionId, cedula);
+  if (!r.ok) return { ok: false, error: r.error };
+
+  // Canalizar: el paciente pasa al terapeuta destino.
+  const { error: eUpd } = await db
     .from('vinculaciones')
-    .update({ terapeuta_id: destino.profile_id })
+    .update({ terapeuta_id: r.d.destinoProfileId })
     .eq('id', vinculacionId);
   if (eUpd) return { ok: false, error: 'No se pudo canalizar. Intenta de nuevo.' };
 
-  // 5. Dejar el informe en el historial para el terapeuta que recibe.
-  await admin.from('resumenes_sesion').insert({
+  // Dejar el informe (ya revisado por el terapeuta) en el historial del que recibe.
+  await db.from('resumenes_sesion').insert({
     vinculacion_id: vinculacionId,
-    terapeuta_id: destino.profile_id,
-    narrativa: reporte.texto,
-    datos: reporte.datos as unknown as Json,
+    terapeuta_id: r.d.destinoProfileId,
+    narrativa: texto.trim(),
+    datos: { incluir, motivo: motivo.trim(), tipo: 'canalizacion', revisado: true } as unknown as Json,
     dias: 90,
   });
 
   revalidatePath('/pacientes');
-  return { ok: true, reporte: reporte.texto, terapeutaDestino: destinoPerfil?.nombre ?? undefined };
+  return { ok: true, terapeutaDestino: r.d.destinoNombre ?? undefined };
+}
+
+function unwrapNota<T>(x: T | T[] | null | undefined): T | null {
+  if (Array.isArray(x)) return x[0] ?? null;
+  return x ?? null;
 }
 
 /** Junta la información seleccionada y redacta el informe (IA si hay clave). */
 async function construirInformeCanalizacion(
-  admin: SupabaseClient<Database>,
+  db: SupabaseClient<Database>,
   pacienteId: string,
   vinculacionId: string,
   incluir: IncluirCanalizacion,
@@ -144,15 +205,15 @@ async function construirInformeCanalizacion(
   const secciones: string[] = [];
   const datos: Record<string, unknown> = { incluir, motivo, desde };
 
-  const { data: pac } = await admin.from('profiles').select('nombre').eq('id', pacienteId).maybeSingle();
+  const { data: pac } = await db.from('profiles').select('nombre').eq('id', pacienteId).maybeSingle();
   const nombre = pac?.nombre ?? 'El paciente';
   if (motivo) secciones.push(`Motivo de la canalización: ${motivo}.`);
 
-  const { data: catalogo } = await admin.from('emociones_catalogo').select('key, nombre_es');
+  const { data: catalogo } = await db.from('emociones_catalogo').select('key, nombre_es');
   const nombreEmocion = new Map((catalogo ?? []).map((e) => [e.key, e.nombre_es]));
 
   if (incluir.registros || incluir.metricas) {
-    const { data: regs } = await admin
+    const { data: regs } = await db
       .from('registros_emocionales')
       .select('fecha, emocion_principal_key, intensidad, situacion_detonante, privacidad')
       .eq('paciente_id', pacienteId)
@@ -184,7 +245,7 @@ async function construirInformeCanalizacion(
   }
 
   if (incluir.diario) {
-    const { data: diario } = await admin
+    const { data: diario } = await db
       .from('diario_entradas')
       .select('fecha, titulo, contenido, privacidad')
       .eq('paciente_id', pacienteId)
@@ -203,7 +264,7 @@ async function construirInformeCanalizacion(
   }
 
   if (incluir.tareas) {
-    const { data: tareas } = await admin
+    const { data: tareas } = await db
       .from('tareas')
       .select('titulo, estado')
       .eq('vinculacion_id', vinculacionId)
@@ -216,24 +277,45 @@ async function construirInformeCanalizacion(
   }
 
   if (incluir.notas) {
-    const { data: sesiones } = await admin
+    const { data: sesiones } = await db
       .from('sesiones')
-      .select('nota:sesion_notas(plan_proxima_sesion)')
+      .select(
+        'fecha_programada, nota:sesion_notas(objetivos_trabajados, contenido_publico, contenido_privado, plan_proxima_sesion)',
+      )
       .eq('vinculacion_id', vinculacionId)
       .eq('estado', 'realizada')
       .order('fecha_programada', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const nota = sesiones?.nota as { plan_proxima_sesion?: string }[] | { plan_proxima_sesion?: string } | null;
-    const plan = (Array.isArray(nota) ? nota[0]?.plan_proxima_sesion : nota?.plan_proxima_sesion) ?? null;
-    if (plan) secciones.push(`Plan de la última nota clínica: ${plan}`);
+      .limit(6);
+    const notas = (sesiones ?? [])
+      .map((s) => ({ fecha: s.fecha_programada as string | null, n: unwrapNota(s.nota) }))
+      .filter((x): x is { fecha: string | null; n: NonNullable<typeof x.n> } => !!x.n);
+
+    const objetivos = [...new Set(notas.flatMap((x) => x.n.objetivos_trabajados ?? []))];
+    if (objetivos.length) secciones.push(`Objetivos trabajados en el proceso: ${objetivos.join(', ')}.`);
+
+    const extractos = notas
+      .slice(0, 5)
+      .map((x) => {
+        const partes = [x.n.contenido_publico, x.n.contenido_privado].filter(Boolean).join(' — ');
+        if (!partes) return null;
+        const f = x.fecha ? new Date(x.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) : '';
+        return `${f ? `(${f}) ` : ''}${partes.slice(0, 320)}`;
+      })
+      .filter(Boolean) as string[];
+    if (extractos.length) secciones.push(`Observaciones de sesión (notas clínicas):\n- ${extractos.join('\n- ')}`);
+
+    const ultimoPlan = notas.find((x) => x.n.plan_proxima_sesion)?.n.plan_proxima_sesion;
+    if (ultimoPlan) secciones.push(`Plan de la última nota clínica: ${ultimoPlan}`);
   }
 
   const cuerpo = secciones.join('\n\n');
   datos.resumen = cuerpo;
 
-  // Encabezado base (siempre presente, aunque no haya IA).
-  let texto = `Informe de canalización — ${nombre}\n\n${cuerpo || 'Sin información seleccionada disponible en el periodo.'}\n\nEste informe se generó con la información que el terapeuta de origen decidió compartir. No constituye diagnóstico.`;
+  // Informe base en texto plano (siempre presente, aunque no haya IA).
+  let texto =
+    `INFORME PSICOLÓGICO DE CANALIZACIÓN\nPaciente: ${nombre}\n\n` +
+    `${cuerpo || 'Sin información seleccionada disponible en el periodo.'}\n\n` +
+    `Este informe reúne la información que el terapeuta de origen decidió compartir sobre el proceso. No constituye diagnóstico.`;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (apiKey && cuerpo) {
@@ -241,9 +323,13 @@ async function construirInformeCanalizacion(
     const r = await ai.generar({
       audiencia: 'clinico',
       instruccion:
-        'Redacta un informe de canalización claro y profesional para el terapeuta que va a recibir a este paciente. Resume el panorama y los puntos de atención como observaciones y preguntas abiertas a partir de los datos, sin diagnosticar ni interpretar causas. Cierra sugiriendo focos para la primera sesión.',
+        'Redacta un INFORME PSICOLÓGICO DE CANALIZACIÓN profesional, dirigido al terapeuta que recibirá a este paciente. ' +
+        'Organízalo con estos encabezados en este orden: "Motivo de la canalización", "Panorama del proceso" (qué se ha observado y trabajado a lo largo del acompañamiento), ' +
+        '"Temas y objetivos abordados", "Evolución y estado actual" (a partir de tendencias, registros y notas), y "Focos sugeridos para la continuidad". ' +
+        'Escribe en tono clínico, claro y respetuoso. Básate únicamente en los datos proporcionados; formula los puntos de atención como observaciones y preguntas abiertas, ' +
+        'sin diagnosticar, sin interpretar causas y sin etiquetar. No inventes información que no esté en los datos. Si falta información para una sección, indícalo brevemente.',
       datos: `Paciente: ${nombre}.\n${cuerpo}`,
-      maxTokens: 500,
+      maxTokens: 900,
       temperatura: 0.5,
     });
     if (r.ok && r.texto) texto = r.texto;
