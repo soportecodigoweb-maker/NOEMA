@@ -291,8 +291,49 @@ export async function redimirCodigoAction(
     .update({ rol: 'paciente', onboarding_completo: true })
     .eq('id', user.id);
 
+  // 7. Notificar a AMBAS partes de la vinculación.
+  const nombreTera = await nombreTerapeuta(vinc.terapeuta_id);
+  const { data: pacRow } = await admin
+    .from('profiles')
+    .select('nombre, apellidos')
+    .eq('id', user.id)
+    .maybeSingle();
+  const nombrePaciente =
+    [pacRow?.nombre, pacRow?.apellidos].filter(Boolean).join(' ') || 'Tu nuevo paciente';
+
+  const notifs: Array<{
+    destinatario_id: string;
+    tipo: string;
+    titulo: string;
+    cuerpo: string;
+    vinculacion_id: string;
+    url: string;
+  }> = [
+    {
+      destinatario_id: user.id,
+      tipo: 'vinculacion',
+      titulo: '¡Vinculación exitosa!',
+      cuerpo: nombreTera
+        ? `Ya estás vinculado con ${nombreTera}. Tu proceso continúa acompañado.`
+        : 'Tu vinculación se completó con éxito.',
+      vinculacion_id: vinc.id,
+      url: '/paciente',
+    },
+  ];
+  if (vinc.terapeuta_id) {
+    notifs.push({
+      destinatario_id: vinc.terapeuta_id,
+      tipo: 'vinculacion',
+      titulo: 'Nuevo paciente vinculado',
+      cuerpo: `${nombrePaciente} se vinculó contigo. Ya puedes darle seguimiento.`,
+      vinculacion_id: vinc.id,
+      url: `/pacientes/${vinc.id}`,
+    });
+  }
+  await admin.from('notificaciones').insert(notifs);
+
   revalidatePath('/paciente', 'layout');
-  return { ok: true, terapeutaNombre: await nombreTerapeuta(vinc.terapeuta_id) };
+  return { ok: true, terapeutaNombre: nombreTera };
 }
 
 /** Responde una tarea (con campos dinámicos). */
