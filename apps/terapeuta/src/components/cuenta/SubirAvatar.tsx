@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { Camera, Loader2 } from 'lucide-react';
 import { guardarAvatarUrlAction } from '../../../app/(auth)/avatar-actions';
 import { EditorAvatar } from './EditorAvatar';
@@ -29,10 +29,7 @@ export function SubirAvatar({
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState<File | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   // Al elegir una imagen, primero se abre el editor para acomodarla.
   const elegir = (file: File) => {

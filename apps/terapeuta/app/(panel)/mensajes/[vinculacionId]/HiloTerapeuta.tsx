@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react';
 import { Send, MessageSquareText, Zap, Plus, Trash2 } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { MENSAJES_PREESTABLECIDOS } from '@/lib/mensajes-preestablecidos';
 import { enviarMensajeAction } from './actions';
@@ -48,10 +48,7 @@ export function HiloTerapeuta({
   const [isPending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import {
   Bell,
   MessageCircle,
@@ -45,10 +45,7 @@ export function CentroNotificaciones({
   const [cargando, setCargando] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   const cargar = useCallback(async () => {
     setCargando(true);

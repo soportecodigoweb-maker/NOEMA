@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { MessageCircle, X } from 'lucide-react';
 import {
   reproducirSonido,
@@ -63,10 +63,7 @@ export function AvisoNotificacion({
   const router = useRouter();
   const [avisos, setAvisos] = useState<Aviso[]>([]);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   useEffect(() => {
     const canal = supabase

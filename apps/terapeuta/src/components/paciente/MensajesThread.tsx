@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
 interface Mensaje {
   id: string;
@@ -56,10 +56,7 @@ export function MensajesThread({
     };
   }, []);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LifeBuoy, X } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
 interface AlertaViva {
   id: string;
@@ -27,10 +27,7 @@ export function AlertasCrisisEnVivo({
 }) {
   const [alertas, setAlertas] = useState<AlertaViva[]>([]);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   useEffect(() => {
     // El terapeuta puede apagarlas en Ajustes (la alerta igual queda registrada

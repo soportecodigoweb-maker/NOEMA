@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import {
   Upload,
   Link2,
@@ -51,10 +51,7 @@ export function EditorMateriales({
   const [error, setError] = useState<string | null>(null);
   const [nuevoEnlace, setNuevoEnlace] = useState({ titulo: '', url: '' });
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   const subirArchivos = async (files: FileList) => {
     setError(null);

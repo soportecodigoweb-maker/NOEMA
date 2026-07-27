@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Activity, X, Send } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
 interface RegistroVivo {
   id: string;
@@ -27,10 +27,7 @@ interface RegistroVivo {
 export function RegistrosEnVivo() {
   const [registros, setRegistros] = useState<RegistroVivo[]>([]);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const supabase = createBrowserClient();
 
   useEffect(() => {
     const canal = supabase
