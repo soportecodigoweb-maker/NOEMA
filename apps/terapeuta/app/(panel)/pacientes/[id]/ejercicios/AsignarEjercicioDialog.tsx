@@ -120,8 +120,8 @@ export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
 
           <Textarea
             name="mensaje"
-            label="Mensaje para el paciente (opcional)"
-            placeholder="Una nota de contexto que aparecerá con la tarea."
+            label="Instrucciones o mensaje para el paciente"
+            placeholder="Lo que quieres que haga o tenga en cuenta. Le aparecerá como 'Indicaciones de tu terapeuta'."
           />
 
           {error && <p className="text-sm text-[#B85450]">{error}</p>}

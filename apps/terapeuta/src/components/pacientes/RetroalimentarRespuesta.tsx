@@ -4,6 +4,16 @@ import { useState, useTransition } from 'react';
 import { MessageSquarePlus } from 'lucide-react';
 import { dejarRetroalimentacionAction } from '../../../app/(panel)/pacientes/[id]/ejercicios/feedback-actions';
 
+/** Frases rápidas que el terapeuta puede insertar y luego editar. */
+const PRESETS = [
+  '¡Muy bien! Gracias por completarla.',
+  'Se nota tu esfuerzo, buen trabajo.',
+  'Gracias por compartirlo, es muy valioso.',
+  'Lo revisamos con calma en tu próxima sesión.',
+  '¿Cómo te sentiste al hacerla?',
+  'Vas por buen camino, sigue así.',
+];
+
 export function RetroalimentarRespuesta({
   respuestaId,
   vinculacionId,
@@ -59,6 +69,18 @@ export function RetroalimentarRespuesta({
 
   return (
     <div className="mt-2 space-y-2">
+      <div className="flex flex-wrap gap-1.5">
+        {PRESETS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setTexto((t) => (t.trim() ? `${t.trim()} ${p}` : p))}
+            className="rounded-full border border-noema-sage/40 bg-noema-sage/5 px-2.5 py-1 text-xs text-noema-deep transition-colors hover:bg-noema-sage/15"
+          >
+            {p}
+          </button>
+        ))}
+      </div>
       <textarea
         value={texto}
         onChange={(e) => setTexto(e.target.value)}

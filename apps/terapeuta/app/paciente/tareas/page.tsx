@@ -44,7 +44,7 @@ export default async function TareasPacientePage() {
   const { data: tareas } = await supabase
     .from('tareas')
     .select(`
-      id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta, recursos,
+      id, titulo, descripcion, contenido_md, comentarios_terapeuta, fecha_limite, estado, campos_respuesta, recursos,
       respuestas:tarea_respuestas(
         id, retroalimentacion, retroalimentacion_at,
         respuestas, texto_libre, dificultad_percibida, creado_at
@@ -85,6 +85,17 @@ export default async function TareasPacientePage() {
                   {t.contenido_md && (
                     <div className="whitespace-pre-wrap font-sans text-[0.95rem] leading-relaxed text-ink/85">
                       {t.contenido_md}
+                    </div>
+                  )}
+
+                  {t.comentarios_terapeuta && (
+                    <div className="mt-3 rounded-lg border-l-2 border-noema-sage bg-noema-sage/5 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-wider text-noema-deep/60">
+                        Indicaciones de tu terapeuta
+                      </p>
+                      <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink/85">
+                        {t.comentarios_terapeuta}
+                      </p>
                     </div>
                   )}
 

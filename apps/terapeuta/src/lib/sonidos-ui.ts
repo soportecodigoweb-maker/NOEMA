@@ -166,8 +166,8 @@ export function sonarUI(sonido: SonidoUI): void {
     osc.type = nota.tipo ?? 'sine';
     osc.frequency.value = nota.f;
 
-    // Volumen base ×2.4 (sonido más alto) × preferencia del usuario (0–1).
-    const pico = Math.min(0.6, (nota.vol ?? 0.05) * 2.4 * volumen);
+    // Volumen base ×4.8 (máximo duplicado) × preferencia del usuario (0–1).
+    const pico = Math.min(1, (nota.vol ?? 0.05) * 4.8 * volumen);
     const t0 = ahora + nota.t;
     // Envolvente rápida de ataque y decaimiento suave para que no truene.
     gain.gain.setValueAtTime(0.0001, t0);
