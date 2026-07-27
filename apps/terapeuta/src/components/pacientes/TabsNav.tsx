@@ -15,6 +15,7 @@ const tabs = [
   { slug: 'sesiones', label: 'Sesiones' },
   { slug: 'ejercicios', label: 'Ejercicios' },
   { slug: 'notas', label: 'Notas' },
+  { slug: 'plan-apoyo', label: 'Plan de apoyo' },
   { slug: 'historial', label: 'Historial clínico' },
 ];
 

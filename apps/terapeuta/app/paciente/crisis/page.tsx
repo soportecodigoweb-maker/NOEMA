@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { Phone, LifeBuoy, HeartHandshake } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ContactoCrisis } from '@/components/paciente/ContactoCrisis';
+import { PlanApoyoPaciente } from '@/components/paciente/PlanApoyoPaciente';
 import { exigirFuncionPaciente } from '@/lib/funciones-paciente';
 
 export const dynamic = 'force-dynamic';
@@ -42,14 +43,32 @@ export default async function PacienteCrisisPage() {
 
   let terapeutaNombre: string | null = null;
   let telefonoTerap: string | null = null;
+  let plan: {
+    contacto_nombre: string | null;
+    contacto_relacion: string | null;
+    contacto_telefono: string | null;
+    plan_seguridad: string;
+    notificar_uso: boolean;
+  } | null = null;
+  let recursos: { id: string; tipo: string; titulo: string; url: string | null; nota: string | null }[] = [];
   if (vinc) {
-    const { data: t } = await supabase
-      .from('profiles')
-      .select('nombre, telefono')
-      .eq('id', vinc.terapeuta_id)
-      .maybeSingle();
+    const [{ data: t }, { data: p }, { data: r }] = await Promise.all([
+      supabase.from('profiles').select('nombre, telefono').eq('id', vinc.terapeuta_id).maybeSingle(),
+      supabase
+        .from('plan_apoyo')
+        .select('contacto_nombre, contacto_relacion, contacto_telefono, plan_seguridad, notificar_uso')
+        .eq('vinculacion_id', vinc.id)
+        .maybeSingle(),
+      supabase
+        .from('plan_apoyo_recursos')
+        .select('id, tipo, titulo, url, nota')
+        .eq('vinculacion_id', vinc.id)
+        .order('creado_at', { ascending: true }),
+    ]);
     terapeutaNombre = t?.nombre ?? null;
     telefonoTerap = t?.telefono ?? null;
+    plan = p;
+    recursos = r ?? [];
   }
 
   const { data: contactos } = await supabase
@@ -80,6 +99,21 @@ export default async function PacienteCrisisPage() {
           telefonoTerapeuta={vinc.telefono_terapeuta ?? telefonoTerap}
           sosHabilitado={vinc.sos_habilitado !== false}
         />
+      )}
+
+      {vinc && (
+        <div className="mb-8">
+          <PlanApoyoPaciente
+            contacto={{
+              nombre: plan?.contacto_nombre ?? null,
+              relacion: plan?.contacto_relacion ?? null,
+              telefono: plan?.contacto_telefono ?? null,
+            }}
+            planSeguridad={plan?.plan_seguridad ?? ''}
+            notificarUso={plan?.notificar_uso ?? true}
+            recursos={recursos}
+          />
+        </div>
       )}
 
       {/* Líneas de emergencia */}

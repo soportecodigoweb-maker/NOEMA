@@ -1404,6 +1404,96 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_apoyo: {
+        Row: {
+          actualizado_at: string
+          contacto_nombre: string | null
+          contacto_relacion: string | null
+          contacto_telefono: string | null
+          notificar_uso: boolean
+          plan_editado_por_paciente_at: string | null
+          plan_seguridad: string
+          vinculacion_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          contacto_nombre?: string | null
+          contacto_relacion?: string | null
+          contacto_telefono?: string | null
+          notificar_uso?: boolean
+          plan_editado_por_paciente_at?: string | null
+          plan_seguridad?: string
+          vinculacion_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          contacto_nombre?: string | null
+          contacto_relacion?: string | null
+          contacto_telefono?: string | null
+          notificar_uso?: boolean
+          plan_editado_por_paciente_at?: string | null
+          plan_seguridad?: string
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
+      plan_apoyo_recursos: {
+        Row: {
+          creado_at: string
+          id: string
+          nota: string | null
+          tipo: string
+          titulo: string
+          url: string | null
+          vinculacion_id: string
+        }
+        Insert: {
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          tipo?: string
+          titulo: string
+          url?: string | null
+          vinculacion_id: string
+        }
+        Update: {
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          tipo?: string
+          titulo?: string
+          url?: string | null
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
+      plan_apoyo_usos: {
+        Row: {
+          id: string
+          paciente_id: string
+          retro_at: string | null
+          retroalimentacion: string | null
+          usado_at: string
+          vinculacion_id: string
+        }
+        Insert: {
+          id?: string
+          paciente_id: string
+          retro_at?: string | null
+          retroalimentacion?: string | null
+          usado_at?: string
+          vinculacion_id: string
+        }
+        Update: {
+          id?: string
+          paciente_id?: string
+          retro_at?: string | null
+          retroalimentacion?: string | null
+          usado_at?: string
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
       recordatorios_personales: {
         Row: {
           actualizado_at: string
