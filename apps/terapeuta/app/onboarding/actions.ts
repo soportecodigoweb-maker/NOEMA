@@ -38,12 +38,16 @@ export async function completarOnboardingAction(
   const rol = String(formData.get('rol') ?? '');
   const nombre = String(formData.get('nombre') ?? '').trim();
   const apellidos = String(formData.get('apellidos') ?? '').trim();
+  const telefono = String(formData.get('telefono') ?? '').trim();
 
   if (rol !== 'terapeuta' && rol !== 'paciente') {
     return { ok: false, error: 'Elige si eres terapeuta o paciente.' };
   }
   if (!nombre || !apellidos) {
     return { ok: false, error: 'Ingresa tu nombre y apellidos.' };
+  }
+  if (!telefono) {
+    return { ok: false, error: 'Ingresa tu número de teléfono (lo usamos para enlazar llamadas).' };
   }
 
   const db = admin();
@@ -52,7 +56,7 @@ export async function completarOnboardingAction(
   if (rol === 'paciente') {
     const { error } = await db
       .from('profiles')
-      .update({ rol: 'paciente', nombre, apellidos, onboarding_completo: true })
+      .update({ rol: 'paciente', nombre, apellidos, telefono, onboarding_completo: true })
       .eq('id', user.id);
     if (error) return { ok: false, error: 'No pudimos guardar tus datos. Intenta de nuevo.' };
     revalidatePath('/', 'layout');
@@ -74,7 +78,7 @@ export async function completarOnboardingAction(
 
   const { error: eProfile } = await db
     .from('profiles')
-    .update({ rol: 'terapeuta', nombre, apellidos, onboarding_completo: true })
+    .update({ rol: 'terapeuta', nombre, apellidos, telefono, onboarding_completo: true })
     .eq('id', user.id);
   if (eProfile) return { ok: false, error: 'No pudimos guardar tus datos. Intenta de nuevo.' };
 

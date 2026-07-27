@@ -84,6 +84,16 @@ export function OnboardingForm() {
         <Input name="apellidos" label="Apellidos" placeholder="Ruiz" autoComplete="family-name" required />
       </div>
 
+      <Input
+        type="tel"
+        name="telefono"
+        label="Teléfono"
+        placeholder="55 1234 5678"
+        autoComplete="tel"
+        helper="Lo usamos para enlazar llamadas con tu terapeuta/paciente."
+        required
+      />
+
       {rol === 'terapeuta' && (
         <>
           <Input
