@@ -66,9 +66,9 @@ export default async function PacienteCrisisPage() {
           <LifeBuoy className="size-7 text-noema-clay" strokeWidth={1.6} />
         </div>
         <div>
-          <h1 className="font-serif text-3xl text-ink">Necesito apoyo</h1>
+          <h1 className="font-serif text-3xl text-ink">Plan de apoyo</h1>
           <p className="mt-1 text-sm text-ink/60">
-            No estás sola. Elige cómo quieres pedir ayuda ahora.
+            Tu red y tus recursos para los momentos difíciles.
           </p>
         </div>
       </header>
@@ -78,7 +78,6 @@ export default async function PacienteCrisisPage() {
         <ContactoCrisis
           terapeutaNombre={terapeutaNombre ?? 'mi terapeuta'}
           telefonoTerapeuta={vinc.telefono_terapeuta ?? telefonoTerap}
-          videoCrisisUrl={vinc.video_crisis_url ?? `https://meet.jit.si/noema-${vinc.id}`}
           sosHabilitado={vinc.sos_habilitado !== false}
         />
       )}

@@ -24,7 +24,7 @@ export function SosTab() {
         >
           <LifeBuoy className="size-3.5" strokeWidth={2} />
           <span className="text-[10px] font-bold leading-none [writing-mode:vertical-rl]">
-            S.O.S
+            APOYO
           </span>
         </button>
       )}
@@ -38,7 +38,7 @@ export function SosTab() {
             className="flex items-center gap-2 text-sm font-semibold text-bone"
           >
             <LifeBuoy className="size-5" strokeWidth={2} />
-            Necesito apoyo
+            Plan de apoyo
           </Link>
           <button
             onClick={() => setAbierto(false)}

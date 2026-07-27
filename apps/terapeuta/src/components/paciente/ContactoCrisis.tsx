@@ -2,13 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Phone, MessageCircle, Video, BellRing, Check } from 'lucide-react';
+import { Phone, MessageCircle, BellRing, Check } from 'lucide-react';
 import { avisarTerapeutaSOSAction, type CanalSOS } from '../../../app/paciente/crisis/actions';
 
 export interface ContactoCrisisProps {
   terapeutaNombre: string;
   telefonoTerapeuta: string | null;
-  videoCrisisUrl: string | null;
   /** El paciente autorizó que su terapeuta reciba alertas de crisis. */
   sosHabilitado: boolean;
 }
@@ -21,7 +20,6 @@ export interface ContactoCrisisProps {
 export function ContactoCrisis({
   terapeutaNombre,
   telefonoTerapeuta,
-  videoCrisisUrl,
   sosHabilitado,
 }: ContactoCrisisProps) {
   const router = useRouter();
@@ -79,7 +77,7 @@ export function ContactoCrisis({
       )}
       {error && <p className="mb-3 text-xs text-red-600">{error}</p>}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           onClick={() => avisar('mensaje', () => router.push('/paciente/mensajes'))}
@@ -88,7 +86,7 @@ export function ContactoCrisis({
           <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
             <MessageCircle className="size-5 text-noema-sage" strokeWidth={1.7} />
           </div>
-          <span className="font-medium text-ink">Mensaje</span>
+          <span className="font-medium text-ink">Enviar mensaje</span>
           <span className="text-xs text-ink/50">Escríbele ahora</span>
         </button>
 
@@ -108,28 +106,6 @@ export function ContactoCrisis({
           <OpcionDeshabilitada
             icon={<Phone className="size-5" strokeWidth={1.7} />}
             label="Llamar"
-            nota="No configurado"
-          />
-        )}
-
-        {videoCrisisUrl ? (
-          <a
-            href={videoCrisisUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => avisar('videollamada')}
-            className="flex flex-col items-center gap-2 rounded-2xl border border-ink/10 bg-white p-5 text-center transition-colors hover:border-noema-sage"
-          >
-            <div className="flex size-11 items-center justify-center rounded-full bg-noema-sage/15">
-              <Video className="size-5 text-noema-sage" strokeWidth={1.7} />
-            </div>
-            <span className="font-medium text-ink">Videollamada</span>
-            <span className="text-xs text-ink/50">Entrar ahora</span>
-          </a>
-        ) : (
-          <OpcionDeshabilitada
-            icon={<Video className="size-5" strokeWidth={1.7} />}
-            label="Videollamada"
             nota="No configurado"
           />
         )}
