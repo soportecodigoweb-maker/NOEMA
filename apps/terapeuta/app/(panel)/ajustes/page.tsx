@@ -29,7 +29,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     { count: pacientesActivos },
     { data: config },
   ] = await Promise.all([
-    supabase.from('profiles').select('nombre, email, ciudad, avatar_url, modo_aprendiz').eq('id', user.id).single(),
+    supabase.from('profiles').select('nombre, email, ciudad, telefono, avatar_url, modo_aprendiz').eq('id', user.id).single(),
     supabase
       .from('terapeutas')
       .select('titulo, descripcion, cedula_profesional, especialidades, enfoques, estado_verificacion, plan_estado, trial_termina_at, stripe_subscription_id')
@@ -114,6 +114,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
               nombre: profile?.nombre ?? '',
               email: profile?.email ?? '',
               ciudad: profile?.ciudad ?? '',
+              telefono: profile?.telefono ?? '',
             }}
             terapeuta={{
               titulo: terapeuta?.titulo ?? '',

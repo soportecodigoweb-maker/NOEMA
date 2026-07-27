@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { actualizarPerfilAction } from './actions';
 
 interface Props {
-  profile: { nombre: string; email: string; ciudad: string };
+  profile: { nombre: string; email: string; ciudad: string; telefono: string };
   terapeuta: {
     titulo: string;
     descripcion: string;
@@ -38,6 +38,13 @@ export function PerfilEditor({ profile, terapeuta }: Props) {
     <form action={onSubmit} className="space-y-5">
       <Input name="nombre" label="Nombre" defaultValue={profile.nombre} required />
       <Input label="Correo" value={profile.email} disabled />
+      <Input
+        name="telefono"
+        type="tel"
+        label="Teléfono"
+        defaultValue={profile.telefono}
+        helper="Tus pacientes podrán llamarte desde el S.O.S. Déjalo vacío si no quieres."
+      />
       <Input
         name="titulo"
         label="Título profesional"

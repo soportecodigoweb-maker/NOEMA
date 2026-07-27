@@ -11,6 +11,7 @@ export async function actualizarPerfilAction(formData: FormData) {
   const enfoquesRaw = String(formData.get('enfoques') ?? '');
   const ciudad = String(formData.get('ciudad') ?? '').trim();
   const cedula = String(formData.get('cedula') ?? '').trim();
+  const telefono = String(formData.get('telefono') ?? '').trim();
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -19,7 +20,7 @@ export async function actualizarPerfilAction(formData: FormData) {
   const [profileResult, terapeutaResult] = await Promise.all([
     supabase
       .from('profiles')
-      .update({ nombre, ciudad: ciudad || null })
+      .update({ nombre, ciudad: ciudad || null, telefono: telefono || null })
       .eq('id', user.id),
     supabase
       .from('terapeutas')

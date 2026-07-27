@@ -41,13 +41,15 @@ export default async function PacienteCrisisPage() {
     .maybeSingle();
 
   let terapeutaNombre: string | null = null;
+  let telefonoTerap: string | null = null;
   if (vinc) {
     const { data: t } = await supabase
       .from('profiles')
-      .select('nombre')
+      .select('nombre, telefono')
       .eq('id', vinc.terapeuta_id)
       .maybeSingle();
     terapeutaNombre = t?.nombre ?? null;
+    telefonoTerap = t?.telefono ?? null;
   }
 
   const { data: contactos } = await supabase
@@ -75,8 +77,8 @@ export default async function PacienteCrisisPage() {
       {vinc && (
         <ContactoCrisis
           terapeutaNombre={terapeutaNombre ?? 'mi terapeuta'}
-          telefonoTerapeuta={vinc.telefono_terapeuta}
-          videoCrisisUrl={vinc.video_crisis_url}
+          telefonoTerapeuta={vinc.telefono_terapeuta ?? telefonoTerap}
+          videoCrisisUrl={vinc.video_crisis_url ?? `https://meet.jit.si/noema-${vinc.id}`}
           sosHabilitado={vinc.sos_habilitado !== false}
         />
       )}
