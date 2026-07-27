@@ -9,7 +9,8 @@
  *   'https://api.somosnoema.com/storage/v1/object/public/descargas/noema-android.apk'
  * - iOS: enlace público de TestFlight, ej. 'https://testflight.apple.com/join/XXXXXXXX'
  */
-export const DESCARGA_ANDROID_URL: string | null = null;
+export const DESCARGA_ANDROID_URL: string | null =
+  'https://api.somosnoema.com/storage/v1/object/public/descargas/noema-android.apk';
 export const DESCARGA_IOS_URL: string | null = null;
 
 /** Requisito mínimo mostrado junto al botón de Android. */
