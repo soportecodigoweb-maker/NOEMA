@@ -11,16 +11,24 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface CampoTarea {
+  key: string;
+  label: string;
+  type?: string;
+}
+
 interface Tarea {
   id: string;
   titulo: string;
   descripcion: string | null;
+  campos_respuesta: CampoTarea[] | null;
   fecha_limite: string | null;
   estado: string;
   creado_at: string;
   respuestas: Array<{
     id: string;
     fecha: string;
+    respuestas: Record<string, string | number> | null;
     texto_libre: string | null;
     dificultad_percibida: number | null;
     retroalimentacion: string | null;
@@ -40,8 +48,8 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
     supabase
       .from('tareas')
       .select(`
-        id, titulo, descripcion, fecha_limite, estado, creado_at,
-        respuestas:tarea_respuestas(id, fecha, texto_libre, dificultad_percibida, retroalimentacion)
+        id, titulo, descripcion, campos_respuesta, fecha_limite, estado, creado_at,
+        respuestas:tarea_respuestas(id, fecha, respuestas, texto_libre, dificultad_percibida, retroalimentacion)
       `)
       .eq('vinculacion_id', id)
       .order('creado_at', { ascending: false }),
@@ -49,6 +57,9 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
       .from('plantillas_ejercicios')
       .select('id, titulo, descripcion, categoria, duracion_min')
       .eq('terapeuta_id', user?.id ?? '')
+      // Los formatos NOM-004 (consentimiento, canalización) son documentos, no
+      // ejercicios asignables al paciente. No van en esta lista.
+      .neq('categoria', 'formato_nom004')
       .order('titulo')
       .limit(80),
   ]);
@@ -107,8 +118,22 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
                       <p className="caption">{t.respuestas.length} respuesta(s) del paciente</p>
                       {t.respuestas.slice(0, 3).map((r) => (
                         <div key={r.id} className="text-sm border-l-2 border-noema-sage/40 pl-3 py-1">
+                          {t.campos_respuesta && t.campos_respuesta.length > 0 && r.respuestas && (
+                            <dl className="mb-1.5 space-y-1">
+                              {t.campos_respuesta.map((c) => {
+                                const v = r.respuestas?.[c.key];
+                                if (v === undefined || v === null || v === '') return null;
+                                return (
+                                  <div key={c.key}>
+                                    <dt className="text-xs font-medium text-ink/70">{c.label}</dt>
+                                    <dd className="whitespace-pre-wrap text-sm text-ink/80">{String(v)}</dd>
+                                  </div>
+                                );
+                              })}
+                            </dl>
+                          )}
                           {r.texto_libre && (
-                            <p className="text-ink/80 italic">"{r.texto_libre}"</p>
+                            <p className="mt-1 text-ink/80 italic">"{r.texto_libre}"</p>
                           )}
                           <p className="text-xs text-foreground-muted mt-1">
                             {formatFecha(r.fecha)}
