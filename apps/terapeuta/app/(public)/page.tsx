@@ -4,6 +4,7 @@ import { Vesica } from '@/components/ui/Vesica';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
+import { DescargaApp } from '@/components/public/DescargaApp';
 
 export const metadata = {
   title: 'NOEMA · Tu proceso continúa acompañado',
@@ -106,7 +107,7 @@ export default async function LandingPage() {
 
       {/* Para pacientes */}
       <section className="bg-bone/40 py-20">
-        <div className="max-w-5xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+        <div className="max-w-3xl mx-auto px-6">
           <div>
             <p className="caption mb-3">Para pacientes</p>
             <h2 className="font-serif text-3xl sm:text-4xl text-ink mb-4">
@@ -124,24 +125,11 @@ export default async function LandingPage() {
               <li className="flex gap-2"><span className="text-noema-sage">·</span> Análisis de tu propio bienestar, semana a semana.</li>
             </ul>
           </div>
-          <Card>
-            <p className="caption mb-2">Disponible para tu celular</p>
-            <h3 className="font-serif text-2xl mb-3">App iOS y Android</h3>
-            <p className="text-sm text-foreground-muted mb-5">
-              Descarga la app gratis. Funciona incluso sin terapeuta — explora
-              contenido de bienestar y encuentra al profesional cuando estés listo.
-            </p>
-            <div className="flex gap-2">
-              <span className="caption bg-foreground-muted/10 px-3 py-1.5 rounded text-foreground-muted">
-                Próximamente App Store
-              </span>
-              <span className="caption bg-foreground-muted/10 px-3 py-1.5 rounded text-foreground-muted">
-                Próximamente Google Play
-              </span>
-            </div>
-          </Card>
         </div>
       </section>
+
+      {/* Descarga de la app móvil */}
+      <DescargaApp />
 
       {/* Para terapeutas */}
       <section className="max-w-5xl mx-auto px-6 py-20">
