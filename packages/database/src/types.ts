@@ -870,6 +870,36 @@ export type Database = {
         }
         Relationships: []
       }
+      informes_paciente: {
+        Row: {
+          compartido_at: string
+          contenido: string
+          creado_por: string | null
+          id: string
+          titulo: string
+          vinculacion_id: string
+          visto_at: string | null
+        }
+        Insert: {
+          compartido_at?: string
+          contenido: string
+          creado_por?: string | null
+          id?: string
+          titulo: string
+          vinculacion_id: string
+          visto_at?: string | null
+        }
+        Update: {
+          compartido_at?: string
+          contenido?: string
+          creado_por?: string | null
+          id?: string
+          titulo?: string
+          vinculacion_id?: string
+          visto_at?: string | null
+        }
+        Relationships: []
+      }
       mensajes: {
         Row: {
           archivos: Json

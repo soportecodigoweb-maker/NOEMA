@@ -29,14 +29,30 @@ export default async function DocumentosPacientePage() {
     .eq('estado', 'activa')
     .maybeSingle();
 
-  let documentos: Awaited<ReturnType<typeof cargar>> = [];
-  async function cargar(vinculacionId: string) {
-    const { data } = await supabase
-      .from('consentimientos_informados')
-      .select('id, titulo, contenido, enviado_at, firmado_at, firma_nombre')
-      .eq('vinculacion_id', vinculacionId)
-      .order('enviado_at', { ascending: false });
-    return (data ?? []).map((d) => ({
+  let documentos: Array<{
+    id: string;
+    titulo: string;
+    contenido: string;
+    enviado: string;
+    firmado: string | null;
+    firmaNombre: string | null;
+  }> = [];
+  let informes: Array<{ id: string; titulo: string; contenido: string; compartido: string }> = [];
+
+  if (vinc) {
+    const [{ data: docs }, { data: infs }] = await Promise.all([
+      supabase
+        .from('consentimientos_informados')
+        .select('id, titulo, contenido, enviado_at, firmado_at, firma_nombre')
+        .eq('vinculacion_id', vinc.id)
+        .order('enviado_at', { ascending: false }),
+      supabase
+        .from('informes_paciente')
+        .select('id, titulo, contenido, compartido_at')
+        .eq('vinculacion_id', vinc.id)
+        .order('compartido_at', { ascending: false }),
+    ]);
+    documentos = (docs ?? []).map((d) => ({
       id: d.id,
       titulo: d.titulo,
       contenido: d.contenido,
@@ -44,8 +60,13 @@ export default async function DocumentosPacientePage() {
       firmado: fmt(d.firmado_at),
       firmaNombre: d.firma_nombre,
     }));
+    informes = (infs ?? []).map((d) => ({
+      id: d.id,
+      titulo: d.titulo,
+      contenido: d.contenido,
+      compartido: fmt(d.compartido_at) ?? '',
+    }));
   }
-  if (vinc) documentos = await cargar(vinc.id);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
@@ -61,6 +82,26 @@ export default async function DocumentosPacientePage() {
         </div>
       </header>
 
+      {informes.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
+            Informes de tu terapeuta
+          </h2>
+          <ul className="space-y-3">
+            {informes.map((inf) => (
+              <li key={inf.id} className="rounded-2xl border border-ink/10 bg-white p-5">
+                <h3 className="font-serif text-lg text-ink">{inf.titulo}</h3>
+                <p className="mb-2 text-xs text-ink/50">Compartido el {inf.compartido}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink/85">
+                  {inf.contenido}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">Para firmar</h2>
       <DocumentosPaciente documentos={documentos} />
     </div>
   );
