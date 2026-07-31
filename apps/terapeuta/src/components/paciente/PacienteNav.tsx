@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   UserCog,
+  FileSignature,
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
@@ -53,6 +54,7 @@ const items: NavItem[] = [
   { href: '/paciente/progreso', label: 'Progreso', icon: BarChart3, requiere: 'progreso', tour: 'nav-progreso' },
   { href: '/paciente/mensajes', label: 'Mensajes', icon: MessageCircle, requiere: 'chat', tour: 'nav-mensajes' },
   { href: '/paciente/sesiones', label: 'Sesiones', icon: Calendar, tour: 'nav-sesiones' },
+  { href: '/paciente/documentos', label: 'Documentos', icon: FileSignature, tour: 'nav-documentos' },
   { href: '/paciente/cuenta', label: 'Mi cuenta', icon: UserCog, tour: 'nav-cuenta' },
 ];
 

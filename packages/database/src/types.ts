@@ -385,6 +385,39 @@ export type Database = {
           },
         ]
       }
+      consentimientos_informados: {
+        Row: {
+          contenido: string
+          creado_por: string | null
+          enviado_at: string
+          firma_nombre: string | null
+          firmado_at: string | null
+          id: string
+          titulo: string
+          vinculacion_id: string
+        }
+        Insert: {
+          contenido: string
+          creado_por?: string | null
+          enviado_at?: string
+          firma_nombre?: string | null
+          firmado_at?: string | null
+          id?: string
+          titulo: string
+          vinculacion_id: string
+        }
+        Update: {
+          contenido?: string
+          creado_por?: string | null
+          enviado_at?: string
+          firma_nombre?: string | null
+          firmado_at?: string | null
+          id?: string
+          titulo?: string
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
       contactos_confianza: {
         Row: {
           activo: boolean
