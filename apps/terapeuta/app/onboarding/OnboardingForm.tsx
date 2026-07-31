@@ -8,10 +8,28 @@ import { completarOnboardingAction } from './actions';
 
 type Rol = 'terapeuta' | 'paciente';
 
+function calcularEdad(fecha: string): number | null {
+  if (!fecha) return null;
+  const nac = new Date(fecha);
+  if (Number.isNaN(nac.getTime())) return null;
+  const hoy = new Date();
+  let edad = hoy.getFullYear() - nac.getFullYear();
+  const m = hoy.getMonth() - nac.getMonth();
+  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+  return edad;
+}
+
 export function OnboardingForm() {
   const [rol, setRol] = useState<Rol | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fechaNac, setFechaNac] = useState('');
+  const [tutorOk, setTutorOk] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  const edad = calcularEdad(fechaNac);
+  const esMenor = edad !== null && edad < 18;
+  const bloqueadoPaciente =
+    rol === 'paciente' && (!fechaNac || edad === null || edad < 0 || (esMenor && !tutorOk));
 
   const onSubmit = (formData: FormData) => {
     setError(null);
@@ -94,6 +112,63 @@ export function OnboardingForm() {
         required
       />
 
+      {rol === 'paciente' && (
+        <>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-ink">
+              Fecha de nacimiento
+            </label>
+            <input
+              type="date"
+              name="fecha_nacimiento"
+              value={fechaNac}
+              onChange={(e) => setFechaNac(e.target.value)}
+              required
+              className="w-full rounded-lg border border-noema-deep/15 bg-white px-3 py-2 text-sm focus:border-noema-sage focus:outline-none"
+            />
+            {edad !== null && edad >= 0 && (
+              <p className="mt-1 text-xs text-foreground-muted">Edad: {edad} años</p>
+            )}
+          </div>
+
+          {esMenor && (
+            <div className="space-y-3 rounded-xl border border-noema-clay/30 bg-noema-clay/[0.05] p-4">
+              <div>
+                <p className="text-sm font-medium text-ink">Eres menor de edad</p>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  Para usar NOEMA necesitas el consentimiento de tu padre, madre o tutor legal.
+                </p>
+              </div>
+              <Input
+                name="tutor_nombre"
+                label="Nombre del tutor legal"
+                placeholder="Nombre completo"
+                required
+              />
+              <Input
+                name="tutor_relacion"
+                label="Parentesco"
+                placeholder="Madre, padre, tutor…"
+                required
+              />
+              <label className="flex cursor-pointer items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  name="tutor_consentimiento"
+                  checked={tutorOk}
+                  onChange={(e) => setTutorOk(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-noema-sage"
+                />
+                <span className="text-xs leading-relaxed text-ink/80">
+                  Como padre/madre o tutor legal, doy mi consentimiento para que el menor use
+                  NOEMA bajo mi supervisión, y acepto el aviso de privacidad en su nombre.
+                </span>
+              </label>
+            </div>
+          )}
+        </>
+      )}
+
       {rol === 'terapeuta' && (
         <>
           <Input
@@ -132,7 +207,14 @@ export function OnboardingForm() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <Button type="submit" variant="primary" size="lg" fullWidth loading={pending}>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        fullWidth
+        loading={pending}
+        disabled={bloqueadoPaciente}
+      >
         {rol === 'terapeuta' ? 'Continuar al panel' : 'Empezar'}
       </Button>
     </form>

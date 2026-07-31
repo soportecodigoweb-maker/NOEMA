@@ -52,13 +52,64 @@ export async function completarOnboardingAction(
 
   const db = admin();
 
-  // --- Paciente: datos mínimos ---
+  // --- Paciente: datos mínimos + edad y consentimiento de tutor si es menor ---
   if (rol === 'paciente') {
+    const fechaNacimiento = String(formData.get('fecha_nacimiento') ?? '').trim();
+    if (!fechaNacimiento) {
+      return { ok: false, error: 'Ingresa tu fecha de nacimiento.' };
+    }
+    const nac = new Date(fechaNacimiento);
+    if (Number.isNaN(nac.getTime())) {
+      return { ok: false, error: 'La fecha de nacimiento no es válida.' };
+    }
+    const ahora = new Date();
+    let edad = ahora.getFullYear() - nac.getFullYear();
+    const m = ahora.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && ahora.getDate() < nac.getDate())) edad--;
+    if (edad < 0 || edad > 120) {
+      return { ok: false, error: 'Revisa tu fecha de nacimiento.' };
+    }
+
+    const esMenor = edad < 18;
+    const tutorNombre = String(formData.get('tutor_nombre') ?? '').trim();
+    const tutorRelacion = String(formData.get('tutor_relacion') ?? '').trim();
+    const tutorConsentimiento = formData.get('tutor_consentimiento') != null;
+    if (esMenor && (!tutorNombre || !tutorRelacion || !tutorConsentimiento)) {
+      return {
+        ok: false,
+        error: 'Como menor de edad, necesitas los datos y el consentimiento de tu tutor legal.',
+      };
+    }
+
     const { error } = await db
       .from('profiles')
       .update({ rol: 'paciente', nombre, apellidos, telefono, onboarding_completo: true })
       .eq('id', user.id);
     if (error) return { ok: false, error: 'No pudimos guardar tus datos. Intenta de nuevo.' };
+
+    const { error: ePac } = await db.from('pacientes').upsert(
+      {
+        profile_id: user.id,
+        fecha_nacimiento: fechaNacimiento,
+        tutor_nombre: esMenor ? tutorNombre : null,
+        tutor_relacion: esMenor ? tutorRelacion : null,
+        tutor_consentimiento_at: esMenor ? ahora.toISOString() : null,
+      },
+      { onConflict: 'profile_id' },
+    );
+    if (ePac) return { ok: false, error: 'No pudimos guardar tus datos. Intenta de nuevo.' };
+
+    // Registro auditable del consentimiento del tutor (para menores).
+    if (esMenor) {
+      await db.from('consentimientos').insert({
+        profile_id: user.id,
+        tipo: 'consentimiento_informado',
+        version: 'tutor-2026-07-v1',
+        aceptado: true,
+        texto_resumen: `Consentimiento otorgado por el tutor legal ${tutorNombre} (${tutorRelacion}) para el uso de NOEMA por un paciente menor de edad.`,
+      });
+    }
+
     revalidatePath('/', 'layout');
     redirect('/paciente');
   }

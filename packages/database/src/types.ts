@@ -1111,6 +1111,9 @@ export type Database = {
           notas_personales: string | null
           ocupacion: string | null
           profile_id: string
+          tutor_consentimiento_at: string | null
+          tutor_nombre: string | null
+          tutor_relacion: string | null
         }
         Insert: {
           actualizado_at?: string
@@ -1121,6 +1124,9 @@ export type Database = {
           notas_personales?: string | null
           ocupacion?: string | null
           profile_id: string
+          tutor_consentimiento_at?: string | null
+          tutor_nombre?: string | null
+          tutor_relacion?: string | null
         }
         Update: {
           actualizado_at?: string
@@ -1131,6 +1137,9 @@ export type Database = {
           notas_personales?: string | null
           ocupacion?: string | null
           profile_id?: string
+          tutor_consentimiento_at?: string | null
+          tutor_nombre?: string | null
+          tutor_relacion?: string | null
         }
         Relationships: [
           {
