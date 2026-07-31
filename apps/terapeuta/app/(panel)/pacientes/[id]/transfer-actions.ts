@@ -5,6 +5,7 @@ import { createClient as createAdminClient, type SupabaseClient } from '@supabas
 import { crearNoemaAi } from '@noema/ai';
 import type { Json, Database } from '@noema/database';
 import { createClient } from '@/lib/supabase/server';
+import { calcularEdad, type SeccionesInforme } from './transfer-informe';
 
 /**
  * Transfiere un paciente (con todo su historial) a otro terapeuta registrado,
@@ -191,6 +192,145 @@ export async function confirmarCanalizacionAction(
 function unwrapNota<T>(x: T | T[] | null | undefined): T | null {
   if (Array.isArray(x)) return x[0] ?? null;
   return x ?? null;
+}
+
+// ===========================================================================
+// Informe de canalización v2 — 10 secciones estructuradas y editables.
+// ===========================================================================
+
+/** Genera las 10 secciones del informe de canalización (auto + IA). */
+export async function generarInformeCanalizacionV2Action(
+  vinculacionId: string,
+  cedulaDestino: string,
+  motivo: string,
+): Promise<{ ok: boolean; error?: string; secciones?: SeccionesInforme; terapeutaDestino?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Sesión expirada.' };
+  const cedula = cedulaDestino.trim();
+  if (!cedula) return { ok: false, error: 'Escribe la cédula del terapeuta destino.' };
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { ok: false, error: 'Configuración incompleta del servidor.' };
+  }
+
+  const db = admin();
+  const r = await resolverDestino(db, user.id, vinculacionId, cedula);
+  if (!r.ok) return { ok: false, error: r.error };
+  const pacienteId = r.d.vinc.paciente_id;
+
+  const hoy = new Date();
+  const fechaHoy = hoy.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Datos del paciente y del terapeuta remitente.
+  const [{ data: pacProfile }, { data: pacRow }, { data: teraProfile }, { data: teraRow }] =
+    await Promise.all([
+      db.from('profiles').select('nombre').eq('id', pacienteId).maybeSingle(),
+      db.from('pacientes').select('fecha_nacimiento, genero, motivos_consulta').eq('profile_id', pacienteId).maybeSingle(),
+      db.from('profiles').select('nombre').eq('id', user.id).maybeSingle(),
+      db.from('terapeutas').select('cedula_profesional').eq('profile_id', user.id).maybeSingle(),
+    ]);
+
+  // 4. Objetivos trabajados (de notas de sesión).
+  const { data: sesiones } = await db
+    .from('sesiones')
+    .select('nota:sesion_notas(objetivos_trabajados)')
+    .eq('vinculacion_id', vinculacionId)
+    .eq('estado', 'realizada')
+    .order('fecha_programada', { ascending: false })
+    .limit(12);
+  const objetivosSet = new Set<string>();
+  for (const s of sesiones ?? []) {
+    const nota = unwrapNota(s.nota) as { objetivos_trabajados?: string[] } | null;
+    for (const o of nota?.objetivos_trabajados ?? []) objetivosSet.add(o);
+  }
+  const objetivos = [...objetivosSet];
+
+  // 6. Información registrada en NOEMA.
+  const desde = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+  const { data: catalogo } = await db.from('emociones_catalogo').select('key, nombre_es');
+  const nombreEmocion = new Map((catalogo ?? []).map((e) => [e.key, e.nombre_es]));
+  const { data: regs } = await db
+    .from('registros_emocionales')
+    .select('emocion_principal_key, intensidad, situacion_detonante, privacidad')
+    .eq('paciente_id', pacienteId)
+    .in('privacidad', ['compartido', 'marcado_sesion'])
+    .gte('fecha', desde)
+    .limit(200);
+  const rg = regs ?? [];
+  const prom = rg.length ? Math.round((rg.reduce((s, x) => s + x.intensidad, 0) / rg.length) * 10) / 10 : null;
+  const conteo = new Map<string, number>();
+  for (const x of rg) conteo.set(x.emocion_principal_key, (conteo.get(x.emocion_principal_key) ?? 0) + 1);
+  const topEmociones = [...conteo.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([k, n]) => `${nombreEmocion.get(k) ?? k} (${n})`)
+    .join(', ');
+  const { data: tareas } = await db.from('tareas').select('estado').eq('vinculacion_id', vinculacionId).limit(200);
+  const tareasComp = (tareas ?? []).filter((t) => t.estado === 'completada').length;
+  const { data: usos } = await db.from('plan_apoyo_usos').select('id').eq('vinculacion_id', vinculacionId);
+  const infoNoemaPartes: string[] = [
+    `Frecuencia de registros compartidos (últimos 90 días): ${rg.length}.`,
+    prom != null ? `Intensidad emocional promedio: ${prom}/5.` : '',
+    topEmociones ? `Emociones predominantes: ${topEmociones}.` : '',
+    `Adherencia a tareas: ${tareasComp} de ${(tareas ?? []).length} completadas.`,
+    (usos ?? []).length ? `Uso del plan de apoyo: ${(usos ?? []).length} vez(ces).` : '',
+  ].filter(Boolean);
+  const infoNoema = infoNoemaPartes.join(' ');
+
+  // 5. Resumen del proceso (IA breve).
+  let resumenProceso = '';
+  const apiKey = process.env.OPENAI_API_KEY;
+  const baseDatos = [
+    objetivos.length ? `Objetivos trabajados: ${objetivos.join(', ')}.` : '',
+    infoNoema,
+    (pacRow?.motivos_consulta ?? []).length ? `Motivo de consulta: ${(pacRow?.motivos_consulta ?? []).join(', ')}.` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  if (apiKey && baseDatos) {
+    const ai = crearNoemaAi({ apiKey });
+    const g = await ai.generar({
+      audiencia: 'clinico',
+      instruccion:
+        'Redacta un resumen MUY BREVE (3-4 líneas) del proceso terapéutico para un informe de canalización dirigido a otro terapeuta. ' +
+        'Describe de forma objetiva qué se ha trabajado y la evolución observada, sin diagnosticar ni interpretar causas. Solo observaciones.',
+      datos: baseDatos,
+      maxTokens: 240,
+      temperatura: 0.5,
+    });
+    if (g.ok && g.texto) resumenProceso = g.texto.trim();
+  }
+
+  const secciones: SeccionesInforme = {
+    nombre: pacProfile?.nombre ?? '',
+    edad: calcularEdad(pacRow?.fecha_nacimiento ?? null),
+    sexo: pacRow?.genero ?? '',
+    fecha_nacimiento: pacRow?.fecha_nacimiento ?? '',
+    fecha_elaboracion: fechaHoy,
+    terapeuta_remitente: teraProfile?.nombre ?? '',
+    motivo_canalizacion: motivo.trim(),
+    motivo_consulta_inicial: (pacRow?.motivos_consulta ?? []).join(', '),
+    objetivos_trabajados: objetivos.join(', '),
+    resumen_proceso: resumenProceso,
+    info_noema: infoNoema,
+    intervenciones: '',
+    observaciones: '',
+    anexos: {
+      notas_clinicas: true,
+      registros: true,
+      graficas: false,
+      plan_apoyo: false,
+      objetivos: true,
+      consentimientos: false,
+    },
+    firma_nombre: teraProfile?.nombre ?? '',
+    firma_cedula: teraRow?.cedula_profesional ?? '',
+    firma_fecha: fechaHoy,
+  };
+
+  return { ok: true, secciones, terapeutaDestino: r.d.destinoNombre ?? undefined };
 }
 
 /** Junta la información seleccionada y redacta el informe (IA si hay clave). */
