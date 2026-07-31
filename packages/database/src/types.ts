@@ -1319,6 +1319,7 @@ export type Database = {
         Row: {
           actualizado_at: string
           apellidos: string | null
+          auto_logout_habilitado: boolean
           avatar_url: string | null
           bio: string | null
           ciudad: string | null
@@ -1338,6 +1339,7 @@ export type Database = {
         Insert: {
           actualizado_at?: string
           apellidos?: string | null
+          auto_logout_habilitado?: boolean
           avatar_url?: string | null
           bio?: string | null
           ciudad?: string | null
@@ -1356,6 +1358,7 @@ export type Database = {
         Update: {
           actualizado_at?: string
           apellidos?: string | null
+          auto_logout_habilitado?: boolean
           avatar_url?: string | null
           bio?: string | null
           ciudad?: string | null

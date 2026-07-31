@@ -4,6 +4,7 @@ import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
+import { ToggleAutoLogout } from '@/components/cuenta/ToggleAutoLogout';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mi cuenta' };
@@ -17,7 +18,7 @@ export default async function CuentaPacientePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('nombre, avatar_url, modo_aprendiz')
+    .select('nombre, avatar_url, modo_aprendiz, auto_logout_habilitado')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -42,6 +43,10 @@ export default async function CuentaPacientePage() {
 
       <div className="mt-4">
         <ToggleSonidosUI />
+      </div>
+
+      <div className="mt-4">
+        <ToggleAutoLogout inicial={profile?.auto_logout_habilitado ?? false} />
       </div>
 
       <div className="mt-4">

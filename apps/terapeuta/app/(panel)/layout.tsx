@@ -5,6 +5,7 @@ import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
+import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -30,7 +31,7 @@ export default async function PanelLayout({
     await Promise.all([
     supabase
       .from('profiles')
-      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz')
+      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado')
       .eq('id', user.id)
       .single(),
     supabase
@@ -89,6 +90,9 @@ export default async function PanelLayout({
       {/* Tour guiado (modo aprendiz) + aviso de dónde activarlo */}
       <GuiaAprendiz activo={profile.modo_aprendiz} />
       <AvisoModoAprendiz />
+
+      {/* Auto-cierre de sesión por inactividad (si el terapeuta lo activó) */}
+      <AutoLogout habilitado={profile.auto_logout_habilitado} />
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion

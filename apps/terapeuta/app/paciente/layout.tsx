@@ -4,6 +4,7 @@ import { SosTab } from '@/components/paciente/SosTab';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
+import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -24,7 +25,7 @@ export default async function PacienteLayout({
 
   // Profile, aviso y vinculación dependen solo de user.id → en paralelo.
   const [{ data: profile }, { data: aviso }, { data: vinculacion }] = await Promise.all([
-    supabase.from('profiles').select('id, nombre, avatar_url, rol, modo_aprendiz').eq('id', user.id).single(),
+    supabase.from('profiles').select('id, nombre, avatar_url, rol, modo_aprendiz, auto_logout_habilitado').eq('id', user.id).single(),
     supabase
       .from('consentimientos')
       .select('id')
@@ -105,6 +106,9 @@ export default async function PacienteLayout({
       {/* Tour guiado (modo aprendiz) + aviso de dónde activarlo */}
       <GuiaAprendiz activo={profile.modo_aprendiz} />
       <AvisoModoAprendiz />
+
+      {/* Auto-cierre de sesión por inactividad (si el paciente lo activó) */}
+      <AutoLogout habilitado={profile.auto_logout_habilitado} />
     </div>
   );
 }

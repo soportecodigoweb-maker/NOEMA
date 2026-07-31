@@ -7,6 +7,7 @@ import { ZonaCuenta } from '@/components/cuenta/ZonaCuenta';
 import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
+import { ToggleAutoLogout } from '@/components/cuenta/ToggleAutoLogout';
 import type { ConfigTerapeuta } from './config-actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -29,7 +30,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     { count: pacientesActivos },
     { data: config },
   ] = await Promise.all([
-    supabase.from('profiles').select('nombre, email, ciudad, telefono, avatar_url, modo_aprendiz').eq('id', user.id).single(),
+    supabase.from('profiles').select('nombre, email, ciudad, telefono, avatar_url, modo_aprendiz, auto_logout_habilitado').eq('id', user.id).single(),
     supabase
       .from('terapeutas')
       .select('titulo, descripcion, cedula_profesional, especialidades, enfoques, estado_verificacion, plan_estado, trial_termina_at, stripe_subscription_id')
@@ -131,6 +132,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
         {/* Sonidos de interacción */}
         <ToggleSonidosUI />
+
+        {/* Auto-cierre de sesión por inactividad */}
+        <ToggleAutoLogout inicial={profile?.auto_logout_habilitado ?? false} />
 
         {/* Funciones del paciente y notificaciones */}
         <PanelConfiguracion inicial={configInicial} />
