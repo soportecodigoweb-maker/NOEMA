@@ -10,12 +10,44 @@
  * antes de producción real. Marcado como borrador en el reporte.
  */
 
-export const VERSION_AVISO = '2026-07-v2';
+export const VERSION_AVISO = '2026-07-v3';
 
 export interface SeccionAviso {
   titulo: string;
   parrafos: string[];
 }
+
+/**
+ * Puntos de consentimiento que el terapeuta debe marcar uno por uno (con
+ * palomita) antes de poder aceptar.
+ */
+export const PUNTOS_CONSENTIMIENTO_TERAPEUTA: Array<{ id: string; texto: string }> = [
+  {
+    id: 'confidencialidad',
+    texto:
+      'Me comprometo a resguardar la información de mis pacientes con estricta confidencialidad, conforme a la LFPDPPP y la NOM-004-SSA3-2012.',
+  },
+  {
+    id: 'paciente-decide',
+    texto:
+      'Entiendo que el paciente decide qué comparte y respetaré como inviolable lo que marque como privado.',
+  },
+  {
+    id: 'no-diagnostico',
+    texto:
+      'Reconozco que NOEMA no realiza diagnósticos ni sustituye mi juicio clínico; las sugerencias de IA son apoyo que debo validar.',
+  },
+  {
+    id: 'cedula-licito',
+    texto:
+      'Declaro contar con cédula y facultades legales para ejercer, y me obligo a no usar material ilícito, pirata o sin licencia.',
+  },
+  {
+    id: 'responsabilidad',
+    texto:
+      'Acepto ser el único responsable de mi práctica profesional y libero a NOEMA de responsabilidad conforme al descargo de este aviso.',
+  },
+];
 
 export const AVISO_CONFIDENCIALIDAD_TERAPEUTA: SeccionAviso[] = [
   {

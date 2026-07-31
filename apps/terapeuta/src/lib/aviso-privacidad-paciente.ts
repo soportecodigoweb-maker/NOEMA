@@ -4,7 +4,40 @@
  *
  * ⚠️ Borrador legal — revisar con abogado antes de producción.
  */
-export const VERSION_AVISO_PACIENTE = '2026-07-v2';
+export const VERSION_AVISO_PACIENTE = '2026-07-v3';
+
+/**
+ * Puntos de consentimiento que el paciente debe marcar uno por uno (con
+ * palomita) antes de poder aceptar: lo que acepta, lo que envía, lo que permite
+ * que vea el terapeuta y lo que se compromete a cuidar.
+ */
+export const PUNTOS_CONSENTIMIENTO_PACIENTE: Array<{ id: string; texto: string }> = [
+  {
+    id: 'apoyo',
+    texto:
+      'Entiendo que NOEMA es una herramienta de apoyo: no realiza diagnósticos ni sustituye la atención psicológica profesional.',
+  },
+  {
+    id: 'privacidad',
+    texto:
+      'Acepto el aviso de privacidad y que mis datos se traten conforme a la LFPDPPP, con estricta confidencialidad.',
+  },
+  {
+    id: 'yo-decido',
+    texto:
+      'Entiendo que yo decido qué información comparto con mi terapeuta y qué queda privado; lo privado es inviolable.',
+  },
+  {
+    id: 'solo-terapeuta',
+    texto:
+      'Autorizo que la información que decida compartir sea vista únicamente por mi terapeuta autorizado, y por nadie más.',
+  },
+  {
+    id: 'responsable',
+    texto:
+      'Me comprometo a cuidar mis credenciales de acceso y a usar NOEMA de forma responsable.',
+  },
+];
 
 export const AVISO_PRIVACIDAD_PACIENTE: Array<{ titulo: string; cuerpo: string }> = [
   {

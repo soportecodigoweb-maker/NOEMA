@@ -3,6 +3,7 @@ import {
   AVISO_CONFIDENCIALIDAD_TERAPEUTA,
   VERSION_AVISO,
 } from '@/lib/aviso-confidencialidad';
+import { AVISO_HERRAMIENTA_APOYO } from '@/lib/aviso-comun';
 import { AceptarAvisoForm } from './AceptarAvisoForm';
 
 export const metadata = { title: 'Aviso de confidencialidad' };
@@ -20,6 +21,17 @@ export default function AvisoConfidencialidadPage() {
             Antes de continuar, lee y acepta tus responsabilidades como profesional.
           </p>
         </div>
+      </div>
+
+      <div className="mb-4 rounded-xl border border-noema-sage/30 bg-noema-sage/[0.07] p-5">
+        {AVISO_HERRAMIENTA_APOYO.map((linea, i) => (
+          <p
+            key={i}
+            className={i === 0 ? 'font-medium text-ink' : 'text-sm text-ink/75'}
+          >
+            {linea}
+          </p>
+        ))}
       </div>
 
       <div className="max-h-[50vh] space-y-5 overflow-y-auto rounded-xl border border-noema-deep/10 bg-white p-6">

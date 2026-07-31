@@ -5,6 +5,7 @@ import {
   AVISO_PRIVACIDAD_PACIENTE,
   VERSION_AVISO_PACIENTE,
 } from '@/lib/aviso-privacidad-paciente';
+import { AVISO_HERRAMIENTA_APOYO } from '@/lib/aviso-comun';
 import { AceptarAvisoPacienteForm } from './AceptarAvisoPacienteForm';
 
 export const metadata = { title: 'Aviso de privacidad' };
@@ -29,6 +30,17 @@ export default async function AvisoPrivacidadPacientePage() {
             Antes de empezar, queremos que tengas clara tu privacidad.
           </p>
         </div>
+      </div>
+
+      <div className="mb-4 rounded-xl border border-noema-sage/30 bg-noema-sage/[0.07] p-5">
+        {AVISO_HERRAMIENTA_APOYO.map((linea, i) => (
+          <p
+            key={i}
+            className={i === 0 ? 'font-medium text-ink' : 'text-sm text-ink/75'}
+          >
+            {linea}
+          </p>
+        ))}
       </div>
 
       <div className="max-h-[55vh] space-y-4 overflow-y-auto rounded-xl border border-ink/10 bg-white p-6">
