@@ -169,21 +169,38 @@ export async function confirmarCanalizacionAction(
   const r = await resolverDestino(db, user.id, vinculacionId, cedula);
   if (!r.ok) return { ok: false, error: r.error };
 
-  // Canalizar: el paciente pasa al terapeuta destino.
-  const { error: eUpd } = await db
-    .from('vinculaciones')
-    .update({ terapeuta_id: r.d.destinoProfileId })
-    .eq('id', vinculacionId);
-  if (eUpd) return { ok: false, error: 'No se pudo canalizar. Intenta de nuevo.' };
+  // Cancelar cualquier canalización pendiente previa de esta vinculación.
+  await db
+    .from('canalizaciones')
+    .update({ estado: 'rechazada', resuelta_at: new Date().toISOString() })
+    .eq('vinculacion_id', vinculacionId)
+    .eq('estado', 'pendiente');
 
-  // Dejar el informe (ya revisado por el terapeuta) en el historial del que recibe.
-  await db.from('resumenes_sesion').insert({
+  // Crear canalización PENDIENTE: el paciente debe autorizar antes de transferir.
+  const { error: eIns } = await db.from('canalizaciones').insert({
     vinculacion_id: vinculacionId,
-    terapeuta_id: r.d.destinoProfileId,
-    narrativa: texto.trim(),
-    datos: { incluir, motivo: motivo.trim(), tipo: 'canalizacion', revisado: true } as unknown as Json,
-    dias: 90,
+    terapeuta_origen: user.id,
+    terapeuta_destino: r.d.destinoProfileId,
+    cedula_destino: cedula,
+    destino_nombre: r.d.destinoNombre,
+    informe: texto.trim(),
+    estado: 'pendiente',
   });
+  if (eIns) return { ok: false, error: 'No se pudo crear la canalización. Intenta de nuevo.' };
+
+  // Avisar al paciente que debe autorizar.
+  await db.from('notificaciones').insert({
+    destinatario_id: r.d.vinc.paciente_id,
+    tipo: 'canalizacion',
+    titulo: 'Tu terapeuta quiere canalizarte',
+    cuerpo: 'Necesita tu autorización para enviar tu información a otro terapeuta.',
+    vinculacion_id: vinculacionId,
+    url: '/paciente',
+  });
+
+  // Silenciar el aviso de "no usado" de las variables de firma/metadata.
+  void motivo;
+  void incluir;
 
   revalidatePath('/pacientes');
   return { ok: true, terapeutaDestino: r.d.destinoNombre ?? undefined };

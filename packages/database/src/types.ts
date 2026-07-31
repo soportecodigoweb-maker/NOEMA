@@ -341,6 +341,45 @@ export type Database = {
           },
         ]
       }
+      canalizaciones: {
+        Row: {
+          cedula_destino: string | null
+          creada_at: string
+          destino_nombre: string | null
+          estado: string
+          id: string
+          informe: string
+          resuelta_at: string | null
+          terapeuta_destino: string | null
+          terapeuta_origen: string | null
+          vinculacion_id: string
+        }
+        Insert: {
+          cedula_destino?: string | null
+          creada_at?: string
+          destino_nombre?: string | null
+          estado?: string
+          id?: string
+          informe: string
+          resuelta_at?: string | null
+          terapeuta_destino?: string | null
+          terapeuta_origen?: string | null
+          vinculacion_id: string
+        }
+        Update: {
+          cedula_destino?: string | null
+          creada_at?: string
+          destino_nombre?: string | null
+          estado?: string
+          id?: string
+          informe?: string
+          resuelta_at?: string | null
+          terapeuta_destino?: string | null
+          terapeuta_origen?: string | null
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
       consentimientos: {
         Row: {
           aceptado: boolean

@@ -130,16 +130,17 @@ export function TransferirPaciente({
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="size-5 text-noema-sage" />
-                    <h2 className="font-serif text-xl text-ink">Paciente canalizado</h2>
+                    <h2 className="font-serif text-xl text-ink">Solicitud enviada</h2>
                   </div>
                   <button onClick={cerrar} aria-label="Cerrar" className="text-foreground-muted hover:text-ink">
                     <X className="size-5" />
                   </button>
                 </div>
                 <p className="text-sm text-foreground-muted">
-                  {nombrePaciente} fue canalizado{terapeutaDestino ? ` con ${terapeutaDestino}` : ''}. El informe
-                  psicológico quedó en su historial para el terapeuta que lo recibe. Ya no tienes acceso a este
-                  paciente.
+                  Le enviamos a {nombrePaciente} la solicitud para canalizarlo
+                  {terapeutaDestino ? ` con ${terapeutaDestino}` : ''}. La canalización se completará cuando el
+                  paciente la <span className="font-medium text-ink">autorice</span> desde su app. Te avisaremos
+                  cuando responda.
                 </p>
                 <div className="mt-5 flex justify-end">
                   <button

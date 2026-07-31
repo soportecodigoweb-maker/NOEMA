@@ -5,6 +5,7 @@ import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
+import { CanalizacionPendiente } from '@/components/paciente/CanalizacionPendiente';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -91,6 +92,15 @@ export default async function PacienteLayout({
     agenda: vinculacion?.agenda_habilitada ?? false,
   };
 
+  // Canalización pendiente de autorización del paciente (ventana importante).
+  const { data: canalizacion } = await supabase
+    .from('canalizaciones')
+    .select('id, destino_nombre')
+    .eq('estado', 'pendiente')
+    .order('creada_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="flex min-h-screen flex-col bg-paper lg:flex-row">
       <PacienteNav
@@ -115,6 +125,11 @@ export default async function PacienteLayout({
 
       {/* Auto-cierre de sesión por inactividad (si el paciente lo activó) */}
       <AutoLogout habilitado={profile.auto_logout_habilitado} />
+
+      {/* Ventana de autorización de canalización (si hay una pendiente) */}
+      {canalizacion && (
+        <CanalizacionPendiente id={canalizacion.id} destinoNombre={canalizacion.destino_nombre} />
+      )}
     </div>
   );
 }
