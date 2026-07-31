@@ -25,7 +25,7 @@ export default async function PacienteLayout({
 
   // Profile, aviso y vinculación dependen solo de user.id → en paralelo.
   const [{ data: profile }, { data: aviso }, { data: vinculacion }] = await Promise.all([
-    supabase.from('profiles').select('id, nombre, avatar_url, rol, modo_aprendiz, auto_logout_habilitado').eq('id', user.id).single(),
+    supabase.from('profiles').select('id, nombre, avatar_url, rol, modo_aprendiz, auto_logout_habilitado, estado_cuenta').eq('id', user.id).single(),
     supabase
       .from('consentimientos')
       .select('id')
@@ -47,6 +47,12 @@ export default async function PacienteLayout({
 
   if (!profile) {
     redirect('/signin');
+  }
+
+  // Cuenta eliminada (bloqueada y archivada): sin acceso.
+  if (profile.estado_cuenta === 'eliminada') {
+    await supabase.auth.signOut();
+    redirect('/signin?motivo=cuenta-eliminada');
   }
 
   if (profile.rol !== 'paciente' && profile.rol !== 'sin_terapeuta') {

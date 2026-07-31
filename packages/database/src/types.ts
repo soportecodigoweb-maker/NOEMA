@@ -1324,7 +1324,9 @@ export type Database = {
           bio: string | null
           ciudad: string | null
           creado_at: string
+          eliminada_at: string | null
           email: string
+          estado_cuenta: string
           id: string
           modo_aprendiz: boolean
           locale: string
@@ -1344,7 +1346,9 @@ export type Database = {
           bio?: string | null
           ciudad?: string | null
           creado_at?: string
+          eliminada_at?: string | null
           email: string
+          estado_cuenta?: string
           id: string
           locale?: string
           nombre: string
@@ -1363,7 +1367,9 @@ export type Database = {
           bio?: string | null
           ciudad?: string | null
           creado_at?: string
+          eliminada_at?: string | null
           email?: string
+          estado_cuenta?: string
           id?: string
           modo_aprendiz?: boolean
           locale?: string

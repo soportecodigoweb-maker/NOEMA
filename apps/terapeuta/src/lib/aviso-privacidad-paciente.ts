@@ -78,7 +78,12 @@ export const AVISO_PRIVACIDAD_PACIENTE: Array<{ titulo: string; cuerpo: string }
   {
     titulo: 'Términos de uso y control de tu cuenta',
     cuerpo:
-      'Al aceptar, reconoces estos términos de uso y confirmas que la información que ingreses es veraz. En cualquier momento puedes pausar la vinculación con tu terapeuta, exportar o eliminar tu cuenta y tus datos.',
+      'Al aceptar, reconoces estos términos de uso y confirmas que la información que ingreses es veraz. En cualquier momento puedes pausar la vinculación con tu terapeuta o eliminar tu cuenta.',
+  },
+  {
+    titulo: 'Si eliminas tu cuenta',
+    cuerpo:
+      'Puedes eliminar tu cuenta cuando quieras. Al hacerlo, tu información deja de ser accesible para tu terapeuta y para ti de inmediato, y no podrás volver a iniciar sesión. Por obligaciones legales aplicables, cierta información se conserva bloqueada —sin que nadie la consulte— durante el periodo que marque la ley, y después se elimina de forma definitiva.',
   },
 ];
 

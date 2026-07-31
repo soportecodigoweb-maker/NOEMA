@@ -31,7 +31,7 @@ export default async function PanelLayout({
     await Promise.all([
     supabase
       .from('profiles')
-      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado')
+      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado, estado_cuenta')
       .eq('id', user.id)
       .single(),
     supabase
@@ -55,6 +55,12 @@ export default async function PanelLayout({
 
   if (!profile) {
     redirect('/signin');
+  }
+
+  // Cuenta eliminada (bloqueada y archivada): sin acceso.
+  if (profile.estado_cuenta === 'eliminada') {
+    await supabase.auth.signOut();
+    redirect('/signin?motivo=cuenta-eliminada');
   }
 
   if (profile.rol !== 'terapeuta' && profile.rol !== 'admin') {

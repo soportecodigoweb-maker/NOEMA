@@ -49,8 +49,10 @@ export function ZonaCuenta() {
           <div className="flex-1">
             <p className="text-sm font-medium text-ink">Eliminar mi cuenta</p>
             <p className="mt-0.5 text-xs text-foreground-muted">
-              Borra tu cuenta y todos tus datos de forma permanente. Esta acción no se
-              puede deshacer.
+              Tu información deja de ser accesible para tu terapeuta y para ti de inmediato,
+              y no podrás volver a iniciar sesión. Por obligaciones legales, cierta
+              información se conserva bloqueada un tiempo y luego se elimina. No se puede
+              deshacer.
             </p>
 
             {!abierto ? (
@@ -100,8 +102,9 @@ export function ZonaCuenta() {
                       ¿Seguro que quieres eliminar tu cuenta?
                     </p>
                     <p className="mt-0.5 text-xs text-foreground-muted">
-                      Se borrará tu cuenta y todos tus datos de forma permanente. Esta
-                      acción <span className="font-semibold">no se puede deshacer</span>.
+                      Perderás el acceso de inmediato y tu terapeuta dejará de ver tu
+                      información. Se conservará bloqueada por el periodo que la ley exige y
+                      luego se eliminará. <span className="font-semibold">No se puede deshacer</span>.
                     </p>
                     <div className="mt-3 flex gap-2">
                       <button
