@@ -92,6 +92,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
               nivelRiesgo={vinc.nivel_riesgo}
               sosHabilitado={vinc.sos_habilitado}
               agendaHabilitada={vinc.agenda_habilitada}
+              nombrePaciente={paciente?.nombre ?? undefined}
             />
           </div>
         </div>

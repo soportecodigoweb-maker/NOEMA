@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Settings2, ShieldAlert, CalendarCheck, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Settings2, ShieldAlert, CalendarCheck, Check, UserMinus } from 'lucide-react';
 import { RIESGO, NIVELES_RIESGO, riesgoConfig, type NivelRiesgo } from '@/lib/riesgo';
 import {
   setNivelRiesgoAction,
   setSosHabilitadoAction,
   setAgendaHabilitadaAction,
+  desvincularPacienteAction,
 } from '../../../app/(panel)/pacientes/[id]/config-actions';
 
 export interface ConfigVinculacionProps {
@@ -14,6 +16,7 @@ export interface ConfigVinculacionProps {
   nivelRiesgo: string;
   sosHabilitado: boolean;
   agendaHabilitada: boolean;
+  nombrePaciente?: string;
 }
 
 export function ConfigVinculacion({
@@ -21,12 +24,30 @@ export function ConfigVinculacion({
   nivelRiesgo: nivelInicial,
   sosHabilitado: sosInicial,
   agendaHabilitada: agendaInicial,
+  nombrePaciente,
 }: ConfigVinculacionProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [nivel, setNivel] = useState<NivelRiesgo>((nivelInicial as NivelRiesgo) ?? 'sin_evaluar');
   const [sos, setSos] = useState(sosInicial);
   const [agenda, setAgenda] = useState(agendaInicial);
   const [pending, startTransition] = useTransition();
+  const [confirmandoDesvincular, setConfirmandoDesvincular] = useState(false);
+  const [errorDesvincular, setErrorDesvincular] = useState<string | null>(null);
+
+  const desvincular = () => {
+    setErrorDesvincular(null);
+    startTransition(async () => {
+      const r = await desvincularPacienteAction(vinculacionId);
+      if (r.ok) {
+        setOpen(false);
+        router.push('/pacientes');
+        router.refresh();
+      } else {
+        setErrorDesvincular(r.error ?? 'No se pudo desvincular.');
+      }
+    });
+  };
 
   const cfgActual = riesgoConfig(nivel);
 
@@ -135,6 +156,51 @@ export function ConfigVinculacion({
               onToggle={toggleAgenda}
               disabled={pending}
             />
+
+            <div className="my-3 border-t border-noema-deep/8" />
+
+            {/* Desvincular paciente */}
+            {!confirmandoDesvincular ? (
+              <button
+                onClick={() => setConfirmandoDesvincular(true)}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm text-[#B85450] transition-colors hover:bg-[#B85450]/8"
+              >
+                <UserMinus className="size-4 shrink-0" strokeWidth={1.7} />
+                <span className="font-medium">Desvincular paciente</span>
+              </button>
+            ) : (
+              <div className="rounded-lg border border-[#B85450]/30 bg-[#B85450]/[0.05] p-3">
+                <p className="text-sm font-medium text-ink">
+                  ¿Desvincular a {nombrePaciente ?? 'este paciente'}?
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-foreground-muted">
+                  Terminarás la relación en NOEMA y dejarás de ver su información. El paciente
+                  quedará sin terapeuta. Podrán volver a vincularse con una nueva invitación.
+                </p>
+                {errorDesvincular && (
+                  <p className="mt-1 text-[11px] text-red-600">{errorDesvincular}</p>
+                )}
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    onClick={desvincular}
+                    disabled={pending}
+                    className="rounded-md bg-[#B85450] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#A14642] disabled:opacity-50"
+                  >
+                    {pending ? 'Desvinculando…' : 'Sí, desvincular'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmandoDesvincular(false);
+                      setErrorDesvincular(null);
+                    }}
+                    disabled={pending}
+                    className="rounded-md px-3 py-1.5 text-xs text-foreground-muted hover:text-ink"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

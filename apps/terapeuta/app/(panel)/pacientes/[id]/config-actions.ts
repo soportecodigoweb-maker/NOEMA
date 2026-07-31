@@ -43,6 +43,37 @@ export async function setSosHabilitadoAction(
   return { ok: true };
 }
 
+/**
+ * Desvincula a un paciente: finaliza la relación terapéutica. El terapeuta deja
+ * de tener acceso a la información del paciente y el paciente queda sin terapeuta
+ * (sin canalizar a otro). A diferencia de canalizar, no reasigna a nadie.
+ */
+export async function desvincularPacienteAction(
+  vinculacionId: string,
+  motivo?: string,
+): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+
+  const { error } = await supabase
+    .from('vinculaciones')
+    .update({
+      estado: 'finalizada',
+      fecha_fin: new Date().toISOString(),
+      motivo_fin: motivo?.trim() || 'Desvinculado por el terapeuta',
+    })
+    .eq('id', vinculacionId)
+    .eq('terapeuta_id', user.id);
+
+  if (error) return { ok: false, error: 'No se pudo desvincular al paciente.' };
+  revalidatePath('/pacientes');
+  revalidatePath(`/pacientes/${vinculacionId}`);
+  return { ok: true };
+}
+
 /** Habilita/deshabilita que el paciente agende citas (requerimiento #13). */
 export async function setAgendaHabilitadaAction(
   vinculacionId: string,
