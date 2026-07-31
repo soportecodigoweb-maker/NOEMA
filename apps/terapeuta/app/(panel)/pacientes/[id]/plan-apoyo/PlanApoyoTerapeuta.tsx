@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Save, Plus, Trash2, Check, MessageSquarePlus, LifeBuoy } from 'lucide-react';
+import { Save, Plus, Trash2, Check, MessageSquarePlus, LifeBuoy, Eye } from 'lucide-react';
 import {
   guardarPlanTerapeutaAction,
   agregarRecursoAction,
   eliminarRecursoAction,
   retroalimentarUsoAction,
+  guardarVisibilidadPlanApoyoAction,
+  type VisibilidadPlanApoyo,
 } from './actions';
 
 interface Recurso {
@@ -29,9 +31,17 @@ interface Props {
     contacto_telefono: string | null;
     plan_seguridad: string;
   } | null;
+  visibilidad: VisibilidadPlanApoyo;
   recursos: Recurso[];
   usos: Uso[];
 }
+
+const OPCIONES_VISIBILIDAD: Array<{ key: keyof VisibilidadPlanApoyo; label: string; desc: string }> = [
+  { key: 'ver_lineas_emergencia', label: 'Líneas de emergencia (México)', desc: 'Números de crisis 24/7 y 911.' },
+  { key: 'ver_contacto_terapeuta', label: 'Contacto con su terapeuta', desc: 'Llamar o enviarte mensaje a ti.' },
+  { key: 'ver_contacto_confianza', label: 'Contacto de confianza y plan de seguridad', desc: 'Persona de confianza y plan personalizado.' },
+  { key: 'ver_recursos', label: 'Recursos', desc: 'Los recursos que definas abajo.' },
+];
 
 const TIPOS = ['respiracion', 'audio', 'video', 'documento', 'imagen', 'recordatorio', 'enlace', 'otro'];
 const TIPO_LABEL: Record<string, string> = {
@@ -47,8 +57,24 @@ const TIPO_LABEL: Record<string, string> = {
 
 const input = 'w-full rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm focus:border-noema-sage focus:outline-none';
 
-export function PlanApoyoTerapeuta({ vinculacionId, plan, recursos: recursosIni, usos }: Props) {
+export function PlanApoyoTerapeuta({
+  vinculacionId,
+  plan,
+  visibilidad,
+  recursos: recursosIni,
+  usos,
+}: Props) {
   const [, startTransition] = useTransition();
+
+  // Visibilidad: qué secciones ve el paciente.
+  const [vis, setVis] = useState<VisibilidadPlanApoyo>(visibilidad);
+  const toggleVis = (key: keyof VisibilidadPlanApoyo) => {
+    const nuevo = { ...vis, [key]: !vis[key] };
+    setVis(nuevo);
+    startTransition(() => {
+      guardarVisibilidadPlanApoyoAction(vinculacionId, nuevo);
+    });
+  };
 
   // Contacto + plan de seguridad
   const [cn, setCn] = useState(plan?.contacto_nombre ?? '');
@@ -89,6 +115,35 @@ export function PlanApoyoTerapeuta({ vinculacionId, plan, recursos: recursosIni,
 
   return (
     <div className="space-y-8">
+      {/* Visibilidad: qué ve el paciente */}
+      <section className="rounded-2xl border border-noema-deep/10 bg-white p-5">
+        <h3 className="mb-1 flex items-center gap-2 font-serif text-lg text-ink">
+          <Eye className="size-5 text-noema-sage" /> ¿Qué ve el paciente?
+        </h3>
+        <p className="mb-3 text-sm text-foreground-muted">
+          Elige qué secciones aparecen en el Plan de apoyo del paciente. Se guarda solo.
+        </p>
+        <div className="space-y-2">
+          {OPCIONES_VISIBILIDAD.map((o) => (
+            <label
+              key={o.key}
+              className="flex cursor-pointer items-start gap-3 rounded-xl border border-noema-deep/10 p-3 hover:border-noema-sage/40"
+            >
+              <input
+                type="checkbox"
+                checked={vis[o.key]}
+                onChange={() => toggleVis(o.key)}
+                className="mt-0.5 size-4 shrink-0 accent-noema-sage"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium text-ink">{o.label}</span>
+                <span className="block text-xs text-foreground-muted">{o.desc}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </section>
+
       {/* Contacto + plan de seguridad */}
       <section className="rounded-2xl border border-noema-deep/10 bg-white p-5">
         <h3 className="mb-3 font-serif text-lg text-ink">Contacto de emergencia</h3>

@@ -49,6 +49,10 @@ export default async function PacienteCrisisPage() {
     contacto_telefono: string | null;
     plan_seguridad: string;
     notificar_uso: boolean;
+    ver_lineas_emergencia: boolean;
+    ver_contacto_terapeuta: boolean;
+    ver_contacto_confianza: boolean;
+    ver_recursos: boolean;
   } | null = null;
   let recursos: { id: string; tipo: string; titulo: string; url: string | null; nota: string | null }[] = [];
   if (vinc) {
@@ -56,7 +60,9 @@ export default async function PacienteCrisisPage() {
       supabase.from('profiles').select('nombre, telefono').eq('id', vinc.terapeuta_id).maybeSingle(),
       supabase
         .from('plan_apoyo')
-        .select('contacto_nombre, contacto_relacion, contacto_telefono, plan_seguridad, notificar_uso')
+        .select(
+          'contacto_nombre, contacto_relacion, contacto_telefono, plan_seguridad, notificar_uso, ver_lineas_emergencia, ver_contacto_terapeuta, ver_contacto_confianza, ver_recursos',
+        )
         .eq('vinculacion_id', vinc.id)
         .maybeSingle(),
       supabase
@@ -78,6 +84,12 @@ export default async function PacienteCrisisPage() {
     .is('eliminado_at', null)
     .order('creado_at', { ascending: true });
 
+  // Visibilidad configurada por el terapeuta (todo visible por defecto).
+  const verLineas = plan?.ver_lineas_emergencia ?? true;
+  const verTerapeuta = plan?.ver_contacto_terapeuta ?? true;
+  const verConfianza = plan?.ver_contacto_confianza ?? true;
+  const verRecursos = plan?.ver_recursos ?? true;
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
       <header className="mb-8 flex items-center gap-4">
@@ -93,7 +105,7 @@ export default async function PacienteCrisisPage() {
       </header>
 
       {/* Contacto con el terapeuta (#10) + aviso inmediato (#4) */}
-      {vinc && (
+      {vinc && verTerapeuta && (
         <ContactoCrisis
           terapeutaNombre={terapeutaNombre ?? 'mi terapeuta'}
           telefonoTerapeuta={vinc.telefono_terapeuta ?? telefonoTerap}
@@ -112,11 +124,14 @@ export default async function PacienteCrisisPage() {
             planSeguridad={plan?.plan_seguridad ?? ''}
             notificarUso={plan?.notificar_uso ?? true}
             recursos={recursos}
+            verContactoConfianza={verConfianza}
+            verRecursos={verRecursos}
           />
         </div>
       )}
 
       {/* Líneas de emergencia */}
+      {verLineas && (
       <section className="mb-8">
         <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
           Líneas de emergencia — México (24/7)
@@ -142,9 +157,10 @@ export default async function PacienteCrisisPage() {
           ))}
         </div>
       </section>
+      )}
 
       {/* Contactos de confianza */}
-      {contactos && contactos.length > 0 && (
+      {verConfianza && contactos && contactos.length > 0 && (
         <section>
           <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
             Tus contactos de confianza

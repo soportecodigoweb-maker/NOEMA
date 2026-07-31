@@ -1431,6 +1431,10 @@ export type Database = {
           notificar_uso: boolean
           plan_editado_por_paciente_at: string | null
           plan_seguridad: string
+          ver_contacto_confianza: boolean
+          ver_contacto_terapeuta: boolean
+          ver_lineas_emergencia: boolean
+          ver_recursos: boolean
           vinculacion_id: string
         }
         Insert: {
@@ -1441,6 +1445,10 @@ export type Database = {
           notificar_uso?: boolean
           plan_editado_por_paciente_at?: string | null
           plan_seguridad?: string
+          ver_contacto_confianza?: boolean
+          ver_contacto_terapeuta?: boolean
+          ver_lineas_emergencia?: boolean
+          ver_recursos?: boolean
           vinculacion_id: string
         }
         Update: {
@@ -1451,6 +1459,10 @@ export type Database = {
           notificar_uso?: boolean
           plan_editado_por_paciente_at?: string | null
           plan_seguridad?: string
+          ver_contacto_confianza?: boolean
+          ver_contacto_terapeuta?: boolean
+          ver_lineas_emergencia?: boolean
+          ver_recursos?: boolean
           vinculacion_id?: string
         }
         Relationships: []

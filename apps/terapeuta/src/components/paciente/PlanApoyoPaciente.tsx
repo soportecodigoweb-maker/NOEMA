@@ -30,6 +30,8 @@ interface Props {
   planSeguridad: string;
   notificarUso: boolean;
   recursos: Recurso[];
+  verContactoConfianza?: boolean;
+  verRecursos?: boolean;
 }
 
 const ICONO_TIPO: Record<string, string> = {
@@ -43,7 +45,14 @@ const ICONO_TIPO: Record<string, string> = {
   otro: '•',
 };
 
-export function PlanApoyoPaciente({ contacto, planSeguridad, notificarUso, recursos }: Props) {
+export function PlanApoyoPaciente({
+  contacto,
+  planSeguridad,
+  notificarUso,
+  recursos,
+  verContactoConfianza = true,
+  verRecursos = true,
+}: Props) {
   const [, startTransition] = useTransition();
 
   // Contacto de emergencia
@@ -91,6 +100,8 @@ export function PlanApoyoPaciente({ contacto, planSeguridad, notificarUso, recur
 
   return (
     <div className="space-y-8">
+      {verContactoConfianza && (
+      <>
       {/* ── Contacto de emergencia de confianza ── */}
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-ink/50">
@@ -209,8 +220,11 @@ export function PlanApoyoPaciente({ contacto, planSeguridad, notificarUso, recur
         </div>
       </section>
 
+      </>
+      )}
+
       {/* ── Recursos del terapeuta ── */}
-      {recursos.length > 0 && (
+      {verRecursos && recursos.length > 0 && (
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-ink/50">
             <Sparkles className="size-4 text-noema-sage" /> Recursos para ti

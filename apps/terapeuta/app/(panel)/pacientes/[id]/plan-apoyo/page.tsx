@@ -14,7 +14,9 @@ export default async function PlanApoyoPage({ params }: PageProps) {
   const [{ data: plan }, { data: recursos }, { data: usos }] = await Promise.all([
     supabase
       .from('plan_apoyo')
-      .select('contacto_nombre, contacto_relacion, contacto_telefono, plan_seguridad')
+      .select(
+        'contacto_nombre, contacto_relacion, contacto_telefono, plan_seguridad, ver_lineas_emergencia, ver_contacto_terapeuta, ver_contacto_confianza, ver_recursos',
+      )
       .eq('vinculacion_id', id)
       .maybeSingle(),
     supabase
@@ -49,7 +51,18 @@ export default async function PlanApoyoPage({ params }: PageProps) {
           puede verlos y editar su plan; verás aquí cuando lo use.
         </p>
       </div>
-      <PlanApoyoTerapeuta vinculacionId={id} plan={plan} recursos={recursos ?? []} usos={usosFmt} />
+      <PlanApoyoTerapeuta
+        vinculacionId={id}
+        plan={plan}
+        visibilidad={{
+          ver_lineas_emergencia: plan?.ver_lineas_emergencia ?? true,
+          ver_contacto_terapeuta: plan?.ver_contacto_terapeuta ?? true,
+          ver_contacto_confianza: plan?.ver_contacto_confianza ?? true,
+          ver_recursos: plan?.ver_recursos ?? true,
+        }}
+        recursos={recursos ?? []}
+        usos={usosFmt}
+      />
     </div>
   );
 }

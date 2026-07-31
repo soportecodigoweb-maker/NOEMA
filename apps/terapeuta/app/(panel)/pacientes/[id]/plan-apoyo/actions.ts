@@ -36,6 +36,35 @@ export async function guardarPlanTerapeutaAction(
   return { ok: true };
 }
 
+export interface VisibilidadPlanApoyo {
+  ver_lineas_emergencia: boolean;
+  ver_contacto_terapeuta: boolean;
+  ver_contacto_confianza: boolean;
+  ver_recursos: boolean;
+}
+
+/** El terapeuta decide qué secciones del Plan de apoyo ve el paciente. */
+export async function guardarVisibilidadPlanApoyoAction(
+  vinculacionId: string,
+  vis: VisibilidadPlanApoyo,
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const { error } = await supabase.from('plan_apoyo').upsert(
+    {
+      vinculacion_id: vinculacionId,
+      ver_lineas_emergencia: vis.ver_lineas_emergencia,
+      ver_contacto_terapeuta: vis.ver_contacto_terapeuta,
+      ver_contacto_confianza: vis.ver_contacto_confianza,
+      ver_recursos: vis.ver_recursos,
+      actualizado_at: new Date().toISOString(),
+    },
+    { onConflict: 'vinculacion_id' },
+  );
+  if (error) return { ok: false };
+  revalidatePath(`/pacientes/${vinculacionId}/plan-apoyo`);
+  return { ok: true };
+}
+
 /** Agrega un recurso al plan de apoyo. */
 export async function agregarRecursoAction(
   vinculacionId: string,
