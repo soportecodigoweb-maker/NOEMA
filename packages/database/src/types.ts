@@ -374,6 +374,33 @@ export type Database = {
         }
         Relationships: []
       }
+      centro_terapeutas: {
+        Row: {
+          centro_id: string
+          estado: string
+          id: string
+          terapeuta_id: string
+          terapeuta_nombre: string | null
+          vinculado_at: string
+        }
+        Insert: {
+          centro_id: string
+          estado?: string
+          id?: string
+          terapeuta_id: string
+          terapeuta_nombre?: string | null
+          vinculado_at?: string
+        }
+        Update: {
+          centro_id?: string
+          estado?: string
+          id?: string
+          terapeuta_id?: string
+          terapeuta_nombre?: string | null
+          vinculado_at?: string
+        }
+        Relationships: []
+      }
       canalizaciones: {
         Row: {
           cedula_destino: string | null

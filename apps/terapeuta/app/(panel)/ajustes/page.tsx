@@ -8,6 +8,7 @@ import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
 import { ToggleAutoLogout } from '@/components/cuenta/ToggleAutoLogout';
+import { VinculacionCentro } from '@/components/ajustes/VinculacionCentro';
 import type { ConfigTerapeuta } from './config-actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -75,6 +76,22 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     no_molestar_hasta: config?.no_molestar_hasta ?? '08:00',
   };
 
+  // Centro terapéutico al que pertenece el terapeuta (si aplica).
+  const { data: membresia } = await supabase
+    .from('centro_terapeutas')
+    .select('centro_id')
+    .eq('terapeuta_id', user.id)
+    .maybeSingle();
+  let centroNombre: string | null = null;
+  if (membresia) {
+    const { data: c } = await supabase
+      .from('centros')
+      .select('nombre_centro')
+      .eq('profile_id', membresia.centro_id)
+      .maybeSingle();
+    centroNombre = c?.nombre_centro ?? 'tu centro';
+  }
+
   return (
     <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-3xl mx-auto">
       <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Ajustes</h1>
@@ -135,6 +152,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
         {/* Auto-cierre de sesión por inactividad */}
         <ToggleAutoLogout inicial={profile?.auto_logout_habilitado ?? false} />
+
+        {/* Vinculación a un centro terapéutico */}
+        <VinculacionCentro centroActual={centroNombre} />
 
         {/* Funciones del paciente y notificaciones */}
         <PanelConfiguracion inicial={configInicial} />
