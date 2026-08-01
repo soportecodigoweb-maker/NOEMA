@@ -8,6 +8,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@noema/database';
 
+/** Ruta de inicio según el rol del usuario. */
+function panelDe(rol: string | null): string {
+  if (rol === 'terapeuta' || rol === 'admin') return '/inicio';
+  if (rol === 'centro') return '/centro';
+  return '/paciente';
+}
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -91,14 +98,14 @@ export async function updateSession(request: NextRequest) {
   // Ya tiene rol pero entra al onboarding → mandarlo a su panel.
   if (user && rol && rol !== 'sin_terapeuta' && path === '/onboarding') {
     const url = request.nextUrl.clone();
-    url.pathname = rol === 'terapeuta' || rol === 'admin' ? '/inicio' : '/paciente';
+    url.pathname = panelDe(rol);
     return NextResponse.redirect(url);
   }
 
   if (user && isAuthPage) {
     // Con sesión y página de auth → al onboarding si es nuevo, si no al panel.
     const url = request.nextUrl.clone();
-    url.pathname = rol === 'sin_terapeuta' ? '/onboarding' : '/inicio';
+    url.pathname = rol === 'sin_terapeuta' ? '/onboarding' : panelDe(rol);
     return NextResponse.redirect(url);
   }
 

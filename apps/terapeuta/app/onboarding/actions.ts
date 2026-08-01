@@ -40,8 +40,8 @@ export async function completarOnboardingAction(
   const apellidos = String(formData.get('apellidos') ?? '').trim();
   const telefono = String(formData.get('telefono') ?? '').trim();
 
-  if (rol !== 'terapeuta' && rol !== 'paciente') {
-    return { ok: false, error: 'Elige si eres terapeuta o paciente.' };
+  if (rol !== 'terapeuta' && rol !== 'paciente' && rol !== 'centro') {
+    return { ok: false, error: 'Elige un tipo de cuenta.' };
   }
   if (!nombre || !apellidos) {
     return { ok: false, error: 'Ingresa tu nombre y apellidos.' };
@@ -112,6 +112,35 @@ export async function completarOnboardingAction(
 
     revalidatePath('/', 'layout');
     redirect('/paciente');
+  }
+
+  // --- Centro terapéutico: ficha del centro ---
+  if (rol === 'centro') {
+    const nombreCentro = String(formData.get('nombre_centro') ?? '').trim();
+    const ciudad = String(formData.get('ciudad') ?? '').trim();
+    if (!nombreCentro) return { ok: false, error: 'Escribe el nombre del centro.' };
+
+    const { error: eProfile } = await db
+      .from('profiles')
+      .update({ rol: 'centro', nombre, apellidos, telefono, onboarding_completo: true })
+      .eq('id', user.id);
+    if (eProfile) return { ok: false, error: 'No pudimos guardar tus datos. Intenta de nuevo.' };
+
+    const codigo = `CENTRO-${crypto.randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
+    const { error: eCentro } = await db.from('centros').upsert(
+      {
+        profile_id: user.id,
+        nombre_centro: nombreCentro,
+        ciudad: ciudad || null,
+        telefono: telefono || null,
+        codigo_centro: codigo,
+      },
+      { onConflict: 'profile_id' },
+    );
+    if (eCentro) return { ok: false, error: 'No pudimos crear el centro. Intenta de nuevo.' };
+
+    revalidatePath('/', 'layout');
+    redirect('/centro');
   }
 
   // --- Terapeuta: datos profesionales obligatorios ---

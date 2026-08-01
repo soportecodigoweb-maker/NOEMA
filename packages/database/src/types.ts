@@ -341,6 +341,39 @@ export type Database = {
           },
         ]
       }
+      centros: {
+        Row: {
+          actualizado_at: string
+          ciudad: string | null
+          codigo_centro: string | null
+          creado_at: string
+          descripcion: string | null
+          nombre_centro: string
+          profile_id: string
+          telefono: string | null
+        }
+        Insert: {
+          actualizado_at?: string
+          ciudad?: string | null
+          codigo_centro?: string | null
+          creado_at?: string
+          descripcion?: string | null
+          nombre_centro: string
+          profile_id: string
+          telefono?: string | null
+        }
+        Update: {
+          actualizado_at?: string
+          ciudad?: string | null
+          codigo_centro?: string | null
+          creado_at?: string
+          descripcion?: string | null
+          nombre_centro?: string
+          profile_id?: string
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       canalizaciones: {
         Row: {
           cedula_destino: string | null
@@ -2868,7 +2901,7 @@ export type Database = {
         | "sueno"
         | "general"
       plan_terapeuta: "gratuito" | "prueba_premium" | "activo" | "cancelado"
-      rol_usuario: "terapeuta" | "paciente" | "sin_terapeuta" | "admin"
+      rol_usuario: "terapeuta" | "paciente" | "sin_terapeuta" | "admin" | "centro"
       tipo_consentimiento:
         | "terminos_servicio"
         | "aviso_privacidad"
@@ -3079,7 +3112,7 @@ export const Constants = {
         "general",
       ],
       plan_terapeuta: ["gratuito", "prueba_premium", "activo", "cancelado"],
-      rol_usuario: ["terapeuta", "paciente", "sin_terapeuta", "admin"],
+      rol_usuario: ["terapeuta", "paciente", "sin_terapeuta", "admin", "centro"],
       tipo_consentimiento: [
         "terminos_servicio",
         "aviso_privacidad",

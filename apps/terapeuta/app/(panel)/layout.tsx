@@ -64,7 +64,7 @@ export default async function PanelLayout({
   }
 
   if (profile.rol !== 'terapeuta' && profile.rol !== 'admin') {
-    redirect('/paciente');
+    redirect(profile.rol === 'centro' ? '/centro' : '/paciente');
   }
 
   if (!profile.onboarding_completo) {

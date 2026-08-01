@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Stethoscope, HeartHandshake, ArrowLeft } from 'lucide-react';
+import { Stethoscope, HeartHandshake, ArrowLeft, Building2 } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { completarOnboardingAction } from './actions';
 
-type Rol = 'terapeuta' | 'paciente';
+type Rol = 'terapeuta' | 'paciente' | 'centro';
 
 function calcularEdad(fecha: string): number | null {
   if (!fecha) return null;
@@ -73,6 +73,19 @@ export function OnboardingForm() {
             <span className="block text-sm font-semibold text-ink">Soy paciente</span>
             <span className="block text-xs text-foreground-muted">
               Sigo mi proceso acompañado por mi terapeuta.
+            </span>
+          </span>
+        </button>
+
+        <button
+          onClick={() => setRol('centro')}
+          className="flex w-full items-start gap-3 rounded-xl border border-noema-deep/15 bg-white p-4 text-left transition-colors hover:border-noema-deep/40"
+        >
+          <Building2 className="mt-0.5 size-6 shrink-0 text-noema-sage" strokeWidth={1.6} />
+          <span>
+            <span className="block text-sm font-semibold text-ink">Soy un centro terapéutico</span>
+            <span className="block text-xs text-foreground-muted">
+              Administro una clínica y doy acceso a mis terapeutas.
             </span>
           </span>
         </button>
@@ -169,6 +182,18 @@ export function OnboardingForm() {
         </>
       )}
 
+      {rol === 'centro' && (
+        <>
+          <Input
+            name="nombre_centro"
+            label="Nombre del centro"
+            placeholder="Centro Terapéutico Aurora"
+            required
+          />
+          <Input name="ciudad" label="Ciudad" placeholder="Guadalajara" />
+        </>
+      )}
+
       {rol === 'terapeuta' && (
         <>
           <Input
@@ -215,7 +240,7 @@ export function OnboardingForm() {
         loading={pending}
         disabled={bloqueadoPaciente}
       >
-        {rol === 'terapeuta' ? 'Continuar al panel' : 'Empezar'}
+        {rol === 'terapeuta' ? 'Continuar al panel' : rol === 'centro' ? 'Crear centro' : 'Empezar'}
       </Button>
     </form>
   );
