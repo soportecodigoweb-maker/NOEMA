@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { Users, KeyRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { cargarTerapeutasYPacientes } from './data';
+import { PacientesDelCentro } from '@/components/centro/PacientesDelCentro';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Centro terapéutico' };
@@ -12,18 +14,13 @@ export default async function CentroPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/signin');
 
-  const [{ data: centro }, { data: terapeutas }] = await Promise.all([
+  const [{ data: centro }, terapeutas] = await Promise.all([
     supabase
       .from('centros')
       .select('nombre_centro, codigo_centro, ciudad')
       .eq('profile_id', user.id)
       .maybeSingle(),
-    supabase
-      .from('centro_terapeutas')
-      .select('id, terapeuta_nombre, vinculado_at')
-      .eq('centro_id', user.id)
-      .eq('estado', 'activa')
-      .order('vinculado_at', { ascending: true }),
+    cargarTerapeutasYPacientes(user.id),
   ]);
 
   return (
@@ -46,35 +43,16 @@ export default async function CentroPage() {
         </div>
       </section>
 
-      {/* Terapeutas del centro */}
+      {/* Terapeutas del centro y sus pacientes */}
       <section className="rounded-2xl border border-noema-deep/10 bg-white p-5">
-        <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ink">
-          <Users className="size-5 text-noema-sage" /> Terapeutas del centro
-          {terapeutas && terapeutas.length > 0 && (
-            <span className="text-sm font-normal text-foreground-muted">({terapeutas.length})</span>
-          )}
+        <h2 className="mb-1 flex items-center gap-2 font-serif text-lg text-ink">
+          <Users className="size-5 text-noema-sage" /> Terapeutas y pacientes
         </h2>
-        {!terapeutas || terapeutas.length === 0 ? (
-          <p className="text-sm text-foreground-muted">
-            Aún no hay terapeutas vinculados. Comparte el código de arriba para que se unan.
-          </p>
-        ) : (
-          <ul className="divide-y divide-noema-deep/[0.06]">
-            {terapeutas.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-3">
-                <span className="flex size-9 items-center justify-center rounded-full bg-noema-sage/15 text-sm font-medium text-noema-deep/70">
-                  {(t.terapeuta_nombre ?? '?')
-                    .split(' ')
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((s) => s[0]?.toUpperCase() ?? '')
-                    .join('')}
-                </span>
-                <span className="text-sm font-medium text-ink">{t.terapeuta_nombre ?? 'Terapeuta'}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <p className="mb-4 text-sm text-foreground-muted">
+          Ves qué pacientes atiende cada terapeuta (no su contenido). Cuando un terapeuta se va,
+          reasigna a sus pacientes con otro del centro para dar continuidad.
+        </p>
+        <PacientesDelCentro terapeutas={terapeutas} />
       </section>
     </div>
   );
