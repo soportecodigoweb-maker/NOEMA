@@ -10,7 +10,8 @@ import type { Database } from '@noema/database';
 
 /** Ruta de inicio según el rol del usuario. */
 function panelDe(rol: string | null): string {
-  if (rol === 'terapeuta' || rol === 'admin') return '/inicio';
+  if (rol === 'admin') return '/owner';
+  if (rol === 'terapeuta') return '/inicio';
   if (rol === 'centro') return '/centro';
   return '/paciente';
 }
