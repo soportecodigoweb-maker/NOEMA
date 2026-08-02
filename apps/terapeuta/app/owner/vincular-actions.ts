@@ -11,9 +11,9 @@ function admin() {
   });
 }
 
-async function esAdmin(userId: string): Promise<boolean> {
-  const { data } = await admin().from('profiles').select('rol').eq('id', userId).maybeSingle();
-  return data?.rol === 'admin';
+async function esDueno(userId: string): Promise<boolean> {
+  const { data } = await admin().from('profiles').select('es_dueno').eq('id', userId).maybeSingle();
+  return data?.es_dueno === true;
 }
 
 /** El dueño vincula manualmente a un paciente con un terapeuta (por correo). */
@@ -25,7 +25,7 @@ export async function crearVinculacionManualAction(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !(await esAdmin(user.id))) return { ok: false, error: 'Sin permiso.' };
+  if (!user || !(await esDueno(user.id))) return { ok: false, error: 'Sin permiso.' };
 
   const db = admin();
   const te = terapeutaEmail.trim().toLowerCase();

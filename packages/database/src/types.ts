@@ -1497,6 +1497,7 @@ export type Database = {
           creado_at: string
           eliminada_at: string | null
           email: string
+          es_dueno: boolean
           estado_cuenta: string
           id: string
           modo_aprendiz: boolean
@@ -1519,6 +1520,7 @@ export type Database = {
           creado_at?: string
           eliminada_at?: string | null
           email: string
+          es_dueno?: boolean
           estado_cuenta?: string
           id: string
           locale?: string
@@ -1540,6 +1542,7 @@ export type Database = {
           creado_at?: string
           eliminada_at?: string | null
           email?: string
+          es_dueno?: boolean
           estado_cuenta?: string
           id?: string
           modo_aprendiz?: boolean
