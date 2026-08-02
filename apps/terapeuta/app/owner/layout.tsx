@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ShieldCheck, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -48,14 +49,22 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
               </span>
             </div>
           </div>
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-bone/70 transition-colors hover:bg-bone/[0.06] hover:text-bone"
-            >
-              <LogOut className="size-4" strokeWidth={1.7} /> Cerrar sesión
-            </button>
-          </form>
+          <div className="flex items-center gap-1">
+            <Link href="/owner" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
+              Panorama
+            </Link>
+            <Link href="/owner/vincular" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
+              Vincular
+            </Link>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-bone/70 transition-colors hover:bg-bone/[0.06] hover:text-bone"
+              >
+                <LogOut className="size-4" strokeWidth={1.7} /> Salir
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
