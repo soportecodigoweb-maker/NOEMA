@@ -82,6 +82,6 @@ export async function crearVinculacionManualAction(
     },
   ]);
 
-  revalidatePath('/owner/vincular');
+  revalidatePath('/admin/vincular');
   return { ok: true };
 }

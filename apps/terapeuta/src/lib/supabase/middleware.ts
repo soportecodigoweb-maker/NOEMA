@@ -10,7 +10,7 @@ import type { Database } from '@noema/database';
 
 /** Ruta de inicio según el rol del usuario. */
 function panelDe(rol: string | null): string {
-  if (rol === 'admin') return '/owner';
+  if (rol === 'admin') return '/admin';
   if (rol === 'terapeuta') return '/inicio';
   if (rol === 'centro') return '/centro';
   return '/paciente';
@@ -66,14 +66,6 @@ export async function updateSession(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
-
-  // Subdominio del panel de dueño: la raíz lleva directo a /owner.
-  const host = request.headers.get('host') ?? '';
-  if (host.startsWith('admin.somosnoema.com') && path === '/') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/owner';
-    return NextResponse.redirect(url);
-  }
 
   // Rutas públicas (los grupos (auth), (onboarding), (panel), (public) NO van en la URL)
   const isAuthPage = path === '/signin' || path === '/signup';

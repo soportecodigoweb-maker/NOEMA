@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Link2, Check } from 'lucide-react';
-import { crearVinculacionManualAction } from '../../../app/owner/vincular-actions';
+import { crearVinculacionManualAction } from '../../../app/admin/vincular-actions';
 
 export function VincularManual() {
   const router = useRouter();

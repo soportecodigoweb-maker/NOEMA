@@ -50,10 +50,10 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Link href="/owner" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
+            <Link href="/admin" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
               Panorama
             </Link>
-            <Link href="/owner/vincular" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
+            <Link href="/admin/vincular" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
               Vincular
             </Link>
             <form action={signOutAction}>
