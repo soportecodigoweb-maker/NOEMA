@@ -224,13 +224,14 @@ export async function redimirCodigoAction(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: 'Inicia sesión para vincularte.' };
 
-  const code = (codigo ?? '').trim().toUpperCase();
-  if (code.replace(/\s/g, '').length < 6) {
+  // Quitamos TODO espacio (incluye invisibles/pegados) y normalizamos a mayúsculas.
+  const code = (codigo ?? '').replace(/\s+/g, '').toUpperCase();
+  if (code.length < 6) {
     return { ok: false, error: 'El código no es válido. Revisa que esté completo.' };
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!serviceKey || !url) {
     return { ok: false, error: 'Configuración incompleta del servidor.' };
   }
@@ -244,34 +245,33 @@ export async function redimirCodigoAction(
     return data?.nombre ?? undefined;
   };
 
-  // 1. Buscar la vinculación PENDIENTE con ese código.
+  // 1. Buscar la vinculación con ese código (sin filtrar por estado, para poder
+  //    dar un mensaje claro según su situación real). Case-insensitive.
   const { data: vinc, error: eFind } = await admin
     .from('vinculaciones')
     .select('id, estado, paciente_id, terapeuta_id')
-    .eq('codigo_invitacion', code)
-    .eq('estado', 'pendiente')
+    .ilike('codigo_invitacion', code)
     .maybeSingle();
   if (eFind) return { ok: false, error: 'No se pudo validar el código. Intenta de nuevo.' };
 
   if (!vinc) {
-    // ¿Ya estaba activa con este mismo paciente? (idempotencia: no re-hacer).
-    const { data: yaActiva } = await admin
-      .from('vinculaciones')
-      .select('id, terapeuta_id')
-      .eq('codigo_invitacion', code)
-      .eq('paciente_id', user.id)
-      .in('estado', ['activa', 'pausada'])
-      .maybeSingle();
-    if (yaActiva) {
-      revalidatePath('/paciente', 'layout');
-      return { ok: true, terapeutaNombre: await nombreTerapeuta(yaActiva.terapeuta_id) };
-    }
-    return { ok: false, error: 'Código no válido o ya usado.' };
+    return { ok: false, error: 'Código no válido. Revisa que esté bien escrito.' };
+  }
+
+  // Ya estaba vinculada con este mismo paciente (idempotencia: éxito).
+  if (vinc.paciente_id === user.id && (vinc.estado === 'activa' || vinc.estado === 'pausada')) {
+    revalidatePath('/paciente', 'layout');
+    return { ok: true, terapeutaNombre: await nombreTerapeuta(vinc.terapeuta_id) };
   }
 
   // 2. La invitación no debe estar tomada por OTRO paciente.
   if (vinc.paciente_id && vinc.paciente_id !== user.id) {
     return { ok: false, error: 'Ese código ya fue usado por otra persona.' };
+  }
+
+  // La invitación debe estar disponible (pendiente).
+  if (vinc.estado !== 'pendiente') {
+    return { ok: false, error: 'Este código ya no está disponible.' };
   }
 
   // 3. El paciente no puede tener ya un terapeuta activo distinto.

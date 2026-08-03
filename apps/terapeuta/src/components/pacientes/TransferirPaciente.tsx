@@ -142,6 +142,19 @@ export function TransferirPaciente({
                   paciente la <span className="font-medium text-ink">autorice</span> desde su app. Te avisaremos
                   cuando responda.
                 </p>
+                <div className="mt-3 rounded-xl border border-noema-deep/10 bg-bone/40 p-4 text-xs leading-relaxed text-ink/70">
+                  <p>
+                    En NOEMA la documentación clínica del proceso terapéutico solo puede compartirse con otro
+                    profesional cuando el paciente otorga su consentimiento. Esto favorece la transparencia,
+                    fortalece la confianza y ayuda a proteger la confidencialidad de la información.
+                  </p>
+                  <p className="mt-2">
+                    El contenido del informe no se muestra al paciente, ya que constituye una comunicación clínica
+                    entre profesionales de la salud mental. Esta medida busca proteger el proceso terapéutico y
+                    evitar interpretaciones fuera del contexto clínico. El paciente únicamente autoriza que su
+                    información clínica sea compartida con el terapeuta receptor.
+                  </p>
+                </div>
                 <div className="mt-5 flex justify-end">
                   <button
                     onClick={cerrar}
