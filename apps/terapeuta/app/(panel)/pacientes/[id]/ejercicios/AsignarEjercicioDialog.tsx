@@ -11,6 +11,7 @@ interface Plantilla {
   id: string;
   titulo: string;
   descripcion: string | null;
+  contenido_md: string | null;
   categoria: string;
   duracion_min: number | null;
 }
@@ -23,22 +24,49 @@ interface Props {
 export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Campos editables (se rellenan con la plantilla y el terapeuta los adapta).
+  const [titulo, setTitulo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [contenido, setContenido] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const seleccionar = (p: Plantilla) => {
+    setSelectedId(p.id);
+    setTitulo(p.titulo);
+    setDescripcion(p.descripcion ?? '');
+    setContenido(p.contenido_md ?? '');
+    setError(null);
+  };
+
+  const cerrar = () => {
+    setOpen(false);
+    setSelectedId(null);
+    setTitulo('');
+    setDescripcion('');
+    setContenido('');
+    setError(null);
+  };
 
   const onSubmit = (formData: FormData) => {
     if (!selectedId) {
       setError('Selecciona un ejercicio.');
       return;
     }
+    if (!titulo.trim()) {
+      setError('El ejercicio necesita un título.');
+      return;
+    }
     formData.set('plantillaId', selectedId);
+    formData.set('titulo', titulo);
+    formData.set('descripcion', descripcion);
+    formData.set('contenido', contenido);
     startTransition(async () => {
       const r = await asignarPlantillaAction(vinculacionId, formData);
       if (!r.ok) {
         setError(r.error ?? 'Algo no funcionó.');
       } else {
-        setOpen(false);
-        setSelectedId(null);
+        cerrar();
       }
     });
   };
@@ -57,14 +85,7 @@ export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-serif text-2xl text-ink">Asignar ejercicio</h2>
-          <button
-            onClick={() => {
-              setOpen(false);
-              setSelectedId(null);
-              setError(null);
-            }}
-            className="text-foreground-muted hover:text-ink"
-          >
+          <button onClick={cerrar} className="text-foreground-muted hover:text-ink">
             <X className="size-5" />
           </button>
         </div>
@@ -84,7 +105,7 @@ export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
                   <button
                     type="button"
                     key={p.id}
-                    onClick={() => setSelectedId(p.id)}
+                    onClick={() => seleccionar(p)}
                     className={`w-full text-left p-3 rounded-md transition-colors ${
                       selectedId === p.id
                         ? 'bg-noema-sage/15 border border-noema-sage'
@@ -111,6 +132,32 @@ export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
             </div>
           </div>
 
+          {/* Editor: adapta el ejercicio para este paciente en particular */}
+          {selectedId && (
+            <div className="space-y-4 rounded-md border border-noema-sage/25 bg-noema-sage/[0.04] p-4">
+              <p className="caption text-noema-sage">
+                Puedes adaptar este ejercicio para este paciente
+              </p>
+              <Input
+                label="Título del ejercicio"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+              />
+              <Textarea
+                label="Descripción"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+                rows={2}
+              />
+              <Textarea
+                label="Contenido / indicaciones del ejercicio"
+                value={contenido}
+                onChange={(e) => setContenido(e.target.value)}
+                rows={6}
+              />
+            </div>
+          )}
+
           <Input
             type="date"
             name="fechaLimite"
@@ -127,16 +174,7 @@ export function AsignarEjercicioDialog({ vinculacionId, plantillas }: Props) {
           {error && <p className="text-sm text-[#B85450]">{error}</p>}
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={() => {
-                setOpen(false);
-                setSelectedId(null);
-                setError(null);
-              }}
-            >
+            <Button type="button" variant="ghost" size="md" onClick={cerrar}>
               Cancelar
             </Button>
             <Button type="submit" variant="primary" size="md" loading={isPending}>

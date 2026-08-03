@@ -55,7 +55,7 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
       .order('creado_at', { ascending: false }),
     supabase
       .from('plantillas_ejercicios')
-      .select('id, titulo, descripcion, categoria, duracion_min')
+      .select('id, titulo, descripcion, contenido_md, categoria, duracion_min')
       .eq('terapeuta_id', user?.id ?? '')
       // Los formatos NOM-004 (consentimiento, canalización) son documentos, no
       // ejercicios asignables al paciente. No van en esta lista.

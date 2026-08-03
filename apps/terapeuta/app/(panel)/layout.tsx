@@ -31,7 +31,7 @@ export default async function PanelLayout({
     await Promise.all([
     supabase
       .from('profiles')
-      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado, estado_cuenta')
+      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado, estado_cuenta, es_dueno')
       .eq('id', user.id)
       .single(),
     supabase
@@ -84,6 +84,7 @@ export default async function PanelLayout({
           avatarUrl: profile.avatar_url,
           titulo: terapeuta?.titulo ?? 'Terapeuta',
         }}
+        esDueno={profile.es_dueno}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
 

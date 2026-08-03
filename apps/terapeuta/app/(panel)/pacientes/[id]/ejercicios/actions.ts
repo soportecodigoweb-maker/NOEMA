@@ -10,6 +10,10 @@ export async function asignarPlantillaAction(
   const plantillaId = String(formData.get('plantillaId') ?? '');
   const fechaLimite = String(formData.get('fechaLimite') ?? '');
   const mensaje = String(formData.get('mensaje') ?? '').trim();
+  // Valores editados por el terapeuta para este paciente (si vienen).
+  const tituloEditado = String(formData.get('titulo') ?? '').trim();
+  const descripcionEditada = String(formData.get('descripcion') ?? '').trim();
+  const contenidoEditado = String(formData.get('contenido') ?? '').trim();
 
   if (!plantillaId) return { ok: false, error: 'Selecciona una plantilla.' };
 
@@ -33,9 +37,10 @@ export async function asignarPlantillaAction(
     vinculacion_id: vinculacionId,
     plantilla_id: plantillaId,
     asignada_por: user.id,
-    titulo: plantilla.titulo,
-    descripcion: plantilla.descripcion,
-    contenido_md: plantilla.contenido_md,
+    // Usa lo que el terapeuta editó; si no editó, cae a la plantilla.
+    titulo: tituloEditado || plantilla.titulo,
+    descripcion: descripcionEditada || plantilla.descripcion,
+    contenido_md: contenidoEditado || plantilla.contenido_md,
     campos_respuesta: plantilla.campos_respuesta ?? [],
     recursos: plantilla.recursos ?? [],
     fecha_limite: fechaLimite || null,

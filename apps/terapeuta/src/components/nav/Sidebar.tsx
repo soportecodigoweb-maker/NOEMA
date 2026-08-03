@@ -14,6 +14,7 @@ import {
   Settings,
   Menu,
   X,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
@@ -45,9 +46,10 @@ export interface SidebarProps {
     avatarUrl?: string | null;
     titulo?: string | null;
   };
+  esDueno?: boolean;
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, esDueno }: SidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
 
@@ -166,6 +168,19 @@ export function Sidebar({ user }: SidebarProps) {
               );
             })}
           </ul>
+
+          {esDueno && (
+            <div className="mt-4 border-t border-bone/[0.08] pt-3">
+              <Link
+                href="/admin"
+                onClick={() => setAbierto(false)}
+                className="group flex items-center gap-3 rounded-md bg-bone/[0.06] px-3 py-2.5 text-sm font-medium text-bone/80 transition-colors hover:bg-bone/10 hover:text-bone"
+              >
+                <ShieldCheck className="size-[18px] shrink-0 text-bone/70 group-hover:text-bone" strokeWidth={1.7} />
+                Panel de dueño
+              </Link>
+            </div>
+          )}
         </nav>
 
         {/* User card */}
