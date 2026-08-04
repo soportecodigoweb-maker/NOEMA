@@ -159,6 +159,69 @@ export async function impactoTotales(): Promise<{
   return { pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes };
 }
 
+export interface UsuarioOwner {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: string;
+  registro: string;
+  ultimoAcceso: string;
+  suscripcion: string;
+  estadoProceso: string;
+}
+
+/** Busca pacientes/terapeutas y devuelve info básica (sin contenido clínico). */
+export async function buscarUsuarios(q: string): Promise<UsuarioOwner[]> {
+  const db = admin();
+  const qs = q.replace(/[,()%*]/g, ' ').trim();
+  let query = db
+    .from('profiles')
+    .select('id, nombre, apellidos, email, rol, creado_at')
+    .order('creado_at', { ascending: false })
+    .limit(40);
+  if (qs) query = query.or(`nombre.ilike.%${qs}%,email.ilike.%${qs}%`);
+  const { data: profs } = await query;
+  const list = profs ?? [];
+  const ids = list.map((p) => p.id);
+
+  const { data: au } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const lastMap = new Map((au?.users ?? []).map((u) => [u.id, u.last_sign_in_at ?? null]));
+
+  const [{ data: teras }, { data: vincs }] = await Promise.all([
+    ids.length
+      ? db.from('terapeutas').select('profile_id, plan_estado').in('profile_id', ids)
+      : Promise.resolve({ data: [] as { profile_id: string; plan_estado: string }[] }),
+    ids.length
+      ? db.from('vinculaciones').select('paciente_id, estado').in('paciente_id', ids)
+      : Promise.resolve({ data: [] as { paciente_id: string | null; estado: string }[] }),
+  ]);
+  const planMap = new Map((teras ?? []).map((t) => [t.profile_id, t.plan_estado]));
+  const vincMap = new Map<string, string>();
+  for (const v of vincs ?? []) {
+    if (v.paciente_id && !vincMap.has(v.paciente_id)) vincMap.set(v.paciente_id, v.estado);
+  }
+
+  return list.map((p) => {
+    const last = lastMap.get(p.id);
+    return {
+      id: p.id,
+      nombre: [p.nombre, p.apellidos].filter(Boolean).join(' ') || 'Sin nombre',
+      email: p.email,
+      rol: p.rol,
+      registro: fmt(p.creado_at),
+      ultimoAcceso: last ? fmt(last) : 'nunca',
+      suscripcion:
+        p.rol === 'terapeuta' ? (planMap.get(p.id) ?? 'sin_pago') : p.rol === 'paciente' ? 'gratis' : '—',
+      estadoProceso:
+        p.rol === 'paciente'
+          ? vincMap.get(p.id)
+            ? `Vinculación ${vincMap.get(p.id)}`
+            : 'Sin terapeuta'
+          : '',
+    };
+  });
+}
+
 export interface SolicitudOwner {
   id: string;
   tipo: string;
