@@ -12,8 +12,8 @@ function admin() {
 }
 
 async function esDueno(userId: string): Promise<boolean> {
-  const { data } = await admin().from('profiles').select('es_dueno').eq('id', userId).maybeSingle();
-  return data?.es_dueno === true;
+  const { data } = await admin().from('profiles').select('rol').eq('id', userId).maybeSingle();
+  return data?.rol === 'admin';
 }
 
 /** El dueño vincula manualmente a un paciente con un terapeuta (por correo). */

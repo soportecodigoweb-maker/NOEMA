@@ -31,7 +31,7 @@ export default async function PanelLayout({
     await Promise.all([
     supabase
       .from('profiles')
-      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado, estado_cuenta, es_dueno')
+      .select('id, nombre, avatar_url, rol, onboarding_completo, modo_aprendiz, auto_logout_habilitado, estado_cuenta')
       .eq('id', user.id)
       .single(),
     supabase
@@ -63,8 +63,12 @@ export default async function PanelLayout({
     redirect('/signin?motivo=cuenta-eliminada');
   }
 
-  if (profile.rol !== 'terapeuta' && profile.rol !== 'admin') {
-    redirect(profile.rol === 'centro' ? '/centro' : '/paciente');
+  // Panel exclusivo del terapeuta. El dueño de NOEMA (admin) y los centros van
+  // a su propio panel aislado.
+  if (profile.rol !== 'terapeuta') {
+    redirect(
+      profile.rol === 'admin' ? '/admin' : profile.rol === 'centro' ? '/centro' : '/paciente',
+    );
   }
 
   if (!profile.onboarding_completo) {
@@ -84,7 +88,6 @@ export default async function PanelLayout({
           avatarUrl: profile.avatar_url,
           titulo: terapeuta?.titulo ?? 'Terapeuta',
         }}
-        esDueno={profile.es_dueno}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
 

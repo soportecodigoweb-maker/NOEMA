@@ -15,7 +15,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('rol, estado_cuenta, auto_logout_habilitado, es_dueno')
+    .select('rol, estado_cuenta, auto_logout_habilitado')
     .eq('id', user.id)
     .single();
   if (!profile) redirect('/signin');
@@ -25,10 +25,10 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     redirect('/signin?motivo=cuenta-eliminada');
   }
 
-  // Solo cuentas con la bandera de dueño entran aquí (independiente del rol).
-  if (!profile.es_dueno) {
+  // Panel EXCLUSIVO del dueño de NOEMA (rol admin). Aislado del resto.
+  if (profile.rol !== 'admin') {
     redirect(
-      profile.rol === 'terapeuta' || profile.rol === 'admin'
+      profile.rol === 'terapeuta'
         ? '/inicio'
         : profile.rol === 'centro'
           ? '/centro'
