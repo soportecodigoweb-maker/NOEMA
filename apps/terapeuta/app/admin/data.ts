@@ -159,6 +159,68 @@ export async function impactoTotales(): Promise<{
   return { pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes };
 }
 
+export interface DatosLegales {
+  totalConsentimientos: number;
+  porVersion: { version: string; n: number }[];
+  consentimientos: { usuario: string; tipo: string; version: string; fecha: string }[];
+  eliminadas: { usuario: string; eliminada: string; purga: string }[];
+}
+
+export async function cargarLegal(): Promise<DatosLegales> {
+  const db = admin();
+
+  const [{ data: recientes }, { data: todas }, { data: elim }] = await Promise.all([
+    db
+      .from('consentimientos')
+      .select('tipo, version, aceptado_at, profile_id')
+      .order('aceptado_at', { ascending: false })
+      .limit(60),
+    db.from('consentimientos').select('version').limit(10000),
+    db
+      .from('profiles')
+      .select('nombre, email, eliminada_at')
+      .eq('estado_cuenta', 'eliminada')
+      .order('eliminada_at', { ascending: false })
+      .limit(60),
+  ]);
+
+  // Nombres/correos de quienes aceptaron (metadato legal, no contenido clínico).
+  const ids = [...new Set((recientes ?? []).map((c) => c.profile_id).filter(Boolean))] as string[];
+  const perfiles = new Map<string, string>();
+  if (ids.length) {
+    const { data: profs } = await db.from('profiles').select('id, nombre, email').in('id', ids);
+    for (const p of profs ?? []) perfiles.set(p.id, p.nombre || p.email || 'Usuario');
+  }
+
+  const conteoVersion = new Map<string, number>();
+  for (const c of todas ?? []) conteoVersion.set(c.version, (conteoVersion.get(c.version) ?? 0) + 1);
+
+  const purgaDe = (iso: string | null): string => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    d.setFullYear(d.getFullYear() + 5);
+    return d.toLocaleDateString('es-MX', { dateStyle: 'medium' });
+  };
+
+  return {
+    totalConsentimientos: (todas ?? []).length,
+    porVersion: [...conteoVersion.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([version, n]) => ({ version, n })),
+    consentimientos: (recientes ?? []).map((c) => ({
+      usuario: perfiles.get(c.profile_id) ?? 'Usuario',
+      tipo: c.tipo,
+      version: c.version,
+      fecha: fmt(c.aceptado_at),
+    })),
+    eliminadas: (elim ?? []).map((e) => ({
+      usuario: e.nombre || e.email || 'Usuario',
+      eliminada: e.eliminada_at ? fmt(e.eliminada_at) : '—',
+      purga: purgaDe(e.eliminada_at),
+    })),
+  };
+}
+
 export interface UsuarioOwner {
   id: string;
   nombre: string;

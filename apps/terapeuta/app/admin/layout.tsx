@@ -57,6 +57,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
               { href: '/admin/metricas', label: 'Métricas' },
               { href: '/admin/analitica', label: 'Analítica' },
               { href: '/admin/impacto', label: 'Impacto' },
+              { href: '/admin/legal', label: 'Legal' },
               { href: '/admin/vincular', label: 'Vincular' },
             ].map((l) => (
               <Link
