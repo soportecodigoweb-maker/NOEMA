@@ -52,6 +52,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
           <nav className="flex flex-wrap items-center gap-0.5">
             {[
               { href: '/admin', label: 'Panorama' },
+              { href: '/admin/solicitudes', label: 'Solicitudes' },
               { href: '/admin/metricas', label: 'Métricas' },
               { href: '/admin/analitica', label: 'Analítica' },
               { href: '/admin/impacto', label: 'Impacto' },

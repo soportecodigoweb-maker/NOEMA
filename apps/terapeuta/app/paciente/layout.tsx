@@ -6,6 +6,7 @@ import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { CanalizacionPendiente } from '@/components/paciente/CanalizacionPendiente';
+import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
@@ -130,6 +131,9 @@ export default async function PacienteLayout({
       {canalizacion && (
         <CanalizacionPendiente id={canalizacion.id} destinoNombre={canalizacion.destino_nombre} />
       )}
+
+      {/* Botón de ayuda / soporte → llega al Panel de Dueño */}
+      <SoporteBoton />
     </div>
   );
 }

@@ -2301,6 +2301,48 @@ export type Database = {
           },
         ]
       }
+      solicitudes_soporte: {
+        Row: {
+          asunto: string | null
+          creado_at: string
+          estado: string
+          id: string
+          mensaje: string
+          resuelto_at: string | null
+          tipo: string
+          usuario_email: string | null
+          usuario_id: string | null
+          usuario_nombre: string | null
+          usuario_rol: string | null
+        }
+        Insert: {
+          asunto?: string | null
+          creado_at?: string
+          estado?: string
+          id?: string
+          mensaje: string
+          resuelto_at?: string | null
+          tipo?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+          usuario_nombre?: string | null
+          usuario_rol?: string | null
+        }
+        Update: {
+          asunto?: string | null
+          creado_at?: string
+          estado?: string
+          id?: string
+          mensaje?: string
+          resuelto_at?: string | null
+          tipo?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+          usuario_nombre?: string | null
+          usuario_rol?: string | null
+        }
+        Relationships: []
+      }
       tareas: {
         Row: {
           actualizado_at: string

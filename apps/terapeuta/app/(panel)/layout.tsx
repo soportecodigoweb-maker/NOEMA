@@ -6,6 +6,7 @@ import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
+import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -103,6 +104,9 @@ export default async function PanelLayout({
 
       {/* Auto-cierre de sesión por inactividad (si el terapeuta lo activó) */}
       <AutoLogout habilitado={profile.auto_logout_habilitado} />
+
+      {/* Botón de ayuda / soporte → llega al Panel de Dueño */}
+      <SoporteBoton />
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion

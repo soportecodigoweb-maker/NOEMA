@@ -159,6 +159,36 @@ export async function impactoTotales(): Promise<{
   return { pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes };
 }
 
+export interface SolicitudOwner {
+  id: string;
+  tipo: string;
+  asunto: string | null;
+  mensaje: string;
+  estado: string;
+  usuario: string;
+  rol: string | null;
+  fecha: string;
+}
+
+export async function cargarSolicitudes(): Promise<SolicitudOwner[]> {
+  const db = admin();
+  const { data } = await db
+    .from('solicitudes_soporte')
+    .select('id, tipo, asunto, mensaje, estado, usuario_nombre, usuario_email, usuario_rol, creado_at')
+    .order('creado_at', { ascending: false })
+    .limit(200);
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    tipo: s.tipo,
+    asunto: s.asunto,
+    mensaje: s.mensaje,
+    estado: s.estado,
+    usuario: s.usuario_nombre || s.usuario_email || 'Usuario',
+    rol: s.usuario_rol,
+    fecha: fmt(s.creado_at),
+  }));
+}
+
 export async function cargarMetricasOwner(): Promise<MetricasOwner> {
   const db = admin();
   const desde7 = new Date(Date.now() - 7 * 86400000).toISOString();
