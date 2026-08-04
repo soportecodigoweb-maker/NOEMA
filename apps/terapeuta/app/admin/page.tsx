@@ -1,15 +1,17 @@
-import { Stethoscope, HeartHandshake, Building2, Link2, Clock, Archive, TrendingUp, DollarSign } from 'lucide-react';
-import { cargarMetricasOwner } from './data';
+import { Stethoscope, HeartHandshake, Building2, Link2, Clock, Archive, TrendingUp, DollarSign, Activity, Star } from 'lucide-react';
+import { cargarMetricasOwner, metricasActividad } from './data';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Panel de dueño · NOEMA' };
 
 export default async function OwnerPage() {
-  const m = await cargarMetricasOwner();
+  const [m, act] = await Promise.all([cargarMetricasOwner(), metricasActividad()]);
 
   const stats = [
     { label: 'Terapeutas', valor: m.terapeutas, sub: `${m.terapeutasVerificados} verificados`, icon: Stethoscope },
     { label: 'Pacientes', valor: m.pacientes, sub: `${m.nuevos7d} nuevos (7 días)`, icon: HeartHandshake },
+    { label: 'Usuarios activos (30 días)', valor: act.activos30d, sub: `${act.activosHoy} activos hoy`, icon: Activity },
+    { label: 'Calificación promedio', valor: '—', sub: 'con la encuesta de satisfacción', icon: Star },
     { label: 'Centros', valor: m.centros, sub: 'clínicas registradas', icon: Building2 },
     { label: 'Vinculaciones activas', valor: m.vincActivas, sub: `${m.vincPendientes} pendientes`, icon: Link2 },
     { label: 'Canalizaciones pendientes', valor: m.canalizacionesPendientes, sub: 'esperando al paciente', icon: Clock },

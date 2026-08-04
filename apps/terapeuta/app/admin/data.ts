@@ -46,6 +46,119 @@ function fmt(iso: string): string {
   });
 }
 
+/** Usuarios activos según su último inicio de sesión (auth). */
+export async function metricasActividad(): Promise<{
+  total: number;
+  activos30d: number;
+  activosHoy: number;
+}> {
+  const db = admin();
+  const { data } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const users = data?.users ?? [];
+  const now = Date.now();
+  const dentro = (iso: string | undefined, ms: number) =>
+    !!iso && now - new Date(iso).getTime() < ms;
+  return {
+    total: users.length,
+    activos30d: users.filter((u) => dentro(u.last_sign_in_at ?? undefined, 30 * 86400000)).length,
+    activosHoy: users.filter((u) => dentro(u.last_sign_in_at ?? undefined, 86400000)).length,
+  };
+}
+
+/** Uso de funciones de la app (conteos globales, sin contenido). */
+export async function metricasUso(): Promise<{ label: string; valor: number }[]> {
+  const db = admin();
+  const c = (t: keyof Database['public']['Tables']) => contar(db, t);
+  const [registros, diario, tareas, mensajes, usosPlan, sesiones, recursos] = await Promise.all([
+    c('registros_emocionales'),
+    c('diario_entradas'),
+    c('tareas'),
+    c('mensajes'),
+    c('plan_apoyo_usos'),
+    c('sesiones'),
+    c('plan_apoyo_recursos'),
+  ]);
+  return [
+    { label: 'Registros emocionales', valor: registros },
+    { label: 'Entradas de diario', valor: diario },
+    { label: 'Tareas asignadas', valor: tareas },
+    { label: 'Mensajes', valor: mensajes },
+    { label: 'Sesiones', valor: sesiones },
+    { label: 'Usos del plan de apoyo', valor: usosPlan },
+    { label: 'Recursos compartidos', valor: recursos },
+  ].sort((a, b) => b.valor - a.valor);
+}
+
+/** Analítica clínica ANÓNIMA (agregada, sin nombres ni contenido). */
+export async function analiticaClinica(): Promise<{
+  totalRegistros: number;
+  intensidadPromedio: number | null;
+  topEmociones: { nombre: string; n: number }[];
+  porHora: number[];
+  porDia: number[];
+}> {
+  const db = admin();
+  const { data: catalogo } = await db.from('emociones_catalogo').select('key, nombre_es');
+  const nombreEmocion = new Map((catalogo ?? []).map((e) => [e.key, e.nombre_es]));
+
+  const { data: regs } = await db
+    .from('registros_emocionales')
+    .select('emocion_principal_key, intensidad, hora, fecha')
+    .limit(20000);
+  const r = regs ?? [];
+
+  const conteo = new Map<string, number>();
+  const porHora = new Array(24).fill(0);
+  const porDia = new Array(7).fill(0); // 0 = domingo
+  let sumaInt = 0;
+  for (const x of r) {
+    conteo.set(x.emocion_principal_key, (conteo.get(x.emocion_principal_key) ?? 0) + 1);
+    sumaInt += x.intensidad;
+    if (x.hora) {
+      const h = parseInt(String(x.hora).slice(0, 2), 10);
+      if (h >= 0 && h < 24) porHora[h]++;
+    }
+    if (x.fecha) {
+      const d = new Date(String(x.fecha) + 'T00:00:00');
+      if (!Number.isNaN(d.getTime())) porDia[d.getDay()]++;
+    }
+  }
+  const topEmociones = [...conteo.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([k, n]) => ({ nombre: nombreEmocion.get(k) ?? k, n }));
+
+  return {
+    totalRegistros: r.length,
+    intensidadPromedio: r.length ? Math.round((sumaInt / r.length) * 10) / 10 : null,
+    topEmociones,
+    porHora,
+    porDia,
+  };
+}
+
+/** Totales de impacto de la plataforma. */
+export async function impactoTotales(): Promise<{
+  pacientesAcompanados: number;
+  terapeutas: number;
+  registros: number;
+  sesiones: number;
+  diario: number;
+  mensajes: number;
+}> {
+  const db = admin();
+  const [pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes] =
+    await Promise.all([
+      contar(db, 'vinculaciones', (q) => q.eq('estado', 'activa')),
+      contar(db, 'profiles', (q) => q.eq('rol', 'terapeuta')),
+      contar(db, 'registros_emocionales'),
+      contar(db, 'sesiones', (q) => q.eq('estado', 'realizada')),
+      contar(db, 'diario_entradas'),
+      contar(db, 'mensajes'),
+    ]);
+  return { pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes };
+}
+
 export async function cargarMetricasOwner(): Promise<MetricasOwner> {
   const db = admin();
   const desde7 = new Date(Date.now() - 7 * 86400000).toISOString();

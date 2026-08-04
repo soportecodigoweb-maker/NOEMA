@@ -49,13 +49,22 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Link href="/admin" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
-              Panorama
-            </Link>
-            <Link href="/admin/vincular" className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone">
-              Vincular
-            </Link>
+          <nav className="flex flex-wrap items-center gap-0.5">
+            {[
+              { href: '/admin', label: 'Panorama' },
+              { href: '/admin/metricas', label: 'Métricas' },
+              { href: '/admin/analitica', label: 'Analítica' },
+              { href: '/admin/impacto', label: 'Impacto' },
+              { href: '/admin/vincular', label: 'Vincular' },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="rounded-md px-3 py-2 text-sm text-bone/70 hover:bg-bone/[0.06] hover:text-bone"
+              >
+                {l.label}
+              </Link>
+            ))}
             <form action={signOutAction}>
               <button
                 type="submit"
@@ -64,7 +73,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 <LogOut className="size-4" strokeWidth={1.7} /> Salir
               </button>
             </form>
-          </div>
+          </nav>
         </div>
       </header>
 
