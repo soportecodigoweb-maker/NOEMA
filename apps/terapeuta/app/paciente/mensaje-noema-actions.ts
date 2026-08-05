@@ -79,7 +79,7 @@ export async function obtenerMensajeNoemaAction(): Promise<{
 
   const { data: registros } = await supabase
     .from('registros_emocionales')
-    .select('emocion_principal_key, intensidad, necesidad, registrado_at')
+    .select('emocion_principal_key, intensidad, necesidad, registrado_at, hora')
     .eq('paciente_id', user.id)
     .gte('registrado_at', desde.toISOString())
     .order('registrado_at', { ascending: false })
@@ -161,6 +161,31 @@ interface RegistroMinimo {
   intensidad: number;
   necesidad: string | null;
   registrado_at: string;
+  hora: string | null;
+}
+
+/**
+ * Hora REAL del registro según el paciente. Usa el campo `hora` que él capturó;
+ * si falta, convierte el timestamp a la zona horaria de México (no la del
+ * servidor, que corre en UTC y desfasaba el "momento del día").
+ */
+function horaDelRegistro(r: RegistroMinimo): number {
+  if (r.hora) {
+    const h = parseInt(String(r.hora).slice(0, 2), 10);
+    if (!Number.isNaN(h) && h >= 0 && h < 24) return h;
+  }
+  try {
+    const h = Number(
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Mexico_City',
+        hour: '2-digit',
+        hour12: false,
+      }).format(new Date(r.registrado_at)),
+    );
+    return Number.isNaN(h) ? 12 : h % 24;
+  } catch {
+    return 12;
+  }
 }
 
 /**
@@ -182,7 +207,7 @@ function resumirRegistros(registros: RegistroMinimo[]): {
     if (r.necesidad) conteoNecesidad[r.necesidad] = (conteoNecesidad[r.necesidad] ?? 0) + 1;
     sumaIntensidad += r.intensidad;
 
-    const hora = new Date(r.registrado_at).getHours();
+    const hora = horaDelRegistro(r);
     const franja = hora < 12 ? 'mañana' : hora < 19 ? 'tarde' : 'noche';
     franjas[franja] = (franjas[franja] ?? 0) + 1;
   }
