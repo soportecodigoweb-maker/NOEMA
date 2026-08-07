@@ -159,6 +159,34 @@ export async function impactoTotales(): Promise<{
   return { pacientesAcompanados, terapeutas, registros, sesiones, diario, mensajes };
 }
 
+export async function cargarSatisfaccion(): Promise<{
+  promedio: number | null;
+  total: number;
+  recientes: { nombre: string; rol: string | null; calificacion: number; comentario: string | null; fecha: string }[];
+}> {
+  const db = admin();
+  const { data } = await db
+    .from('encuestas_satisfaccion')
+    .select('usuario_nombre, rol, calificacion, comentario, creado_at')
+    .order('creado_at', { ascending: false })
+    .limit(200);
+  const r = data ?? [];
+  const promedio = r.length
+    ? Math.round((r.reduce((s, x) => s + x.calificacion, 0) / r.length) * 10) / 10
+    : null;
+  return {
+    promedio,
+    total: r.length,
+    recientes: r.slice(0, 12).map((x) => ({
+      nombre: x.usuario_nombre || 'Usuario',
+      rol: x.rol,
+      calificacion: x.calificacion,
+      comentario: x.comentario,
+      fecha: fmt(x.creado_at),
+    })),
+  };
+}
+
 export interface DatosLegales {
   totalConsentimientos: number;
   porVersion: { version: string; n: number }[];

@@ -7,6 +7,7 @@ import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { SoporteBoton } from '@/components/soporte/SoporteBoton';
+import { EncuestaSatisfaccion } from '@/components/soporte/EncuestaSatisfaccion';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -81,6 +82,15 @@ export default async function PanelLayout({
     redirect('/aviso-confidencialidad');
   }
 
+  // Encuesta de satisfacción: se muestra si no respondió en los últimos 14 días.
+  const hace14 = new Date(Date.now() - 14 * 86400000).toISOString();
+  const { count: encuestasRecientes } = await supabase
+    .from('encuestas_satisfaccion')
+    .select('*', { count: 'exact', head: true })
+    .eq('usuario_id', user.id)
+    .gte('creado_at', hace14);
+  const mostrarEncuesta = (encuestasRecientes ?? 0) === 0;
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar
@@ -107,6 +117,9 @@ export default async function PanelLayout({
 
       {/* Botón de ayuda / soporte → llega al Panel de Dueño */}
       <SoporteBoton />
+
+      {/* Encuesta de satisfacción ocasional → llega al Panel de Dueño */}
+      <EncuestaSatisfaccion mostrar={mostrarEncuesta} />
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion

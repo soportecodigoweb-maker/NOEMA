@@ -2301,6 +2301,36 @@ export type Database = {
           },
         ]
       }
+      encuestas_satisfaccion: {
+        Row: {
+          calificacion: number
+          comentario: string | null
+          creado_at: string
+          id: string
+          rol: string | null
+          usuario_id: string | null
+          usuario_nombre: string | null
+        }
+        Insert: {
+          calificacion: number
+          comentario?: string | null
+          creado_at?: string
+          id?: string
+          rol?: string | null
+          usuario_id?: string | null
+          usuario_nombre?: string | null
+        }
+        Update: {
+          calificacion?: number
+          comentario?: string | null
+          creado_at?: string
+          id?: string
+          rol?: string | null
+          usuario_id?: string | null
+          usuario_nombre?: string | null
+        }
+        Relationships: []
+      }
       solicitudes_soporte: {
         Row: {
           asunto: string | null

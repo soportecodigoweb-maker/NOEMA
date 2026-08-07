@@ -1,17 +1,21 @@
-import { Stethoscope, HeartHandshake, Building2, Link2, Clock, Archive, TrendingUp, DollarSign, Activity, Star } from 'lucide-react';
-import { cargarMetricasOwner, metricasActividad } from './data';
+import { Stethoscope, HeartHandshake, Building2, Link2, Clock, Archive, TrendingUp, DollarSign, Activity, Star, MessageSquareQuote } from 'lucide-react';
+import { cargarMetricasOwner, metricasActividad, cargarSatisfaccion } from './data';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Panel de dueño · NOEMA' };
 
 export default async function OwnerPage() {
-  const [m, act] = await Promise.all([cargarMetricasOwner(), metricasActividad()]);
+  const [m, act, sat] = await Promise.all([
+    cargarMetricasOwner(),
+    metricasActividad(),
+    cargarSatisfaccion(),
+  ]);
 
   const stats = [
     { label: 'Terapeutas', valor: m.terapeutas, sub: `${m.terapeutasVerificados} verificados`, icon: Stethoscope },
     { label: 'Pacientes', valor: m.pacientes, sub: `${m.nuevos7d} nuevos (7 días)`, icon: HeartHandshake },
     { label: 'Usuarios activos (30 días)', valor: act.activos30d, sub: `${act.activosHoy} activos hoy`, icon: Activity },
-    { label: 'Calificación promedio', valor: '—', sub: 'con la encuesta de satisfacción', icon: Star },
+    { label: 'Calificación promedio', valor: sat.promedio != null ? `${sat.promedio}/5` : '—', sub: `${sat.total} respuestas`, icon: Star },
     { label: 'Centros', valor: m.centros, sub: 'clínicas registradas', icon: Building2 },
     { label: 'Vinculaciones activas', valor: m.vincActivas, sub: `${m.vincPendientes} pendientes`, icon: Link2 },
     { label: 'Canalizaciones pendientes', valor: m.canalizacionesPendientes, sub: 'esperando al paciente', icon: Clock },
@@ -65,6 +69,32 @@ export default async function OwnerPage() {
           </div>
         </div>
       </section>
+
+      {/* Retroalimentación de la encuesta */}
+      {sat.recientes.length > 0 && (
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 font-serif text-lg text-ink">
+            <MessageSquareQuote className="size-5 text-noema-sage" /> Retroalimentación reciente
+          </h2>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {sat.recientes
+              .filter((s) => s.comentario)
+              .slice(0, 6)
+              .map((s, i) => (
+                <li key={i} className="rounded-2xl border border-noema-deep/10 bg-white p-4">
+                  <div className="mb-1 flex items-center gap-1 text-noema-clay">
+                    {'★'.repeat(s.calificacion)}
+                    <span className="text-noema-deep/20">{'★'.repeat(5 - s.calificacion)}</span>
+                  </div>
+                  <p className="text-sm text-ink/85">{s.comentario}</p>
+                  <p className="mt-1 text-xs text-foreground-muted">
+                    {s.nombre}{s.rol ? ` · ${s.rol}` : ''} · {s.fecha}
+                  </p>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Registros recientes */}
