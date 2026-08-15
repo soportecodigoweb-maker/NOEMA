@@ -10,6 +10,11 @@ function admin() {
   });
 }
 
+function unwrapNota<T>(x: T | T[] | null | undefined): T | null {
+  if (Array.isArray(x)) return x[0] ?? null;
+  return x ?? null;
+}
+
 export interface TerapeutaCentro {
   terapeutaId: string;
   nombre: string;
@@ -98,6 +103,179 @@ export async function listaTerapeutasCentro(
     nombre: m.terapeuta_nombre ?? 'Terapeuta',
     pacientes: conteo.get(m.terapeuta_id) ?? 0,
   }));
+}
+
+export interface SupervisionCentro {
+  activa: boolean;
+  terapeutas: {
+    terapeutaId: string;
+    nombre: string;
+    autorizada: boolean;
+    pacientes: { vinculacionId: string; nombre: string; estado: string }[];
+  }[];
+}
+
+/** Datos para la sección Supervisión del centro. */
+export async function datosSupervision(centroId: string): Promise<SupervisionCentro> {
+  const db = admin();
+  const [{ data: centro }, { data: miembros }] = await Promise.all([
+    db.from('centros').select('supervision_clinica').eq('profile_id', centroId).maybeSingle(),
+    db
+      .from('centro_terapeutas')
+      .select('terapeuta_id, terapeuta_nombre, supervision_autorizada')
+      .eq('centro_id', centroId)
+      .eq('estado', 'activa')
+      .order('vinculado_at', { ascending: true }),
+  ]);
+  const tids = (miembros ?? []).map((m) => m.terapeuta_id);
+  const vincByT = new Map<string, { vinculacionId: string; nombre: string; estado: string }[]>();
+  if (tids.length) {
+    const { data: vincs } = await db
+      .from('vinculaciones')
+      .select('id, terapeuta_id, paciente_id, estado')
+      .in('terapeuta_id', tids)
+      .eq('estado', 'activa');
+    const pacIds = [...new Set((vincs ?? []).map((v) => v.paciente_id).filter((x): x is string => !!x))];
+    const nombres = new Map<string, string>();
+    if (pacIds.length) {
+      const { data: profs } = await db.from('profiles').select('id, nombre').in('id', pacIds);
+      for (const p of profs ?? []) nombres.set(p.id, p.nombre);
+    }
+    for (const v of vincs ?? []) {
+      const arr = vincByT.get(v.terapeuta_id) ?? [];
+      arr.push({
+        vinculacionId: v.id,
+        nombre: (v.paciente_id && nombres.get(v.paciente_id)) || 'Paciente',
+        estado: v.estado,
+      });
+      vincByT.set(v.terapeuta_id, arr);
+    }
+  }
+  return {
+    activa: centro?.supervision_clinica ?? false,
+    terapeutas: (miembros ?? []).map((m) => ({
+      terapeutaId: m.terapeuta_id,
+      nombre: m.terapeuta_nombre ?? 'Terapeuta',
+      autorizada: m.supervision_autorizada,
+      pacientes: vincByT.get(m.terapeuta_id) ?? [],
+    })),
+  };
+}
+
+export interface ProcesoSupervision {
+  permitido: true;
+  pacienteNombre: string;
+  terapeutaId: string;
+  terapeutaNombre: string;
+  registros: { total: number; promedio: number | null; top: string; recientes: string[] };
+  tareas: { total: number; completadas: number; titulos: string[] };
+  notas: { objetivos: string[]; plan: string | null; observaciones: string[] };
+}
+
+/** Verifica el acceso y reúne el proceso del paciente para supervisión. */
+export async function procesoSupervision(
+  centroId: string,
+  vinculacionId: string,
+): Promise<ProcesoSupervision | { permitido: false; terapeutaId: string; terapeutaNombre: string } | null> {
+  const db = admin();
+  const { data: vinc } = await db
+    .from('vinculaciones')
+    .select('id, terapeuta_id, paciente_id')
+    .eq('id', vinculacionId)
+    .maybeSingle();
+  if (!vinc) return null;
+
+  const { data: ct } = await db
+    .from('centro_terapeutas')
+    .select('terapeuta_nombre, supervision_autorizada')
+    .eq('centro_id', centroId)
+    .eq('terapeuta_id', vinc.terapeuta_id)
+    .maybeSingle();
+  if (!ct) return null;
+  const terapeutaNombre = ct.terapeuta_nombre ?? 'Terapeuta';
+
+  const { data: centro } = await db
+    .from('centros')
+    .select('supervision_clinica')
+    .eq('profile_id', centroId)
+    .maybeSingle();
+
+  let permitido = !!(centro?.supervision_clinica && ct.supervision_autorizada);
+  if (!permitido) {
+    const { data: sol } = await db
+      .from('supervision_solicitudes')
+      .select('expira_at')
+      .eq('vinculacion_id', vinculacionId)
+      .eq('estado', 'autorizada')
+      .order('creado_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (sol?.expira_at && new Date(sol.expira_at) > new Date()) permitido = true;
+  }
+  if (!permitido) return { permitido: false, terapeutaId: vinc.terapeuta_id, terapeutaNombre };
+
+  const desde = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+  const [{ data: pac }, { data: catalogo }, { data: regs }, { data: tareas }, { data: sesiones }] =
+    await Promise.all([
+      db.from('profiles').select('nombre').eq('id', vinc.paciente_id ?? '').maybeSingle(),
+      db.from('emociones_catalogo').select('key, nombre_es'),
+      db
+        .from('registros_emocionales')
+        .select('emocion_principal_key, intensidad, situacion_detonante, fecha, privacidad')
+        .eq('paciente_id', vinc.paciente_id ?? '')
+        .in('privacidad', ['compartido', 'marcado_sesion'])
+        .gte('fecha', desde)
+        .order('fecha', { ascending: false })
+        .limit(60),
+      db.from('tareas').select('titulo, estado').eq('vinculacion_id', vinculacionId).limit(60),
+      db
+        .from('sesiones')
+        .select('nota:sesion_notas(objetivos_trabajados, contenido_publico, plan_proxima_sesion)')
+        .eq('vinculacion_id', vinculacionId)
+        .eq('estado', 'realizada')
+        .order('fecha_programada', { ascending: false })
+        .limit(8),
+    ]);
+
+  const nombreEmocion = new Map((catalogo ?? []).map((e) => [e.key, e.nombre_es]));
+  const r = regs ?? [];
+  const prom = r.length ? Math.round((r.reduce((s, x) => s + x.intensidad, 0) / r.length) * 10) / 10 : null;
+  const conteo = new Map<string, number>();
+  for (const x of r) conteo.set(x.emocion_principal_key, (conteo.get(x.emocion_principal_key) ?? 0) + 1);
+  const top = [...conteo.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([k, n]) => `${nombreEmocion.get(k) ?? k} (${n})`)
+    .join(', ');
+  const recientes = r
+    .slice(0, 8)
+    .map(
+      (x) =>
+        `${nombreEmocion.get(x.emocion_principal_key) ?? x.emocion_principal_key} (${x.intensidad}/5)${x.situacion_detonante ? ` — ${x.situacion_detonante}` : ''}`,
+    );
+
+  const t = tareas ?? [];
+  const objetivosSet = new Set<string>();
+  const observaciones: string[] = [];
+  let plan: string | null = null;
+  for (const s of sesiones ?? []) {
+    const nota = unwrapNota(s.nota) as
+      | { objetivos_trabajados?: string[]; contenido_publico?: string | null; plan_proxima_sesion?: string | null }
+      | null;
+    for (const o of nota?.objetivos_trabajados ?? []) objetivosSet.add(o);
+    if (nota?.contenido_publico) observaciones.push(nota.contenido_publico);
+    if (!plan && nota?.plan_proxima_sesion) plan = nota.plan_proxima_sesion;
+  }
+
+  return {
+    permitido: true,
+    pacienteNombre: pac?.nombre ?? 'Paciente',
+    terapeutaId: vinc.terapeuta_id,
+    terapeutaNombre,
+    registros: { total: r.length, promedio: prom, top: top || 'sin datos', recientes },
+    tareas: { total: t.length, completadas: t.filter((x) => x.estado === 'completada').length, titulos: t.slice(0, 8).map((x) => x.titulo) },
+    notas: { objetivos: [...objetivosSet], plan, observaciones: observaciones.slice(0, 5) },
+  };
 }
 
 export interface DetalleTerapeuta {
