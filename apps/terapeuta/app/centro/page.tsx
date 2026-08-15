@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { KeyRound, Users, HeartPulse, CalendarCheck, ArrowRightLeft, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { estadisticasCentro } from './data';
+import { ToggleSupervision } from '@/components/centro/ToggleSupervision';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Centro terapéutico' };
@@ -15,7 +16,11 @@ export default async function CentroPage() {
   if (!user) redirect('/signin');
 
   const [{ data: centro }, e] = await Promise.all([
-    supabase.from('centros').select('nombre_centro, codigo_centro, ciudad').eq('profile_id', user.id).maybeSingle(),
+    supabase
+      .from('centros')
+      .select('nombre_centro, codigo_centro, ciudad, supervision_clinica')
+      .eq('profile_id', user.id)
+      .maybeSingle(),
     estadisticasCentro(user.id),
   ]);
 
@@ -34,6 +39,9 @@ export default async function CentroPage() {
         <h1 className="font-serif text-3xl text-ink">{centro?.nombre_centro ?? 'Tu centro'}</h1>
         {centro?.ciudad && <p className="text-sm text-foreground-muted">{centro.ciudad}</p>}
       </div>
+
+      {/* Supervisión clínica */}
+      <ToggleSupervision inicial={centro?.supervision_clinica ?? false} />
 
       {/* Estadísticas */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

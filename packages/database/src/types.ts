@@ -350,6 +350,7 @@ export type Database = {
           descripcion: string | null
           nombre_centro: string
           profile_id: string
+          supervision_clinica: boolean
           telefono: string | null
         }
         Insert: {
@@ -360,6 +361,7 @@ export type Database = {
           descripcion?: string | null
           nombre_centro: string
           profile_id: string
+          supervision_clinica?: boolean
           telefono?: string | null
         }
         Update: {
@@ -370,6 +372,7 @@ export type Database = {
           descripcion?: string | null
           nombre_centro?: string
           profile_id?: string
+          supervision_clinica?: boolean
           telefono?: string | null
         }
         Relationships: []
@@ -379,6 +382,8 @@ export type Database = {
           centro_id: string
           estado: string
           id: string
+          supervision_autorizada: boolean
+          supervision_autorizada_at: string | null
           terapeuta_id: string
           terapeuta_nombre: string | null
           vinculado_at: string
@@ -387,6 +392,8 @@ export type Database = {
           centro_id: string
           estado?: string
           id?: string
+          supervision_autorizada?: boolean
+          supervision_autorizada_at?: string | null
           terapeuta_id: string
           terapeuta_nombre?: string | null
           vinculado_at?: string
@@ -395,9 +402,92 @@ export type Database = {
           centro_id?: string
           estado?: string
           id?: string
+          supervision_autorizada?: boolean
+          supervision_autorizada_at?: string | null
           terapeuta_id?: string
           terapeuta_nombre?: string | null
           vinculado_at?: string
+        }
+        Relationships: []
+      }
+      supervision_solicitudes: {
+        Row: {
+          centro_id: string
+          creado_at: string
+          estado: string
+          expira_at: string | null
+          id: string
+          resuelto_at: string | null
+          terapeuta_id: string
+          vinculacion_id: string
+        }
+        Insert: {
+          centro_id: string
+          creado_at?: string
+          estado?: string
+          expira_at?: string | null
+          id?: string
+          resuelto_at?: string | null
+          terapeuta_id: string
+          vinculacion_id: string
+        }
+        Update: {
+          centro_id?: string
+          creado_at?: string
+          estado?: string
+          expira_at?: string | null
+          id?: string
+          resuelto_at?: string | null
+          terapeuta_id?: string
+          vinculacion_id?: string
+        }
+        Relationships: []
+      }
+      supervision_accesos: {
+        Row: {
+          accedido_at: string
+          centro_id: string
+          id: string
+          terapeuta_id: string | null
+          vinculacion_id: string | null
+        }
+        Insert: {
+          accedido_at?: string
+          centro_id: string
+          id?: string
+          terapeuta_id?: string | null
+          vinculacion_id?: string | null
+        }
+        Update: {
+          accedido_at?: string
+          centro_id?: string
+          id?: string
+          terapeuta_id?: string | null
+          vinculacion_id?: string | null
+        }
+        Relationships: []
+      }
+      supervision_comentarios: {
+        Row: {
+          centro_id: string
+          creado_at: string
+          id: string
+          terapeuta_id: string
+          texto: string
+        }
+        Insert: {
+          centro_id: string
+          creado_at?: string
+          id?: string
+          terapeuta_id: string
+          texto: string
+        }
+        Update: {
+          centro_id?: string
+          creado_at?: string
+          id?: string
+          terapeuta_id?: string
+          texto?: string
         }
         Relationships: []
       }

@@ -8,6 +8,7 @@ import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { EncuestaSatisfaccion } from '@/components/soporte/EncuestaSatisfaccion';
+import { SupervisionPendiente } from '@/components/supervision/SupervisionPendiente';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -91,6 +92,25 @@ export default async function PanelLayout({
     .gte('creado_at', hace14);
   const mostrarEncuesta = (encuestasRecientes ?? 0) === 0;
 
+  // Supervisión clínica pendiente de autorizar (si su centro la activó).
+  const { data: membresiaSup } = await supabase
+    .from('centro_terapeutas')
+    .select('centro_id, supervision_autorizada')
+    .eq('terapeuta_id', user.id)
+    .eq('estado', 'activa')
+    .maybeSingle();
+  let supervisionPendiente: { centroId: string; centroNombre: string } | null = null;
+  if (membresiaSup && !membresiaSup.supervision_autorizada) {
+    const { data: c } = await supabase
+      .from('centros')
+      .select('nombre_centro, supervision_clinica')
+      .eq('profile_id', membresiaSup.centro_id)
+      .maybeSingle();
+    if (c?.supervision_clinica) {
+      supervisionPendiente = { centroId: membresiaSup.centro_id, centroNombre: c.nombre_centro };
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar
@@ -120,6 +140,14 @@ export default async function PanelLayout({
 
       {/* Encuesta de satisfacción ocasional → llega al Panel de Dueño */}
       <EncuestaSatisfaccion mostrar={mostrarEncuesta} />
+
+      {/* Autorización de supervisión clínica (si el centro la activó) */}
+      {supervisionPendiente && (
+        <SupervisionPendiente
+          centroId={supervisionPendiente.centroId}
+          centroNombre={supervisionPendiente.centroNombre}
+        />
+      )}
 
       {/* Aviso emergente, según Ajustes → Mis notificaciones */}
       <AvisoNotificacion
