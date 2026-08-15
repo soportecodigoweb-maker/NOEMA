@@ -9,6 +9,8 @@ import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { EncuestaSatisfaccion } from '@/components/soporte/EncuestaSatisfaccion';
 import { SupervisionPendiente } from '@/components/supervision/SupervisionPendiente';
+import { SolicitudSupervisionPendiente } from '@/components/supervision/SolicitudSupervisionPendiente';
+import { solicitudSupervisionPendiente } from '../supervision-data';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
 
@@ -111,6 +113,9 @@ export default async function PanelLayout({
     }
   }
 
+  // Solicitud de acceso puntual pendiente (modo por-acceso).
+  const solicitudSup = supervisionPendiente ? null : await solicitudSupervisionPendiente(user.id);
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
       <Sidebar
@@ -146,6 +151,15 @@ export default async function PanelLayout({
         <SupervisionPendiente
           centroId={supervisionPendiente.centroId}
           centroNombre={supervisionPendiente.centroNombre}
+        />
+      )}
+
+      {/* Solicitud de acceso puntual (modo por-acceso) */}
+      {solicitudSup && (
+        <SolicitudSupervisionPendiente
+          solicitudId={solicitudSup.solicitudId}
+          pacienteNombre={solicitudSup.pacienteNombre}
+          centroNombre={solicitudSup.centroNombre}
         />
       )}
 

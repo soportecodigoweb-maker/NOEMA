@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { procesoSupervision } from '../../data';
 import { RegistrarAccesoSupervision } from '@/components/centro/RegistrarAccesoSupervision';
 import { ComentarPractica } from '@/components/centro/ComentarPractica';
+import { SolicitarAcceso } from '@/components/centro/SolicitarAcceso';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,11 +39,12 @@ export default async function SupervisionDetallePage({ params }: PageProps) {
           <div>
             <p className="font-medium text-ink">Acceso no autorizado</p>
             <p className="mt-1 text-sm text-foreground-muted">
-              {p.terapeutaNombre} aún no autoriza la supervisión de sus pacientes. Actívala en Inicio
-              para que reciba la solicitud.
+              Para revisar la información de este paciente necesitas la autorización de{' '}
+              {p.terapeutaNombre}. Puedes solicitarla; el terapeuta decide cada vez.
             </p>
           </div>
         </div>
+        <SolicitarAcceso vinculacionId={vinculacionId} pendiente={p.solicitudPendiente} />
       </div>
     );
   }

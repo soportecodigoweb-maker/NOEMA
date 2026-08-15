@@ -176,7 +176,11 @@ export interface ProcesoSupervision {
 export async function procesoSupervision(
   centroId: string,
   vinculacionId: string,
-): Promise<ProcesoSupervision | { permitido: false; terapeutaId: string; terapeutaNombre: string } | null> {
+): Promise<
+  | ProcesoSupervision
+  | { permitido: false; terapeutaId: string; terapeutaNombre: string; solicitudPendiente: boolean }
+  | null
+> {
   const db = admin();
   const { data: vinc } = await db
     .from('vinculaciones')
@@ -212,7 +216,21 @@ export async function procesoSupervision(
       .maybeSingle();
     if (sol?.expira_at && new Date(sol.expira_at) > new Date()) permitido = true;
   }
-  if (!permitido) return { permitido: false, terapeutaId: vinc.terapeuta_id, terapeutaNombre };
+  if (!permitido) {
+    const { data: pend } = await db
+      .from('supervision_solicitudes')
+      .select('id')
+      .eq('vinculacion_id', vinculacionId)
+      .eq('estado', 'pendiente')
+      .limit(1)
+      .maybeSingle();
+    return {
+      permitido: false,
+      terapeutaId: vinc.terapeuta_id,
+      terapeutaNombre,
+      solicitudPendiente: !!pend,
+    };
+  }
 
   const desde = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
   const [{ data: pac }, { data: catalogo }, { data: regs }, { data: tareas }, { data: sesiones }] =
@@ -280,6 +298,7 @@ export async function procesoSupervision(
 
 export interface DetalleTerapeuta {
   nombre: string;
+  estado: string;
   pacientes: { vinculacionId: string; nombre: string; estado: string; sesiones: number }[];
   otrosTerapeutas: { id: string; nombre: string }[];
 }
@@ -292,7 +311,7 @@ export async function detalleTerapeuta(
   const db = admin();
   const { data: miembro } = await db
     .from('centro_terapeutas')
-    .select('terapeuta_nombre')
+    .select('terapeuta_nombre, estado')
     .eq('centro_id', centroId)
     .eq('terapeuta_id', terapeutaId)
     .maybeSingle();
@@ -327,6 +346,7 @@ export async function detalleTerapeuta(
 
   return {
     nombre: miembro.terapeuta_nombre ?? 'Terapeuta',
+    estado: miembro.estado,
     pacientes: v.map((x) => ({
       vinculacionId: x.id,
       nombre: (x.paciente_id && nombres.get(x.paciente_id)) || 'Paciente',

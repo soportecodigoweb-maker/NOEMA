@@ -4,6 +4,7 @@ import { ChevronLeft, Eye } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { detalleTerapeuta } from '../../data';
 import { PacientesTerapeuta } from '@/components/centro/PacientesTerapeuta';
+import { GestionTerapeuta } from '@/components/centro/GestionTerapeuta';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,11 +32,19 @@ export default async function TerapeutaDetallePage({ params }: PageProps) {
         <ChevronLeft className="size-4" /> Terapeutas
       </Link>
 
-      <div>
-        <h1 className="font-serif text-3xl text-ink">{detalle.nombre}</h1>
-        <p className="text-sm text-foreground-muted">
-          {detalle.pacientes.length} paciente{detalle.pacientes.length === 1 ? '' : 's'} en total.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-serif text-3xl text-ink">{detalle.nombre}</h1>
+            {detalle.estado === 'inactiva' && (
+              <span className="rounded bg-emotion-cansado/30 px-2 py-0.5 text-[11px] text-ink/70">Suspendido</span>
+            )}
+          </div>
+          <p className="text-sm text-foreground-muted">
+            {detalle.pacientes.length} paciente{detalle.pacientes.length === 1 ? '' : 's'} en total.
+          </p>
+        </div>
+        <GestionTerapeuta terapeutaId={id} estado={detalle.estado} />
       </div>
 
       <PacientesTerapeuta pacientes={detalle.pacientes} otrosTerapeutas={detalle.otrosTerapeutas} />

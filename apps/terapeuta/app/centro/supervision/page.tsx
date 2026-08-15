@@ -36,7 +36,6 @@ export default async function SupervisionPage() {
       ) : (
         <div className="space-y-4">
           {s.terapeutas.map((t) => {
-            const puedeVer = s.activa && t.autorizada;
             return (
               <section key={t.terapeutaId} className="rounded-2xl border border-noema-deep/10 bg-white p-5">
                 <div className="mb-3 flex items-center justify-between gap-2">
@@ -56,28 +55,23 @@ export default async function SupervisionPage() {
                   <p className="text-sm text-foreground-muted">Sin pacientes activos.</p>
                 ) : (
                   <ul className="space-y-1.5">
-                    {t.pacientes.map((p) =>
-                      puedeVer ? (
+                    {t.pacientes.map((p) => {
+                      const puedeVer = s.activa && t.autorizada;
+                      return (
                         <li key={p.vinculacionId}>
                           <Link
                             href={`/centro/supervision/${p.vinculacionId}`}
                             className="flex items-center gap-3 rounded-lg border border-noema-deep/10 px-3 py-2 text-sm transition-colors hover:border-noema-sage/40"
                           >
                             <span className="flex-1 text-ink">{p.nombre}</span>
-                            <span className="text-xs text-noema-sage">Ver proceso</span>
+                            <span className={`text-xs ${puedeVer ? 'text-noema-sage' : 'text-foreground-muted'}`}>
+                              {puedeVer ? 'Ver proceso' : 'Solicitar acceso'}
+                            </span>
                             <ChevronRight className="size-4 text-foreground-muted" />
                           </Link>
                         </li>
-                      ) : (
-                        <li
-                          key={p.vinculacionId}
-                          className="flex items-center gap-3 rounded-lg border border-noema-deep/[0.06] px-3 py-2 text-sm text-foreground-muted"
-                        >
-                          <span className="flex-1">{p.nombre}</span>
-                          <span className="text-xs">Requiere autorización</span>
-                        </li>
-                      ),
-                    )}
+                      );
+                    })}
                   </ul>
                 )}
               </section>

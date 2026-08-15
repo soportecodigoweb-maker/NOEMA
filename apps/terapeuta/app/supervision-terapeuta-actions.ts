@@ -46,3 +46,49 @@ export async function autorizarSupervisionGeneralAction(
   revalidatePath('/', 'layout');
   return { ok: true };
 }
+
+/** El terapeuta autoriza (o rechaza) una solicitud de acceso PUNTUAL a un
+ *  paciente. Si autoriza, el centro puede verlo durante 48 horas. */
+export async function responderSolicitudSupervisionAction(
+  solicitudId: string,
+  autoriza: boolean,
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  const db = admin();
+  const { data: sol } = await db
+    .from('supervision_solicitudes')
+    .select('id, terapeuta_id, centro_id, vinculacion_id, estado')
+    .eq('id', solicitudId)
+    .maybeSingle();
+  if (!sol || sol.terapeuta_id !== user.id || sol.estado !== 'pendiente') return { ok: false };
+
+  const ahora = new Date();
+  const expira = new Date(ahora.getTime() + 48 * 3600 * 1000);
+  await db
+    .from('supervision_solicitudes')
+    .update({
+      estado: autoriza ? 'autorizada' : 'rechazada',
+      resuelto_at: ahora.toISOString(),
+      expira_at: autoriza ? expira.toISOString() : null,
+    })
+    .eq('id', solicitudId);
+
+  await db.from('notificaciones').insert({
+    destinatario_id: sol.centro_id,
+    tipo: 'supervision',
+    titulo: autoriza ? 'Acceso autorizado' : 'Acceso no autorizado',
+    cuerpo: autoriza
+      ? 'El terapeuta autorizó la revisión del paciente por 48 horas.'
+      : 'El terapeuta no autorizó la revisión del paciente.',
+    vinculacion_id: sol.vinculacion_id,
+    url: `/centro/supervision/${sol.vinculacion_id}`,
+  });
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}

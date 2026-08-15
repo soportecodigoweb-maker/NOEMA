@@ -107,6 +107,108 @@ export async function registrarAccesoSupervisionAction(
   return { ok: true };
 }
 
+/** El centro solicita acceso PUNTUAL a un paciente (cuando la supervisión
+ *  general no está activa/autorizada). El terapeuta debe autorizar cada vez. */
+export async function solicitarAccesoPacienteAction(
+  vinculacionId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+
+  const db = admin();
+  const { data: vinc } = await db
+    .from('vinculaciones')
+    .select('terapeuta_id')
+    .eq('id', vinculacionId)
+    .maybeSingle();
+  if (!vinc) return { ok: false, error: 'Paciente no encontrado.' };
+  const { data: ct } = await db
+    .from('centro_terapeutas')
+    .select('id')
+    .eq('centro_id', user.id)
+    .eq('terapeuta_id', vinc.terapeuta_id)
+    .maybeSingle();
+  if (!ct) return { ok: false, error: 'Ese terapeuta no pertenece a tu centro.' };
+
+  // Evitar duplicar solicitudes pendientes.
+  const { data: existe } = await db
+    .from('supervision_solicitudes')
+    .select('id')
+    .eq('vinculacion_id', vinculacionId)
+    .eq('estado', 'pendiente')
+    .maybeSingle();
+  if (!existe) {
+    await db.from('supervision_solicitudes').insert({
+      centro_id: user.id,
+      terapeuta_id: vinc.terapeuta_id,
+      vinculacion_id: vinculacionId,
+      estado: 'pendiente',
+    });
+    const { data: centro } = await db.from('centros').select('nombre_centro').eq('profile_id', user.id).maybeSingle();
+    await db.from('notificaciones').insert({
+      destinatario_id: vinc.terapeuta_id,
+      tipo: 'supervision',
+      titulo: 'Solicitud de acceso para supervisión',
+      cuerpo: `${centro?.nombre_centro ?? 'Tu centro'} solicita autorización para revisar la información de un paciente.`,
+      vinculacion_id: vinculacionId,
+      url: '/inicio',
+    });
+  }
+
+  revalidatePath(`/centro/supervision/${vinculacionId}`);
+  return { ok: true };
+}
+
+/** El centro suspende, reactiva o elimina a un terapeuta de su centro. */
+export async function gestionarTerapeutaCentroAction(
+  terapeutaId: string,
+  accion: 'suspender' | 'reactivar' | 'eliminar',
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  const db = admin();
+  const { data: ct } = await db
+    .from('centro_terapeutas')
+    .select('id')
+    .eq('centro_id', user.id)
+    .eq('terapeuta_id', terapeutaId)
+    .maybeSingle();
+  if (!ct) return { ok: false };
+
+  if (accion === 'eliminar') {
+    await db.from('centro_terapeutas').delete().eq('id', ct.id);
+  } else {
+    await db
+      .from('centro_terapeutas')
+      .update({ estado: accion === 'suspender' ? 'inactiva' : 'activa' })
+      .eq('id', ct.id);
+  }
+
+  const cuerpo =
+    accion === 'eliminar'
+      ? 'Tu vínculo con el centro terapéutico terminó.'
+      : accion === 'suspender'
+        ? 'Tu vínculo con el centro fue suspendido temporalmente.'
+        : 'Tu vínculo con el centro fue reactivado.';
+  await db.from('notificaciones').insert({
+    destinatario_id: terapeutaId,
+    tipo: 'centro',
+    titulo: 'Cambio en tu centro terapéutico',
+    cuerpo,
+    url: '/ajustes',
+  });
+
+  revalidatePath('/centro/terapeutas');
+  return { ok: true };
+}
+
 /** El supervisor (centro) deja una observación sobre la práctica del terapeuta. */
 export async function comentarPracticaAction(
   terapeutaId: string,
