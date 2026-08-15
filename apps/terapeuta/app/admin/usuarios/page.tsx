@@ -1,4 +1,5 @@
-import { Users, Search } from 'lucide-react';
+import Link from 'next/link';
+import { Users, Search, ChevronRight } from 'lucide-react';
 import { buscarUsuarios } from '../data';
 
 export const dynamic = 'force-dynamic';
@@ -56,21 +57,24 @@ export default async function UsuariosPage({ searchParams }: PageProps) {
               <th className="px-4 py-3 font-medium">Último acceso</th>
               <th className="px-4 py-3 font-medium">Suscripción</th>
               <th className="px-4 py-3 font-medium">Proceso</th>
+              <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody>
             {usuarios.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-foreground-muted">
+                <td colSpan={7} className="px-4 py-6 text-center text-foreground-muted">
                   Sin resultados.
                 </td>
               </tr>
             ) : (
               usuarios.map((u) => (
-                <tr key={u.id} className="border-b border-noema-deep/[0.04] last:border-0">
+                <tr key={u.id} className="border-b border-noema-deep/[0.04] transition-colors last:border-0 hover:bg-paper/40">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-ink">{u.nombre}</p>
-                    <p className="text-xs text-foreground-muted">{u.email}</p>
+                    <Link href={`/admin/usuarios/${u.id}`} className="block">
+                      <p className="font-medium text-ink">{u.nombre}</p>
+                      <p className="text-xs text-foreground-muted">{u.email}</p>
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`rounded px-2 py-0.5 text-[11px] ${ROL_COLOR[u.rol] ?? ''}`}>{u.rol}</span>
@@ -79,6 +83,11 @@ export default async function UsuariosPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3 text-foreground-muted">{u.ultimoAcceso}</td>
                   <td className="px-4 py-3 text-foreground-muted">{u.suscripcion}</td>
                   <td className="px-4 py-3 text-foreground-muted">{u.estadoProceso || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link href={`/admin/usuarios/${u.id}`} className="text-foreground-muted hover:text-ink">
+                      <ChevronRight className="ml-auto size-4" />
+                    </Link>
+                  </td>
                 </tr>
               ))
             )}

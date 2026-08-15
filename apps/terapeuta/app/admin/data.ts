@@ -312,6 +312,90 @@ export async function buscarUsuarios(q: string): Promise<UsuarioOwner[]> {
   });
 }
 
+export interface DetalleUsuario {
+  nombre: string;
+  email: string;
+  rol: string;
+  registro: string;
+  ultimoAcceso: string;
+  suscripcion: string;
+  telefono: string | null;
+  ciudad: string | null;
+  resumen: { label: string; valor: string | number }[];
+}
+
+/** Detalle de un usuario para el dueño: info básica y resumen NO clínico. */
+export async function detalleUsuario(id: string): Promise<DetalleUsuario | null> {
+  const db = admin();
+  const { data: p } = await db
+    .from('profiles')
+    .select('id, nombre, apellidos, email, rol, creado_at, telefono, ciudad')
+    .eq('id', id)
+    .maybeSingle();
+  if (!p) return null;
+
+  const { data: au } = await db.auth.admin.getUserById(id);
+  const last = au?.user?.last_sign_in_at ?? null;
+
+  let suscripcion = '—';
+  const resumen: { label: string; valor: string | number }[] = [];
+
+  if (p.rol === 'terapeuta') {
+    const [{ data: t }, { count: pac }] = await Promise.all([
+      db.from('terapeutas').select('plan_estado, cedula_profesional, estado_verificacion').eq('profile_id', id).maybeSingle(),
+      db.from('vinculaciones').select('*', { count: 'exact', head: true }).eq('terapeuta_id', id).eq('estado', 'activa'),
+    ]);
+    suscripcion = t?.plan_estado ?? 'sin_pago';
+    resumen.push({ label: 'Pacientes activos', valor: pac ?? 0 });
+    resumen.push({ label: 'Cédula', valor: t?.cedula_profesional ?? '—' });
+    resumen.push({ label: 'Verificación', valor: t?.estado_verificacion ?? '—' });
+  } else if (p.rol === 'paciente') {
+    suscripcion = 'gratis';
+    const { data: vinc } = await db
+      .from('vinculaciones')
+      .select('id, estado')
+      .eq('paciente_id', id)
+      .order('fecha_inicio', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const vid = vinc?.id;
+    const [{ count: regs }, { count: diario }, tareasRes, sesRes] = await Promise.all([
+      db.from('registros_emocionales').select('*', { count: 'exact', head: true }).eq('paciente_id', id),
+      db.from('diario_entradas').select('*', { count: 'exact', head: true }).eq('paciente_id', id),
+      vid
+        ? db.from('tareas').select('*', { count: 'exact', head: true }).eq('vinculacion_id', vid)
+        : Promise.resolve({ count: 0 }),
+      vid
+        ? db.from('sesiones').select('*', { count: 'exact', head: true }).eq('vinculacion_id', vid)
+        : Promise.resolve({ count: 0 }),
+    ]);
+    resumen.push({ label: 'Estado', valor: vinc ? `Vinculación ${vinc.estado}` : 'Sin terapeuta' });
+    resumen.push({ label: 'Registros emocionales', valor: regs ?? 0 });
+    resumen.push({ label: 'Entradas de diario', valor: diario ?? 0 });
+    resumen.push({ label: 'Tareas', valor: tareasRes.count ?? 0 });
+    resumen.push({ label: 'Sesiones', valor: sesRes.count ?? 0 });
+  } else if (p.rol === 'centro') {
+    const { count: teras } = await db
+      .from('centro_terapeutas')
+      .select('*', { count: 'exact', head: true })
+      .eq('centro_id', id)
+      .eq('estado', 'activa');
+    resumen.push({ label: 'Terapeutas del centro', valor: teras ?? 0 });
+  }
+
+  return {
+    nombre: [p.nombre, p.apellidos].filter(Boolean).join(' ') || 'Sin nombre',
+    email: p.email,
+    rol: p.rol,
+    registro: fmt(p.creado_at),
+    ultimoAcceso: last ? fmt(last) : 'nunca',
+    suscripcion,
+    telefono: p.telefono,
+    ciudad: p.ciudad,
+    resumen,
+  };
+}
+
 export interface SolicitudOwner {
   id: string;
   tipo: string;
