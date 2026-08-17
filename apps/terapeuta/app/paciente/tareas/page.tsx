@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ResponderTarea } from '@/components/paciente/ResponderTarea';
+import { TablaRespuesta } from '@/components/paciente/TablaRespuesta';
 import { HojaMembretada } from '@/components/ui/HojaMembretada';
 import { ListaMateriales } from '@/components/recursos/ListaMateriales';
 import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
@@ -44,7 +45,7 @@ export default async function TareasPacientePage() {
   const { data: tareas } = await supabase
     .from('tareas')
     .select(`
-      id, titulo, descripcion, contenido_md, comentarios_terapeuta, fecha_limite, estado, campos_respuesta, recursos,
+      id, titulo, descripcion, contenido_md, comentarios_terapeuta, fecha_limite, estado, campos_respuesta, recursos, tabla_columnas,
       respuestas:tarea_respuestas(
         id, retroalimentacion, retroalimentacion_at,
         respuestas, texto_libre, dificultad_percibida, creado_at
@@ -72,6 +73,10 @@ export default async function TareasPacientePage() {
               .filter((r) => r.retroalimentacion)
               .sort((a, b) => (b.retroalimentacion_at ?? '').localeCompare(a.retroalimentacion_at ?? ''))[0];
             const campos = Array.isArray(t.campos_respuesta) ? (t.campos_respuesta as unknown[]) : [];
+            // Ejercicios en formato tabla (auto-registros).
+            const columnasTabla = Array.isArray(t.tabla_columnas)
+              ? (t.tabla_columnas as { key: string; label: string }[])
+              : null;
             // Respuesta más reciente del paciente (si ya la envió).
             const previa = (t.respuestas ?? [])
               .filter((r) => r.creado_at)
@@ -115,6 +120,22 @@ export default async function TareasPacientePage() {
                     </div>
                   )}
 
+                  {columnasTabla && columnasTabla.length > 0 ? (
+                    <TablaRespuesta
+                      tareaId={t.id}
+                      columnas={columnasTabla}
+                      filasPrevias={(() => {
+                        const raw = (previa?.respuestas as Record<string, unknown> | null)?.tabla;
+                        if (typeof raw !== 'string') return null;
+                        try {
+                          const parsed = JSON.parse(raw) as { filas?: string[][] };
+                          return Array.isArray(parsed.filas) ? parsed.filas : null;
+                        } catch {
+                          return null;
+                        }
+                      })()}
+                    />
+                  ) : (
                   <ResponderTarea
                     tareaId={t.id}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,6 +152,7 @@ export default async function TareasPacientePage() {
                         : null
                     }
                   />
+                  )}
                 </HojaMembretada>
               </li>
             );

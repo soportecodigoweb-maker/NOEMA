@@ -14,6 +14,19 @@ export async function asignarPlantillaAction(
   const tituloEditado = String(formData.get('titulo') ?? '').trim();
   const descripcionEditada = String(formData.get('descripcion') ?? '').trim();
   const contenidoEditado = String(formData.get('contenido') ?? '').trim();
+  // Formato tabla: el terapeuta define las columnas.
+  const columnasRaw = String(formData.get('columnas') ?? '').trim();
+  let tablaColumnas: { key: string; label: string }[] | null = null;
+  if (columnasRaw) {
+    try {
+      const arr = JSON.parse(columnasRaw) as string[];
+      if (Array.isArray(arr) && arr.length > 0) {
+        tablaColumnas = arr.map((label, i) => ({ key: `c${i + 1}`, label: String(label) }));
+      }
+    } catch {
+      tablaColumnas = null;
+    }
+  }
 
   if (!plantillaId) return { ok: false, error: 'Selecciona una plantilla.' };
 
@@ -42,6 +55,7 @@ export async function asignarPlantillaAction(
     descripcion: descripcionEditada || plantilla.descripcion,
     contenido_md: contenidoEditado || plantilla.contenido_md,
     campos_respuesta: plantilla.campos_respuesta ?? [],
+    ...(tablaColumnas ? { tabla_columnas: tablaColumnas } : {}),
     recursos: plantilla.recursos ?? [],
     fecha_limite: fechaLimite || null,
     comentarios_terapeuta: mensaje || null,

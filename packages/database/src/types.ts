@@ -1965,6 +1965,7 @@ export type Database = {
       recordatorios_personales: {
         Row: {
           actualizado_at: string
+          compartida: boolean
           completado: boolean
           completado_at: string | null
           creado_at: string
@@ -1978,6 +1979,7 @@ export type Database = {
         }
         Insert: {
           actualizado_at?: string
+          compartida?: boolean
           completado?: boolean
           completado_at?: string | null
           creado_at?: string
@@ -1992,6 +1994,7 @@ export type Database = {
         }
         Update: {
           actualizado_at?: string
+          compartida?: boolean
           completado?: boolean
           completado_at?: string | null
           creado_at?: string
@@ -2665,6 +2668,7 @@ export type Database = {
           recordatorios: Json
           recursos: Json
           respuestas_visibles_terapeuta: boolean
+          tabla_columnas: Json | null
           titulo: string
           vinculacion_id: string
         }
@@ -2686,6 +2690,7 @@ export type Database = {
           recordatorios?: Json
           recursos?: Json
           respuestas_visibles_terapeuta?: boolean
+          tabla_columnas?: Json | null
           titulo: string
           vinculacion_id: string
         }
@@ -2707,6 +2712,7 @@ export type Database = {
           recordatorios?: Json
           recursos?: Json
           respuestas_visibles_terapeuta?: boolean
+          tabla_columnas?: Json | null
           titulo?: string
           vinculacion_id?: string
         }

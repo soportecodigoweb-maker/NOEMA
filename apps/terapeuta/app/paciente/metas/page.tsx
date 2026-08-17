@@ -14,7 +14,7 @@ export default async function MetasPage() {
 
   const { data: metas } = await supabase
     .from('recordatorios_personales')
-    .select('id, titulo, tipo, recurrencia, completado, completado_at')
+    .select('id, titulo, tipo, recurrencia, completado, completado_at, compartida')
     .eq('paciente_id', user.id)
     .order('creado_at', { ascending: false });
 

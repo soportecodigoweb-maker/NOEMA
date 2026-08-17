@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { CheckCircle2, Circle, Plus, Trash2, Sun, Target } from 'lucide-react';
-import { crearMetaAction, toggleMetaAction, eliminarMetaAction } from '../../../app/paciente/actions';
+import { CheckCircle2, Circle, Plus, Trash2, Sun, Target, Share2, Lock } from 'lucide-react';
+import { crearMetaAction, toggleMetaAction, eliminarMetaAction, compartirMetaAction } from '../../../app/paciente/actions';
 
 type Tipo = 'diario' | 'corto' | 'mediano' | 'largo';
 
@@ -13,6 +13,7 @@ interface Meta {
   recurrencia: string | null;
   completado: boolean;
   completado_at: string | null;
+  compartida?: boolean;
 }
 
 // getDay(): 0=Domingo … 6=Sábado. (Miércoles = X, para no chocar con Martes = M.)
@@ -58,7 +59,7 @@ export function MetasClient({ iniciales }: { iniciales: Meta[] }) {
     if (!t) return;
     reset();
     const tmpId = crypto.randomUUID();
-    setMetas((prev) => [{ id: tmpId, titulo: t, tipo, recurrencia, completado: false, completado_at: null }, ...prev]);
+    setMetas((prev) => [{ id: tmpId, titulo: t, tipo, recurrencia, completado: false, completado_at: null, compartida: false }, ...prev]);
     startTransition(async () => {
       const res = await crearMetaAction(t, tipo, recurrencia);
       if (res.ok && res.id) {
@@ -77,6 +78,14 @@ export function MetasClient({ iniciales }: { iniciales: Meta[] }) {
     );
     startTransition(() => {
       toggleMetaAction(m.id, done);
+    });
+  };
+
+  const compartir = (m: Meta) => {
+    const nuevo = !m.compartida;
+    setMetas((prev) => prev.map((x) => (x.id === m.id ? { ...x, compartida: nuevo } : x)));
+    startTransition(() => {
+      compartirMetaAction(m.id, nuevo);
     });
   };
 
@@ -255,6 +264,19 @@ export function MetasClient({ iniciales }: { iniciales: Meta[] }) {
                           {m.completado ? <CheckCircle2 className="size-6 text-noema-sage" /> : <Circle className="size-6 text-ink/25" />}
                         </button>
                         <span className={`min-w-0 flex-1 text-sm ${m.completado ? 'text-ink/40 line-through' : 'text-ink'}`}>{m.titulo}</span>
+                        <button
+                          onClick={() => compartir(m)}
+                          aria-label={m.compartida ? 'Dejar privada' : 'Compartir con mi terapeuta'}
+                          title={m.compartida ? 'Compartida con tu terapeuta · toca para hacerla privada' : 'Privada · toca para compartirla con tu terapeuta'}
+                          className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors ${
+                            m.compartida
+                              ? 'bg-noema-sage/12 text-noema-sage hover:bg-noema-sage/20'
+                              : 'text-ink/40 hover:bg-ink/[0.04] hover:text-ink/70'
+                          }`}
+                        >
+                          {m.compartida ? <Share2 className="size-3.5" /> : <Lock className="size-3.5" />}
+                          {m.compartida ? 'Compartida' : 'Privada'}
+                        </button>
                         <button onClick={() => eliminar(m.id)} aria-label="Eliminar" className="shrink-0 text-ink/30 hover:text-red-600">
                           <Trash2 className="size-4" />
                         </button>

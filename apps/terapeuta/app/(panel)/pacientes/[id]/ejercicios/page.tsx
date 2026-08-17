@@ -22,6 +22,7 @@ interface Tarea {
   titulo: string;
   descripcion: string | null;
   campos_respuesta: CampoTarea[] | null;
+  tabla_columnas: { key: string; label: string }[] | null;
   fecha_limite: string | null;
   estado: string;
   creado_at: string;
@@ -48,7 +49,7 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
     supabase
       .from('tareas')
       .select(`
-        id, titulo, descripcion, campos_respuesta, fecha_limite, estado, creado_at,
+        id, titulo, descripcion, campos_respuesta, tabla_columnas, fecha_limite, estado, creado_at,
         respuestas:tarea_respuestas(id, fecha, respuestas, texto_libre, dificultad_percibida, retroalimentacion)
       `)
       .eq('vinculacion_id', id)
@@ -118,6 +119,37 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
                       <p className="caption">{t.respuestas.length} respuesta(s) del paciente</p>
                       {t.respuestas.slice(0, 3).map((r) => (
                         <div key={r.id} className="text-sm border-l-2 border-noema-sage/40 pl-3 py-1">
+                          {(() => {
+                            const raw = (r.respuestas as Record<string, unknown> | null)?.tabla;
+                            if (typeof raw !== 'string') return null;
+                            let parsed: { columnas?: string[]; filas?: string[][] } | null = null;
+                            try { parsed = JSON.parse(raw); } catch { return null; }
+                            const cols = parsed?.columnas ?? (t.tabla_columnas ?? []).map((c) => c.label);
+                            const filas = parsed?.filas ?? [];
+                            if (filas.length === 0) return null;
+                            return (
+                              <div className="mb-2 overflow-x-auto rounded-lg border border-noema-deep/10">
+                                <table className="w-full min-w-[420px] text-xs">
+                                  <thead>
+                                    <tr className="bg-paper/60">
+                                      {cols.map((c, ci) => (
+                                        <th key={ci} className="border-b border-noema-deep/10 px-2.5 py-1.5 text-left font-medium text-ink/70">{c}</th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {filas.map((fila, fi) => (
+                                      <tr key={fi} className="border-b border-noema-deep/[0.06] last:border-0">
+                                        {cols.map((_, ci) => (
+                                          <td key={ci} className="whitespace-pre-wrap px-2.5 py-1.5 align-top text-ink/85">{fila[ci] || '—'}</td>
+                                        ))}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            );
+                          })()}
                           {t.campos_respuesta && t.campos_respuesta.length > 0 && r.respuestas && (
                             <dl className="mb-1.5 space-y-1">
                               {t.campos_respuesta.map((c) => {

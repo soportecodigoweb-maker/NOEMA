@@ -198,6 +198,23 @@ export async function toggleMetaAction(id: string, completado: boolean): Promise
   return { ok: true };
 }
 
+/** El paciente decide si comparte una meta con su terapeuta o la deja privada. */
+export async function compartirMetaAction(id: string, compartida: boolean): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+  const { error } = await supabase
+    .from('recordatorios_personales')
+    .update({ compartida })
+    .eq('id', id)
+    .eq('paciente_id', user.id);
+  if (error) return { ok: false };
+  revalidatePath('/paciente/metas');
+  return { ok: true };
+}
+
 export async function eliminarMetaAction(id: string): Promise<{ ok: boolean }> {
   const supabase = await createClient();
   const { error } = await supabase.from('recordatorios_personales').delete().eq('id', id);
