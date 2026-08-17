@@ -15,6 +15,10 @@ import {
   Eye,
   ShieldCheck,
   Building2,
+  Wallet,
+  BellRing,
+  Library,
+  MessagesSquare,
   LogOut,
   Menu,
   X,
@@ -45,7 +49,11 @@ const MENUS: Record<'admin' | 'centro', Item[]> = {
   centro: [
     { href: '/centro', label: 'Inicio', icon: LayoutDashboard, exact: true },
     { href: '/centro/terapeutas', label: 'Terapeutas', icon: Users },
+    { href: '/centro/finanzas', label: 'Finanzas', icon: Wallet },
+    { href: '/centro/alertas', label: 'Alertas', icon: BellRing },
     { href: '/centro/supervision', label: 'Supervisión', icon: Eye },
+    { href: '/centro/recursos', label: 'Recursos', icon: Library },
+    { href: '/centro/comunicacion', label: 'Comunicación', icon: MessagesSquare },
   ],
 };
 

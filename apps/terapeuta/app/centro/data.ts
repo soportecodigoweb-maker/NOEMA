@@ -299,6 +299,17 @@ export async function procesoSupervision(
 export interface DetalleTerapeuta {
   nombre: string;
   estado: string;
+  perfil: {
+    email: string;
+    telefono: string | null;
+    ciudad: string | null;
+    titulo: string | null;
+    cedula: string | null;
+    especialidades: string[];
+    verificacion: string | null;
+    desde: string;
+  };
+  acuerdos: { id: string; titulo: string; enviado: string; firmado: string | null; firmaNombre: string | null }[];
   pacientes: { vinculacionId: string; nombre: string; estado: string; sesiones: number }[];
   otrosTerapeutas: { id: string; nombre: string }[];
 }
@@ -311,11 +322,29 @@ export async function detalleTerapeuta(
   const db = admin();
   const { data: miembro } = await db
     .from('centro_terapeutas')
-    .select('terapeuta_nombre, estado')
+    .select('terapeuta_nombre, estado, vinculado_at')
     .eq('centro_id', centroId)
     .eq('terapeuta_id', terapeutaId)
     .maybeSingle();
   if (!miembro) return null;
+
+  const fmtF = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('es-MX', { dateStyle: 'medium' }) : null;
+
+  const [{ data: prof }, { data: tera }, { data: acuerdos }] = await Promise.all([
+    db.from('profiles').select('email, telefono, ciudad').eq('id', terapeutaId).maybeSingle(),
+    db
+      .from('terapeutas')
+      .select('titulo, cedula_profesional, especialidades, estado_verificacion')
+      .eq('profile_id', terapeutaId)
+      .maybeSingle(),
+    db
+      .from('centro_acuerdos')
+      .select('id, titulo, enviado_at, firmado_at, firma_nombre')
+      .eq('centro_id', centroId)
+      .eq('terapeuta_id', terapeutaId)
+      .order('enviado_at', { ascending: false }),
+  ]);
 
   const { data: vincs } = await db
     .from('vinculaciones')
@@ -347,6 +376,23 @@ export async function detalleTerapeuta(
   return {
     nombre: miembro.terapeuta_nombre ?? 'Terapeuta',
     estado: miembro.estado,
+    perfil: {
+      email: prof?.email ?? '—',
+      telefono: prof?.telefono ?? null,
+      ciudad: prof?.ciudad ?? null,
+      titulo: tera?.titulo ?? null,
+      cedula: tera?.cedula_profesional ?? null,
+      especialidades: tera?.especialidades ?? [],
+      verificacion: tera?.estado_verificacion ?? null,
+      desde: fmtF(miembro.vinculado_at) ?? '—',
+    },
+    acuerdos: (acuerdos ?? []).map((a) => ({
+      id: a.id,
+      titulo: a.titulo,
+      enviado: fmtF(a.enviado_at) ?? '',
+      firmado: fmtF(a.firmado_at),
+      firmaNombre: a.firma_nombre,
+    })),
     pacientes: v.map((x) => ({
       vinculacionId: x.id,
       nombre: (x.paciente_id && nombres.get(x.paciente_id)) || 'Paciente',

@@ -348,9 +348,12 @@ export type Database = {
           codigo_centro: string | null
           creado_at: string
           descripcion: string | null
+          comision_pct: number
+          moneda: string
           nombre_centro: string
           profile_id: string
           supervision_clinica: boolean
+          tarifa_sesion: number
           telefono: string | null
         }
         Insert: {
@@ -359,9 +362,12 @@ export type Database = {
           codigo_centro?: string | null
           creado_at?: string
           descripcion?: string | null
+          comision_pct?: number
+          moneda?: string
           nombre_centro: string
           profile_id: string
           supervision_clinica?: boolean
+          tarifa_sesion?: number
           telefono?: string | null
         }
         Update: {
@@ -370,40 +376,211 @@ export type Database = {
           codigo_centro?: string | null
           creado_at?: string
           descripcion?: string | null
+          comision_pct?: number
+          moneda?: string
           nombre_centro?: string
           profile_id?: string
           supervision_clinica?: boolean
+          tarifa_sesion?: number
           telefono?: string | null
+        }
+        Relationships: []
+      }
+      centro_cobros: {
+        Row: {
+          centro_id: string
+          concepto: string | null
+          creado_at: string
+          fecha: string
+          id: string
+          metodo: string
+          monto: number
+          registrado_por: string | null
+          sesion_id: string | null
+          terapeuta_id: string | null
+          vinculacion_id: string | null
+        }
+        Insert: {
+          centro_id: string
+          concepto?: string | null
+          creado_at?: string
+          fecha?: string
+          id?: string
+          metodo?: string
+          monto: number
+          registrado_por?: string | null
+          sesion_id?: string | null
+          terapeuta_id?: string | null
+          vinculacion_id?: string | null
+        }
+        Update: {
+          centro_id?: string
+          concepto?: string | null
+          creado_at?: string
+          fecha?: string
+          id?: string
+          metodo?: string
+          monto?: number
+          registrado_por?: string | null
+          sesion_id?: string | null
+          terapeuta_id?: string | null
+          vinculacion_id?: string | null
+        }
+        Relationships: []
+      }
+      centro_acuerdos: {
+        Row: {
+          centro_id: string
+          contenido: string
+          enviado_at: string
+          firma_nombre: string | null
+          firmado_at: string | null
+          id: string
+          terapeuta_id: string
+          titulo: string
+        }
+        Insert: {
+          centro_id: string
+          contenido: string
+          enviado_at?: string
+          firma_nombre?: string | null
+          firmado_at?: string | null
+          id?: string
+          terapeuta_id: string
+          titulo: string
+        }
+        Update: {
+          centro_id?: string
+          contenido?: string
+          enviado_at?: string
+          firma_nombre?: string | null
+          firmado_at?: string | null
+          id?: string
+          terapeuta_id?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      centro_recursos: {
+        Row: {
+          centro_id: string
+          creado_at: string
+          id: string
+          nota: string | null
+          tipo: string
+          titulo: string
+          url: string | null
+        }
+        Insert: {
+          centro_id: string
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          tipo?: string
+          titulo: string
+          url?: string | null
+        }
+        Update: {
+          centro_id?: string
+          creado_at?: string
+          id?: string
+          nota?: string | null
+          tipo?: string
+          titulo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      centro_anuncios: {
+        Row: {
+          centro_id: string
+          creado_at: string
+          cuerpo: string
+          id: string
+          titulo: string
+        }
+        Insert: {
+          centro_id: string
+          creado_at?: string
+          cuerpo: string
+          id?: string
+          titulo: string
+        }
+        Update: {
+          centro_id?: string
+          creado_at?: string
+          cuerpo?: string
+          id?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
+      centro_mensajes: {
+        Row: {
+          autor_id: string | null
+          centro_id: string
+          creado_at: string
+          cuerpo: string
+          de_centro: boolean
+          id: string
+          leido_at: string | null
+          terapeuta_id: string
+        }
+        Insert: {
+          autor_id?: string | null
+          centro_id: string
+          creado_at?: string
+          cuerpo: string
+          de_centro: boolean
+          id?: string
+          leido_at?: string | null
+          terapeuta_id: string
+        }
+        Update: {
+          autor_id?: string | null
+          centro_id?: string
+          creado_at?: string
+          cuerpo?: string
+          de_centro?: boolean
+          id?: string
+          leido_at?: string | null
+          terapeuta_id?: string
         }
         Relationships: []
       }
       centro_terapeutas: {
         Row: {
           centro_id: string
+          comision_pct: number | null
           estado: string
           id: string
           supervision_autorizada: boolean
           supervision_autorizada_at: string | null
+          tarifa_sesion: number | null
           terapeuta_id: string
           terapeuta_nombre: string | null
           vinculado_at: string
         }
         Insert: {
           centro_id: string
+          comision_pct?: number | null
           estado?: string
           id?: string
           supervision_autorizada?: boolean
           supervision_autorizada_at?: string | null
+          tarifa_sesion?: number | null
           terapeuta_id: string
           terapeuta_nombre?: string | null
           vinculado_at?: string
         }
         Update: {
           centro_id?: string
+          comision_pct?: number | null
           estado?: string
           id?: string
           supervision_autorizada?: boolean
           supervision_autorizada_at?: string | null
+          tarifa_sesion?: number | null
           terapeuta_id?: string
           terapeuta_nombre?: string | null
           vinculado_at?: string

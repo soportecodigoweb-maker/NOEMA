@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { detalleTerapeuta } from '../../data';
 import { PacientesTerapeuta } from '@/components/centro/PacientesTerapeuta';
 import { GestionTerapeuta } from '@/components/centro/GestionTerapeuta';
+import { AcuerdosTerapeuta } from '@/components/centro/AcuerdosTerapeuta';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +48,39 @@ export default async function TerapeutaDetallePage({ params }: PageProps) {
         <GestionTerapeuta terapeutaId={id} estado={detalle.estado} />
       </div>
 
-      <PacientesTerapeuta pacientes={detalle.pacientes} otrosTerapeutas={detalle.otrosTerapeutas} />
+      {/* Información completa del terapeuta */}
+      <section className="rounded-2xl border border-noema-deep/10 bg-white p-5">
+        <h2 className="mb-3 font-serif text-lg text-ink">Información profesional</h2>
+        <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { l: 'Correo', v: detalle.perfil.email },
+            { l: 'Teléfono', v: detalle.perfil.telefono || '—' },
+            { l: 'Ciudad', v: detalle.perfil.ciudad || '—' },
+            { l: 'Título', v: detalle.perfil.titulo || '—' },
+            { l: 'Cédula', v: detalle.perfil.cedula || '—' },
+            { l: 'Verificación', v: detalle.perfil.verificacion || '—' },
+            { l: 'En el centro desde', v: detalle.perfil.desde },
+            {
+              l: 'Especialidades',
+              v: detalle.perfil.especialidades.length ? detalle.perfil.especialidades.join(', ') : '—',
+            },
+          ].map((x) => (
+            <div key={x.l}>
+              <dt className="text-xs uppercase tracking-wider text-foreground-muted">{x.l}</dt>
+              <dd className="truncate text-sm text-ink" title={x.v}>
+                {x.v}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <div>
+        <h2 className="mb-3 font-serif text-lg text-ink">Pacientes</h2>
+        <PacientesTerapeuta pacientes={detalle.pacientes} otrosTerapeutas={detalle.otrosTerapeutas} />
+      </div>
+
+      <AcuerdosTerapeuta terapeutaId={id} acuerdos={detalle.acuerdos} />
 
       <div className="flex items-start gap-3 rounded-2xl border border-dashed border-noema-deep/15 bg-white/60 p-4 text-sm text-foreground-muted">
         <Eye className="mt-0.5 size-4 shrink-0 text-noema-sage" />
