@@ -26,11 +26,29 @@ export default async function CentroLayout({ children }: { children: React.React
     redirect(profile.rol === 'terapeuta' || profile.rol === 'admin' ? '/inicio' : '/paciente');
   }
 
-  const { data: centro } = await supabase
+  let { data: centro } = await supabase
     .from('centros')
     .select('nombre_centro')
     .eq('profile_id', user.id)
     .maybeSingle();
+
+  // Auto-reparación: si el onboarding quedó a medias, creamos su ficha para que
+  // el panel nunca aparezca vacío ni roto.
+  if (!centro) {
+    const codigo = `CENTRO-${crypto.randomUUID().replace(/-/g, '').slice(0, 5).toUpperCase()}`;
+    await supabase
+      .from('centros')
+      .upsert(
+        { profile_id: user.id, nombre_centro: profile.nombre || 'Mi centro', codigo_centro: codigo },
+        { onConflict: 'profile_id' },
+      );
+    const { data: nuevo } = await supabase
+      .from('centros')
+      .select('nombre_centro')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+    centro = nuevo;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-paper lg:flex-row">

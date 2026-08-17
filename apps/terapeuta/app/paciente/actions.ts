@@ -285,8 +285,15 @@ export async function redimirCodigoAction(
     return { ok: false, error: 'Ya tienes un terapeuta vinculado.' };
   }
 
-  // 4. Asegurar la fila en pacientes (FK de vinculaciones).
-  await admin.from('pacientes').upsert({ profile_id: user.id }, { onConflict: 'profile_id' });
+  // 4. Asegurar la fila en pacientes (FK obligatorio de vinculaciones).
+  //    Si esto falla, el paso 5 revienta con error de llave foránea, así que
+  //    lo verificamos explícitamente en vez de continuar a ciegas.
+  const { error: ePac } = await admin
+    .from('pacientes')
+    .upsert({ profile_id: user.id }, { onConflict: 'profile_id' });
+  if (ePac) {
+    return { ok: false, error: 'No pudimos preparar tu perfil de paciente. Intenta de nuevo.' };
+  }
 
   // 5. Activar la vinculación.
   const ahora = new Date().toISOString();
@@ -299,7 +306,13 @@ export async function redimirCodigoAction(
       consentimiento_aceptado_at: ahora,
     })
     .eq('id', vinc.id);
-  if (eUpd) return { ok: false, error: 'No se pudo completar la vinculación. Intenta de nuevo.' };
+  if (eUpd) {
+    const msg = (eUpd.message ?? '').toLowerCase();
+    if (msg.includes('foreign key') || msg.includes('violates')) {
+      return { ok: false, error: 'No pudimos completar la vinculación (perfil incompleto). Intenta de nuevo.' };
+    }
+    return { ok: false, error: 'No se pudo completar la vinculación. Intenta de nuevo.' };
+  }
 
   // 6. Marcar al usuario como paciente.
   await admin

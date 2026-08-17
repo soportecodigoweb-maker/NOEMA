@@ -9,6 +9,51 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { crearVinculacionAction } from './actions';
 
+/** Mensaje listo para copiar y enviarle al paciente por WhatsApp o correo. */
+function MensajeParaPaciente({ codigo }: { codigo: string }) {
+  const [copiado, setCopiado] = useState(false);
+  const texto = `Hola, te comparto tu acceso a NOEMA para dar seguimiento a tu proceso entre sesiones:
+
+1) Entra a https://app.somosnoema.com y crea tu cuenta.
+2) Elige "Soy paciente" y completa tus datos.
+3) En tu inicio, toca "Colocar código para vincularme" y escribe este código:
+
+${codigo}
+
+Cualquier duda, avísame.`;
+
+  const copiar = async () => {
+    await navigator.clipboard.writeText(texto);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  };
+
+  return (
+    <Card variant="flat">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-ink">Mensaje listo para enviar</h3>
+        <button
+          onClick={copiar}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-noema-sage hover:text-noema-deep"
+        >
+          {copiado ? (
+            <>
+              <Check className="size-4" strokeWidth={2} /> Copiado
+            </>
+          ) : (
+            <>
+              <Copy className="size-4" strokeWidth={1.8} /> Copiar mensaje
+            </>
+          )}
+        </button>
+      </div>
+      <pre className="whitespace-pre-wrap rounded-lg bg-paper/60 p-3 text-xs leading-relaxed text-ink/75">
+        {texto}
+      </pre>
+    </Card>
+  );
+}
+
 export function NuevoPacienteForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -64,16 +109,30 @@ export function NuevoPacienteForm() {
 
         <Card variant="flat" className="bg-emotion-tranquilo/15 border-emotion-tranquilo/40">
           <h3 className="font-semibold text-ink mb-2">¿Cómo se lo comparto?</h3>
-          <p className="text-sm text-foreground-muted mb-3 leading-relaxed">
-            Pídele a tu paciente que descargue la app NOEMA en su celular,
-            cree su cuenta como <em>"paciente con terapeuta"</em>, e introduzca
-            este código en la pantalla de vinculación.
-          </p>
+          <ol className="mb-3 space-y-2 text-sm text-foreground-muted leading-relaxed">
+            <li>
+              <span className="font-medium text-ink">1.</span> Tu paciente entra a{' '}
+              <span className="font-medium text-ink">app.somosnoema.com</span> y{' '}
+              <span className="font-medium text-ink">crea su cuenta</span> (es indispensable: sin
+              cuenta no puede usar el código).
+            </li>
+            <li>
+              <span className="font-medium text-ink">2.</span> En el onboarding elige{' '}
+              <em>"Soy paciente"</em> y completa sus datos.
+            </li>
+            <li>
+              <span className="font-medium text-ink">3.</span> En su inicio, toca{' '}
+              <em>"Colocar código para vincularme"</em> y pega este código.
+            </li>
+          </ol>
           <p className="text-sm text-foreground-muted leading-relaxed">
-            Al aceptar el consentimiento informado, la vinculación queda activa
-            y empezarás a recibir su actividad.
+            Al aceptar el aviso de privacidad, la vinculación queda activa y empezarás a recibir su
+            actividad. El código sirve una sola vez.
           </p>
         </Card>
+
+        {/* Mensaje listo para copiar y enviar por WhatsApp/correo */}
+        <MensajeParaPaciente codigo={codigo} />
 
         <div className="flex gap-3">
           <Button
