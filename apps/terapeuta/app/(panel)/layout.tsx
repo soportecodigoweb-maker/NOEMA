@@ -10,6 +10,7 @@ import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { EncuestaSatisfaccion } from '@/components/soporte/EncuestaSatisfaccion';
 import { SupervisionPendiente } from '@/components/supervision/SupervisionPendiente';
 import { SolicitudSupervisionPendiente } from '@/components/supervision/SolicitudSupervisionPendiente';
+import { InvitacionCentroPendiente } from '@/components/ajustes/InvitacionCentroPendiente';
 import { solicitudSupervisionPendiente } from '../supervision-data';
 import { createClient } from '@/lib/supabase/server';
 import { VERSION_AVISO } from '@/lib/aviso-confidencialidad';
@@ -94,6 +95,26 @@ export default async function PanelLayout({
     .gte('creado_at', hace14);
   const mostrarEncuesta = (encuestasRecientes ?? 0) === 0;
 
+  // Invitación de un centro pendiente de aceptar.
+  const { data: invitacionCentro } = await supabase
+    .from('centro_terapeutas')
+    .select('centro_id')
+    .eq('terapeuta_id', user.id)
+    .eq('estado', 'pendiente')
+    .maybeSingle();
+  let invitacion: { centroId: string; centroNombre: string } | null = null;
+  if (invitacionCentro) {
+    const { data: c } = await supabase
+      .from('centros')
+      .select('nombre_centro')
+      .eq('profile_id', invitacionCentro.centro_id)
+      .maybeSingle();
+    invitacion = {
+      centroId: invitacionCentro.centro_id,
+      centroNombre: c?.nombre_centro ?? 'Un centro terapéutico',
+    };
+  }
+
   // Supervisión clínica pendiente de autorizar (si su centro la activó).
   const { data: membresiaSup } = await supabase
     .from('centro_terapeutas')
@@ -145,6 +166,11 @@ export default async function PanelLayout({
 
       {/* Encuesta de satisfacción ocasional → llega al Panel de Dueño */}
       <EncuestaSatisfaccion mostrar={mostrarEncuesta} />
+
+      {/* Invitación de un centro pendiente de aceptar */}
+      {invitacion && (
+        <InvitacionCentroPendiente centroId={invitacion.centroId} centroNombre={invitacion.centroNombre} />
+      )}
 
       {/* Autorización de supervisión clínica (si el centro la activó) */}
       {supervisionPendiente && (

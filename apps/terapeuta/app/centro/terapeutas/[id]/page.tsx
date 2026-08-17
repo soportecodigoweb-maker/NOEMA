@@ -6,6 +6,7 @@ import { detalleTerapeuta } from '../../data';
 import { PacientesTerapeuta } from '@/components/centro/PacientesTerapeuta';
 import { GestionTerapeuta } from '@/components/centro/GestionTerapeuta';
 import { AcuerdosTerapeuta } from '@/components/centro/AcuerdosTerapeuta';
+import { ReasignarTodos } from '@/components/centro/ReasignarTodos';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,10 +76,45 @@ export default async function TerapeutaDetallePage({ params }: PageProps) {
         </dl>
       </section>
 
-      <div>
-        <h2 className="mb-3 font-serif text-lg text-ink">Pacientes</h2>
-        <PacientesTerapeuta pacientes={detalle.pacientes} otrosTerapeutas={detalle.otrosTerapeutas} />
-      </div>
+      {/* Reasignación masiva (cuando el terapeuta deja el centro) */}
+      <ReasignarTodos
+        origenId={id}
+        totalPacientes={detalle.pacientes.filter((p) => p.estado === 'activa' || p.estado === 'pausada').length}
+        otrosTerapeutas={detalle.otrosTerapeutas}
+      />
+
+      {/* Pacientes seccionados por estado */}
+      {(() => {
+        const activos = detalle.pacientes.filter((p) => p.estado === 'activa');
+        const pausados = detalle.pacientes.filter((p) => p.estado === 'pausada');
+        const otros = detalle.pacientes.filter((p) => p.estado !== 'activa' && p.estado !== 'pausada');
+        return (
+          <div className="space-y-5">
+            <div>
+              <h2 className="mb-2 text-xs uppercase tracking-wider text-foreground-muted">
+                Pacientes activos ({activos.length})
+              </h2>
+              <PacientesTerapeuta pacientes={activos} otrosTerapeutas={detalle.otrosTerapeutas} />
+            </div>
+            {pausados.length > 0 && (
+              <div>
+                <h2 className="mb-2 text-xs uppercase tracking-wider text-foreground-muted">
+                  En pausa ({pausados.length})
+                </h2>
+                <PacientesTerapeuta pacientes={pausados} otrosTerapeutas={detalle.otrosTerapeutas} />
+              </div>
+            )}
+            {otros.length > 0 && (
+              <div>
+                <h2 className="mb-2 text-xs uppercase tracking-wider text-foreground-muted">
+                  Historial ({otros.length})
+                </h2>
+                <PacientesTerapeuta pacientes={otros} otrosTerapeutas={detalle.otrosTerapeutas} />
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <AcuerdosTerapeuta terapeutaId={id} acuerdos={detalle.acuerdos} />
 

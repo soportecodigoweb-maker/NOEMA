@@ -162,11 +162,152 @@ export async function solicitarAccesoPacienteAction(
   return { ok: true };
 }
 
+/** El centro invita a un terapeuta por correo. Queda PENDIENTE hasta que él
+ *  acepte: nadie entra a un centro sin su consentimiento. */
+export async function invitarTerapeutaAction(
+  email: string,
+): Promise<{ ok: boolean; error?: string; aviso?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+
+  const db = admin();
+  const { data: perfilCentro } = await db.from('profiles').select('rol').eq('id', user.id).maybeSingle();
+  if (perfilCentro?.rol !== 'centro') return { ok: false, error: 'Sin permiso.' };
+
+  const correo = email.trim().toLowerCase();
+  if (!correo) return { ok: false, error: 'Escribe el correo del terapeuta.' };
+
+  const { data: prof } = await db
+    .from('profiles')
+    .select('id, rol, nombre, apellidos')
+    .eq('email', correo)
+    .maybeSingle();
+
+  if (!prof) {
+    return {
+      ok: false,
+      error: 'No hay ninguna cuenta con ese correo. Pídele que se registre en NOEMA como terapeuta y vuelve a invitarlo.',
+    };
+  }
+  if (prof.rol !== 'terapeuta') {
+    return { ok: false, error: 'Esa cuenta no es de terapeuta.' };
+  }
+
+  // ¿Ya pertenece a algún centro?
+  const { data: yaEn } = await db
+    .from('centro_terapeutas')
+    .select('id, centro_id, estado')
+    .eq('terapeuta_id', prof.id)
+    .maybeSingle();
+  if (yaEn && yaEn.centro_id !== user.id) {
+    return { ok: false, error: 'Ese terapeuta ya pertenece a otro centro.' };
+  }
+  if (yaEn && yaEn.centro_id === user.id) {
+    if (yaEn.estado === 'activa') return { ok: true, aviso: 'Ese terapeuta ya es miembro de tu centro.' };
+    await db
+      .from('centro_terapeutas')
+      .update({ estado: 'pendiente', invitado_at: new Date().toISOString() })
+      .eq('id', yaEn.id);
+  } else {
+    const nombre = [prof.nombre, prof.apellidos].filter(Boolean).join(' ') || 'Terapeuta';
+    const { error } = await db.from('centro_terapeutas').insert({
+      centro_id: user.id,
+      terapeuta_id: prof.id,
+      terapeuta_nombre: nombre,
+      estado: 'pendiente',
+      email_invitado: correo,
+      invitado_at: new Date().toISOString(),
+    });
+    if (error) return { ok: false, error: 'No se pudo enviar la invitación.' };
+  }
+
+  const { data: c } = await db.from('centros').select('nombre_centro').eq('profile_id', user.id).maybeSingle();
+  await db.from('notificaciones').insert({
+    destinatario_id: prof.id,
+    tipo: 'centro',
+    titulo: 'Invitación a un centro terapéutico',
+    cuerpo: `${c?.nombre_centro ?? 'Un centro'} te invitó a formar parte de su equipo. Revisa la invitación para aceptarla.`,
+    url: '/inicio',
+  });
+
+  revalidatePath('/centro/terapeutas');
+  return { ok: true, aviso: 'Invitación enviada. El terapeuta debe aceptarla.' };
+}
+
+/** Reasigna TODOS los pacientes activos de un terapeuta a otro del centro. */
+export async function reasignarTodosPacientesAction(
+  origenId: string,
+  destinoId: string,
+): Promise<{ ok: boolean; movidos?: number; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+  if (origenId === destinoId) return { ok: false, error: 'Elige un terapeuta distinto.' };
+
+  const db = admin();
+  const { data: miembros } = await db
+    .from('centro_terapeutas')
+    .select('terapeuta_id, terapeuta_nombre, estado')
+    .eq('centro_id', user.id)
+    .in('terapeuta_id', [origenId, destinoId]);
+  const origen = (miembros ?? []).find((m) => m.terapeuta_id === origenId);
+  const destino = (miembros ?? []).find((m) => m.terapeuta_id === destinoId);
+  if (!origen || !destino) return { ok: false, error: 'Ambos terapeutas deben ser de tu centro.' };
+  if (destino.estado !== 'activa') return { ok: false, error: 'El terapeuta destino no está activo.' };
+
+  const { data: vincs } = await db
+    .from('vinculaciones')
+    .select('id, paciente_id')
+    .eq('terapeuta_id', origenId)
+    .in('estado', ['activa', 'pausada']);
+  const lista = vincs ?? [];
+  if (lista.length === 0) return { ok: true, movidos: 0 };
+
+  const { error } = await db
+    .from('vinculaciones')
+    .update({ terapeuta_id: destinoId })
+    .in(
+      'id',
+      lista.map((v) => v.id),
+    );
+  if (error) return { ok: false, error: 'No se pudo reasignar. Intenta de nuevo.' };
+
+  const notifs: any[] = [
+    {
+      destinatario_id: destinoId,
+      tipo: 'centro',
+      titulo: 'Se te reasignaron pacientes',
+      cuerpo: `Tu centro te asignó ${lista.length} paciente(s) para dar continuidad a su proceso.`,
+      url: '/pacientes',
+    },
+  ];
+  for (const v of lista) {
+    if (v.paciente_id) {
+      notifs.push({
+        destinatario_id: v.paciente_id,
+        tipo: 'centro',
+        titulo: 'Tu terapeuta cambió',
+        cuerpo: `Tu centro asignó a ${destino.terapeuta_nombre ?? 'un nuevo terapeuta'} para continuar tu proceso.`,
+        url: '/paciente',
+      });
+    }
+  }
+  await db.from('notificaciones').insert(notifs);
+
+  revalidatePath('/centro/terapeutas');
+  return { ok: true, movidos: lista.length };
+}
+
 /** El centro suspende, reactiva o elimina a un terapeuta de su centro. */
 export async function gestionarTerapeutaCentroAction(
   terapeutaId: string,
   accion: 'suspender' | 'reactivar' | 'eliminar',
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -183,6 +324,18 @@ export async function gestionarTerapeutaCentroAction(
   if (!ct) return { ok: false };
 
   if (accion === 'eliminar') {
+    // No dejamos pacientes huérfanos: primero hay que reasignarlos.
+    const { count } = await db
+      .from('vinculaciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('terapeuta_id', terapeutaId)
+      .in('estado', ['activa', 'pausada']);
+    if ((count ?? 0) > 0) {
+      return {
+        ok: false,
+        error: `Este terapeuta tiene ${count} paciente(s). Reasígnalos a otro terapeuta antes de eliminarlo.`,
+      };
+    }
     await db.from('centro_terapeutas').delete().eq('id', ct.id);
   } else {
     await db

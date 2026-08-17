@@ -552,8 +552,10 @@ export type Database = {
         Row: {
           centro_id: string
           comision_pct: number | null
+          email_invitado: string | null
           estado: string
           id: string
+          invitado_at: string | null
           supervision_autorizada: boolean
           supervision_autorizada_at: string | null
           tarifa_sesion: number | null
@@ -564,8 +566,10 @@ export type Database = {
         Insert: {
           centro_id: string
           comision_pct?: number | null
+          email_invitado?: string | null
           estado?: string
           id?: string
+          invitado_at?: string | null
           supervision_autorizada?: boolean
           supervision_autorizada_at?: string | null
           tarifa_sesion?: number | null
@@ -576,8 +580,10 @@ export type Database = {
         Update: {
           centro_id?: string
           comision_pct?: number | null
+          email_invitado?: string | null
           estado?: string
           id?: string
+          invitado_at?: string | null
           supervision_autorizada?: boolean
           supervision_autorizada_at?: string | null
           tarifa_sesion?: number | null

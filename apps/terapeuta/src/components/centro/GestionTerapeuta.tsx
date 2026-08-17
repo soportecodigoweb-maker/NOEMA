@@ -8,9 +8,11 @@ import { gestionarTerapeutaCentroAction } from '../../../app/centro/supervision-
 export function GestionTerapeuta({ terapeutaId, estado }: { terapeutaId: string; estado: string }) {
   const router = useRouter();
   const [confirmarEliminar, setConfirmarEliminar] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const accionar = (accion: 'suspender' | 'reactivar' | 'eliminar') => {
+    setError(null);
     startTransition(async () => {
       const r = await gestionarTerapeutaCentroAction(terapeutaId, accion);
       if (r.ok) {
@@ -18,12 +20,16 @@ export function GestionTerapeuta({ terapeutaId, estado }: { terapeutaId: string;
           router.push('/centro/terapeutas');
         }
         router.refresh();
+      } else {
+        setError(r.error ?? 'No se pudo completar la acción.');
+        setConfirmarEliminar(false);
       }
     });
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {error && <p className="w-full text-right text-xs text-[#B85450]">{error}</p>}
       {estado === 'activa' ? (
         <button
           onClick={() => accionar('suspender')}

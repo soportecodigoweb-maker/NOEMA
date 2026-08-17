@@ -62,6 +62,52 @@ export async function vincularseCentroAction(
   return { ok: true, centro: centro.nombre_centro };
 }
 
+/** El terapeuta responde a la invitación que le envió un centro. */
+export async function responderInvitacionCentroAction(
+  centroId: string,
+  acepta: boolean,
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  const db = admin();
+  const { data: ct } = await db
+    .from('centro_terapeutas')
+    .select('id, estado')
+    .eq('centro_id', centroId)
+    .eq('terapeuta_id', user.id)
+    .maybeSingle();
+  if (!ct || ct.estado !== 'pendiente') return { ok: false };
+
+  if (acepta) {
+    await db.from('centro_terapeutas').update({ estado: 'activa' }).eq('id', ct.id);
+  } else {
+    await db.from('centro_terapeutas').delete().eq('id', ct.id);
+  }
+
+  const { data: perfil } = await db
+    .from('profiles')
+    .select('nombre, apellidos')
+    .eq('id', user.id)
+    .maybeSingle();
+  const nombre = [perfil?.nombre, perfil?.apellidos].filter(Boolean).join(' ') || 'Un terapeuta';
+  await db.from('notificaciones').insert({
+    destinatario_id: centroId,
+    tipo: 'centro',
+    titulo: acepta ? 'Invitación aceptada' : 'Invitación rechazada',
+    cuerpo: acepta
+      ? `${nombre} aceptó unirse a tu centro.`
+      : `${nombre} no aceptó la invitación a tu centro.`,
+    url: '/centro/terapeutas',
+  });
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
 /** El terapeuta sale del centro al que pertenece. */
 export async function salirCentroAction(): Promise<{ ok: boolean }> {
   const supabase = await createClient();

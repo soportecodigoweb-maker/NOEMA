@@ -80,14 +80,16 @@ export async function estadisticasCentro(centroId: string): Promise<{
 /** Lista de terapeutas del centro con su número de pacientes activos. */
 export async function listaTerapeutasCentro(
   centroId: string,
-): Promise<{ terapeutaId: string; nombre: string; pacientes: number }[]> {
+  soloActivos = true,
+): Promise<{ terapeutaId: string; nombre: string; pacientes: number; estado: string }[]> {
   const db = admin();
-  const { data: miembros } = await db
+  let q = db
     .from('centro_terapeutas')
-    .select('terapeuta_id, terapeuta_nombre')
+    .select('terapeuta_id, terapeuta_nombre, estado')
     .eq('centro_id', centroId)
-    .eq('estado', 'activa')
     .order('vinculado_at', { ascending: true });
+  if (soloActivos) q = q.eq('estado', 'activa');
+  const { data: miembros } = await q;
   const tids = (miembros ?? []).map((m) => m.terapeuta_id);
   const conteo = new Map<string, number>();
   if (tids.length) {
@@ -102,6 +104,7 @@ export async function listaTerapeutasCentro(
     terapeutaId: m.terapeuta_id,
     nombre: m.terapeuta_nombre ?? 'Terapeuta',
     pacientes: conteo.get(m.terapeuta_id) ?? 0,
+    estado: m.estado,
   }));
 }
 
