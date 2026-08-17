@@ -202,11 +202,37 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
         ))}
 
       {/* ── Sesiones y notas ── */}
-      {activo === 'sesiones' &&
-        (e.sesiones.length === 0 ? (
-          vacio('Sin sesiones registradas.')
-        ) : (
-          <ul className="space-y-2">
+      {activo === 'sesiones' && (
+        <div className="space-y-6">
+          {/* Notas clínicas del terapeuta */}
+          <section>
+            <h2 className="mb-2 text-xs uppercase tracking-wider text-foreground-muted">
+              Notas clínicas ({e.notasClinicas.length})
+            </h2>
+            {e.notasClinicas.length === 0 ? (
+              vacio('El terapeuta no ha escrito notas clínicas.')
+            ) : (
+              <ul className="space-y-2">
+                {e.notasClinicas.map((n, i) => (
+                  <li key={i} className={card}>
+                    {n.titulo && <p className="font-medium text-ink">{n.titulo}</p>}
+                    <p className="text-xs text-foreground-muted">{n.fecha}</p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-ink/85">{n.contenido}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Sesiones */}
+          <section>
+            <h2 className="mb-2 text-xs uppercase tracking-wider text-foreground-muted">
+              Sesiones ({e.sesiones.length})
+            </h2>
+            {e.sesiones.length === 0 ? (
+              vacio('Sin sesiones registradas.')
+            ) : (
+              <ul className="space-y-2">
             {e.sesiones.map((s, i) => (
               <li key={i} className={card}>
                 <div className="flex flex-wrap items-center gap-2">
@@ -234,8 +260,11 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
                 )}
               </li>
             ))}
-          </ul>
-        ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
 
       {/* ── Ejercicios ── */}
       {activo === 'ejercicios' &&

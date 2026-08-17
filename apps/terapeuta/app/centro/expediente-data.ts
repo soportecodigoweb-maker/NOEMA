@@ -71,6 +71,7 @@ export interface Expediente {
     fechaLimite: string | null;
     respuestas: { fecha: string; texto: string | null; dificultad: number | null; retro: string | null }[];
   }[];
+  notasClinicas: { titulo: string | null; contenido: string; fecha: string }[];
   expedienteInicial: Record<string, unknown> | null;
   planApoyo: {
     contacto: string | null;
@@ -99,6 +100,7 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
     { data: sesiones },
     { data: tareas },
     { count: alertas },
+    { data: notasClin },
     { data: expIni },
     { data: plan },
     { data: recursos },
@@ -134,6 +136,12 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
       .order('creado_at', { ascending: false })
       .limit(40),
     db.from('alertas_crisis').select('*', { count: 'exact', head: true }).eq('paciente_id', pid),
+    db
+      .from('notas_privadas')
+      .select('titulo, contenido, creado_at')
+      .eq('vinculacion_id', vinculacionId)
+      .order('creado_at', { ascending: false })
+      .limit(40),
     db.from('expediente_inicial').select('*').eq('vinculacion_id', vinculacionId).maybeSingle(),
     db
       .from('plan_apoyo')
@@ -225,6 +233,11 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
         dificultad: rr.dificultad_percibida,
         retro: rr.retroalimentacion,
       })),
+    })),
+    notasClinicas: (notasClin ?? []).map((n) => ({
+      titulo: n.titulo,
+      contenido: n.contenido,
+      fecha: fFechaHora(n.creado_at),
     })),
     expedienteInicial: (expIni as Record<string, unknown> | null) ?? null,
     planApoyo: plan

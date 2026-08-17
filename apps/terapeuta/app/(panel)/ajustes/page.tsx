@@ -9,6 +9,8 @@ import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
 import { ToggleAutoLogout } from '@/components/cuenta/ToggleAutoLogout';
 import { VinculacionCentro } from '@/components/ajustes/VinculacionCentro';
+import { ObservacionesSupervision } from '@/components/ajustes/ObservacionesSupervision';
+import { observacionesDelCentro } from './supervision-data';
 import type { ConfigTerapeuta } from './config-actions';
 
 export const metadata = { title: 'Ajustes' };
@@ -92,6 +94,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
     centroNombre = c?.nombre_centro ?? 'tu centro';
   }
 
+  // Observaciones que el centro dejó al terapeuta tras supervisar.
+  const observaciones = await observacionesDelCentro(user.id);
+
   return (
     <div className="px-5 py-8 sm:px-8 sm:py-10 max-w-3xl mx-auto">
       <h1 className="font-serif text-4xl text-ink leading-tight mb-2">Ajustes</h1>
@@ -155,6 +160,9 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
 
         {/* Vinculación a un centro terapéutico */}
         <VinculacionCentro centroActual={centroNombre} />
+
+        {/* Observaciones de supervisión del centro */}
+        <ObservacionesSupervision items={observaciones} />
 
         {/* Funciones del paciente y notificaciones */}
         <PanelConfiguracion inicial={configInicial} />
