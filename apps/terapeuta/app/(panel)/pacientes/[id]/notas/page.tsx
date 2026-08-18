@@ -33,7 +33,8 @@ export default async function NotasPacientePage({ params }: PageProps) {
       <div>
         <h2 className="font-serif text-2xl text-ink mb-1">Notas privadas</h2>
         <p className="text-sm text-foreground-muted flex items-center gap-1">
-          <Lock className="size-3" /> Solo tú puedes verlas. El paciente jamás accede.
+          <Lock className="size-3" /> El paciente jamás accede. Si perteneces a un centro con
+          supervisión clínica autorizada, tu supervisor puede consultarlas.
         </p>
       </div>
 

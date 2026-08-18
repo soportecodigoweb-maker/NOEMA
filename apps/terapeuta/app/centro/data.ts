@@ -165,6 +165,29 @@ export async function datosSupervision(centroId: string): Promise<SupervisionCen
   };
 }
 
+export async function observacionesDelCentroATerapeuta(
+  centroId: string,
+  terapeutaId: string,
+): Promise<{ texto: string; fecha: string; visto: boolean }[]> {
+  const db = admin();
+  const { data } = await db
+    .from('supervision_comentarios')
+    .select('texto, creado_at, visto_at')
+    .eq('centro_id', centroId)
+    .eq('terapeuta_id', terapeutaId)
+    .order('creado_at', { ascending: false })
+    .limit(20);
+  return (data ?? []).map((x) => ({
+    texto: x.texto,
+    visto: !!x.visto_at,
+    fecha: new Date(x.creado_at).toLocaleString('es-MX', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'America/Mexico_City',
+    }),
+  }));
+}
+
 export interface ProcesoSupervision {
   permitido: true;
   pacienteNombre: string;

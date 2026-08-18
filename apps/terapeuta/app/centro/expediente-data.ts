@@ -80,6 +80,7 @@ export interface Expediente {
     }[];
   }[];
   notasClinicas: { titulo: string | null; contenido: string; fecha: string }[];
+  adjuntos: { nombre: string; ruta: string; fecha: string }[];
   expedienteInicial: Record<string, unknown> | null;
   planApoyo: {
     contacto: string | null;
@@ -109,6 +110,7 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
     { data: tareas },
     { count: alertas },
     { data: notasClin },
+    { data: adjuntosRows },
     { data: expIni },
     { data: plan },
     { data: recursos },
@@ -148,6 +150,13 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
       .from('notas_privadas')
       .select('titulo, contenido, creado_at')
       .eq('vinculacion_id', vinculacionId)
+      .order('creado_at', { ascending: false })
+      .limit(40),
+    db
+      .from('adjuntos')
+      .select('nombre, ruta, creado_at')
+      .eq('vinculacion_id', vinculacionId)
+      .eq('archivado', false)
       .order('creado_at', { ascending: false })
       .limit(40),
     db.from('expediente_inicial').select('*').eq('vinculacion_id', vinculacionId).maybeSingle(),
@@ -275,6 +284,11 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
       titulo: n.titulo,
       contenido: n.contenido,
       fecha: fFechaHora(n.creado_at),
+    })),
+    adjuntos: (adjuntosRows ?? []).map((a) => ({
+      nombre: a.nombre,
+      ruta: a.ruta,
+      fecha: fFechaHora(a.creado_at),
     })),
     expedienteInicial: (expIni as Record<string, unknown> | null) ?? null,
     planApoyo: plan

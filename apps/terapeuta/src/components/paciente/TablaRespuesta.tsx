@@ -61,7 +61,7 @@ export function TablaRespuesta({
         setEnviado(true);
         router.refresh();
       } else {
-        setError('No se pudo enviar. Intenta de nuevo.');
+        setError(r.error ?? 'No se pudo enviar. Intenta de nuevo.');
       }
     });
   };

@@ -13,7 +13,7 @@ export async function observacionesDelCentro(terapeutaId: string): Promise<Obser
   const db = admin();
   const { data } = await db
     .from('supervision_comentarios')
-    .select('texto, creado_at, centro_id')
+    .select('id, texto, creado_at, centro_id, visto_at')
     .eq('terapeuta_id', terapeutaId)
     .order('creado_at', { ascending: false })
     .limit(30);
@@ -29,6 +29,8 @@ export async function observacionesDelCentro(terapeutaId: string): Promise<Obser
   for (const c of centros ?? []) nombres.set(c.profile_id, c.nombre_centro);
 
   return items.map((x) => ({
+    id: x.id,
+    visto: !!x.visto_at,
     texto: x.texto,
     centro: nombres.get(x.centro_id) ?? 'Tu centro',
     fecha: new Date(x.creado_at).toLocaleString('es-MX', {

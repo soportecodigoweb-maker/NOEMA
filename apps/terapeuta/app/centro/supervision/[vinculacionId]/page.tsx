@@ -2,7 +2,7 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Lock, Eye } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { procesoSupervision } from '../../data';
+import { procesoSupervision, observacionesDelCentroATerapeuta } from '../../data';
 import { expedienteSupervision } from '../../expediente-data';
 import { RegistrarAccesoSupervision } from '@/components/centro/RegistrarAccesoSupervision';
 import { ComentarPractica } from '@/components/centro/ComentarPractica';
@@ -72,7 +72,10 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
     );
   }
 
-  const e = await expedienteSupervision(vinculacionId);
+  const [e, misObs] = await Promise.all([
+    expedienteSupervision(vinculacionId),
+    observacionesDelCentroATerapeuta(user.id, p.terapeutaId),
+  ]);
   if (!e) notFound();
 
   const card = 'rounded-2xl border border-noema-deep/10 bg-white p-5';
@@ -366,6 +369,22 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
         ))}
 
       {/* ── Historial clínico ── */}
+      {activo === 'historial' && e.adjuntos.length > 0 && (
+        <section className={card}>
+          <h2 className="mb-2 font-serif text-lg text-ink">Archivos del expediente</h2>
+          <ul className="space-y-1.5">
+            {e.adjuntos.map((a, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-ink">{a.nombre}</span>
+                <span className="shrink-0 text-xs text-foreground-muted">{a.fecha}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-foreground-muted">
+            Los archivos se consultan desde el expediente del terapeuta.
+          </p>
+        </section>
+      )}
       {activo === 'historial' &&
         (!e.expedienteInicial ? (
           vacio('El terapeuta aún no ha llenado el expediente inicial.')
@@ -395,6 +414,27 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
         Vista de supervisión en solo lectura. Muestra lo mismo que ve el terapeuta, excepto lo que el
         paciente marcó como privado (eso nunca sale de su cuenta). Tu acceso quedó registrado.
       </p>
+
+      {misObs.length > 0 && (
+        <section className="rounded-2xl border border-noema-deep/10 bg-white p-5">
+          <h2 className="mb-2 font-serif text-lg text-ink">Tus observaciones a este terapeuta</h2>
+          <ul className="space-y-2">
+            {misObs.map((o, i) => (
+              <li key={i} className="rounded-lg border border-noema-deep/10 p-3">
+                <p className="whitespace-pre-wrap text-sm text-ink/85">{o.texto}</p>
+                <p className="mt-1 text-[11px] text-foreground-muted">
+                  {o.fecha} ·{' '}
+                  {o.visto ? (
+                    <span className="text-noema-sage">leída por el terapeuta</span>
+                  ) : (
+                    <span className="text-noema-clay">sin leer</span>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <ComentarPractica terapeutaId={p.terapeutaId} />
     </div>

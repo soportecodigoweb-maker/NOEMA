@@ -167,12 +167,14 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
         {/* Funciones del paciente y notificaciones */}
         <PanelConfiguracion inicial={configInicial} />
 
+        {!membresia && (
         <PlanCard
           planEstado={terapeuta?.plan_estado ?? 'sin_pago'}
           trialTerminaAt={terapeuta?.trial_termina_at ?? null}
           pacientesActivos={pacientesActivos ?? 0}
           facturas={(facturas as any[]) ?? []}
         />
+        )}
 
         <Card>
           <CardHeader>

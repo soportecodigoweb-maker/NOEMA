@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FolderLock, FolderHeart, FileText, Paperclip } from 'lucide-react';
+import { FolderLock, FolderHeart, FileText, Paperclip, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { NuevaPlantilla } from '@/components/recursos/NuevaPlantilla';
 
@@ -40,6 +40,28 @@ export default async function RecursosPage() {
     .order('usos_count', { ascending: false })
     .limit(120);
 
+  // Recursos que el centro comparte con sus terapeutas (si pertenece a uno).
+  const { data: membresia } = await supabase
+    .from('centro_terapeutas')
+    .select('centro_id')
+    .eq('terapeuta_id', user?.id ?? '')
+    .eq('estado', 'activa')
+    .maybeSingle();
+  let recursosCentro: { id: string; titulo: string; tipo: string; nota: string | null; url: string | null; ruta: string | null }[] = [];
+  let nombreCentro = '';
+  if (membresia) {
+    const [{ data: rc }, { data: c }] = await Promise.all([
+      supabase
+        .from('centro_recursos')
+        .select('id, titulo, tipo, nota, url, ruta')
+        .eq('centro_id', membresia.centro_id)
+        .order('creado_at', { ascending: false }),
+      supabase.from('centros').select('nombre_centro').eq('profile_id', membresia.centro_id).maybeSingle(),
+    ]);
+    recursosCentro = rc ?? [];
+    nombreCentro = c?.nombre_centro ?? 'tu centro';
+  }
+
   const lista = (plantillas ?? []) as Plantilla[];
   const formatosTerapeuta = lista.filter((p) => CATEGORIAS_TERAPEUTA.has(p.categoria));
   const recursosPaciente = lista.filter((p) => !CATEGORIAS_TERAPEUTA.has(p.categoria));
@@ -56,6 +78,46 @@ export default async function RecursosPage() {
         </div>
         <NuevaPlantilla terapeutaId={user?.id ?? ''} />
       </div>
+
+      {/* Carpeta: recursos que comparte el centro */}
+      {recursosCentro.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-1 flex items-center gap-2 font-serif text-2xl text-ink">
+            <Building2 className="size-6 text-noema-sage" /> Recursos de {nombreCentro}
+          </h2>
+          <p className="mb-3 text-sm text-foreground-muted">
+            Materiales que tu centro comparte con el equipo.
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recursosCentro.map((r) => (
+              <li key={r.id} className="rounded-2xl border border-noema-sage/25 bg-noema-sage/[0.05] p-4">
+                <span className="rounded bg-noema-sage/15 px-2 py-0.5 text-[11px] capitalize text-noema-sage">
+                  {r.tipo}
+                </span>
+                <p className="mt-2 font-medium text-ink">{r.titulo}</p>
+                {r.nota && <p className="mt-0.5 text-xs text-foreground-muted">{r.nota}</p>}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {r.url && (
+                    <a href={r.url} target="_blank" rel="noreferrer" className="text-xs text-noema-sage hover:underline">
+                      Abrir enlace
+                    </a>
+                  )}
+                  {r.ruta && (
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/centro-recursos/${r.ruta}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-medium text-noema-sage hover:underline"
+                    >
+                      Abrir archivo
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Carpeta: formatos del terapeuta (uso interno) */}
       <Carpeta

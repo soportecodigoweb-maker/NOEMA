@@ -672,6 +672,7 @@ export type Database = {
           id: string
           terapeuta_id: string
           texto: string
+          visto_at: string | null
         }
         Insert: {
           centro_id: string
@@ -686,6 +687,7 @@ export type Database = {
           id?: string
           terapeuta_id?: string
           texto?: string
+          visto_at?: string | null
         }
         Relationships: []
       }

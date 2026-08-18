@@ -389,22 +389,27 @@ export async function responderTareaAction(
   textoLibre: string,
   dificultad: number,
   compartir: boolean,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false };
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+
+  // La fila del paciente debe existir (FK) y la dificultad solo admite 1..5:
+  // si no la indicó (0 o fuera de rango), se guarda como null.
+  await asegurarFilaPaciente(user.id);
+  const dif = dificultad >= 1 && dificultad <= 5 ? dificultad : null;
 
   const { error } = await supabase.from('tarea_respuestas').insert({
     tarea_id: tareaId,
     paciente_id: user.id,
     respuestas,
     texto_libre: textoLibre || null,
-    dificultad_percibida: dificultad,
+    dificultad_percibida: dif,
     compartir_terapeuta: compartir,
   });
-  if (error) return { ok: false };
+  if (error) return { ok: false, error: 'No se pudo enviar tu respuesta. Intenta de nuevo.' };
 
   // Al enviar el formulario la tarea queda COMPLETADA (antes se quedaba en
   // 'en_progreso' para siempre y el terapeuta nunca la veía terminada).
