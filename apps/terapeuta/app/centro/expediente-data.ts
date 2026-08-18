@@ -69,7 +69,15 @@ export interface Expediente {
     titulo: string;
     estado: string;
     fechaLimite: string | null;
-    respuestas: { fecha: string; texto: string | null; dificultad: number | null; retro: string | null }[];
+    campos: { key: string; label: string }[];
+    respuestas: {
+      fecha: string;
+      texto: string | null;
+      dificultad: number | null;
+      retro: string | null;
+      valores: { label: string; valor: string }[];
+      tabla: { columnas: string[]; filas: string[][] } | null;
+    }[];
   }[];
   notasClinicas: { titulo: string | null; contenido: string; fecha: string }[];
   expedienteInicial: Record<string, unknown> | null;
@@ -131,7 +139,7 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
       .limit(40),
     db
       .from('tareas')
-      .select('titulo, estado, fecha_limite, respuestas:tarea_respuestas(fecha, texto_libre, dificultad_percibida, retroalimentacion)')
+      .select('titulo, estado, fecha_limite, campos_respuesta, tabla_columnas, respuestas:tarea_respuestas(fecha, texto_libre, dificultad_percibida, retroalimentacion, respuestas)')
       .eq('vinculacion_id', vinculacionId)
       .order('creado_at', { ascending: false })
       .limit(40),
@@ -223,17 +231,46 @@ export async function expedienteSupervision(vinculacionId: string): Promise<Expe
         plan: nota?.plan_proxima_sesion ?? null,
       };
     }),
-    ejercicios: t.map((x: any) => ({
-      titulo: x.titulo,
-      estado: x.estado,
-      fechaLimite: x.fecha_limite ? fFecha(x.fecha_limite) : null,
-      respuestas: (x.respuestas ?? []).map((rr: any) => ({
-        fecha: fFechaHora(rr.fecha),
-        texto: rr.texto_libre,
-        dificultad: rr.dificultad_percibida,
-        retro: rr.retroalimentacion,
-      })),
-    })),
+    ejercicios: t.map((x: any) => {
+      const campos: { key: string; label: string }[] = Array.isArray(x.campos_respuesta)
+        ? x.campos_respuesta
+        : [];
+      const colsTarea: string[] = Array.isArray(x.tabla_columnas)
+        ? x.tabla_columnas.map((c: any) => c.label)
+        : [];
+      return {
+        titulo: x.titulo,
+        estado: x.estado,
+        fechaLimite: x.fecha_limite ? fFecha(x.fecha_limite) : null,
+        campos,
+        respuestas: (x.respuestas ?? []).map((rr: any) => {
+          const resp = (rr.respuestas ?? {}) as Record<string, unknown>;
+          // Auto-registros: la tabla viene serializada en `tabla`.
+          let tabla: { columnas: string[]; filas: string[][] } | null = null;
+          if (typeof resp.tabla === 'string') {
+            try {
+              const parsed = JSON.parse(resp.tabla) as { columnas?: string[]; filas?: string[][] };
+              if (Array.isArray(parsed.filas) && parsed.filas.length > 0) {
+                tabla = { columnas: parsed.columnas ?? colsTarea, filas: parsed.filas };
+              }
+            } catch {
+              tabla = null;
+            }
+          }
+          const valores = campos
+            .map((c) => ({ label: c.label, valor: String(resp[c.key] ?? '') }))
+            .filter((v) => v.valor !== '' && v.valor !== 'undefined' && v.valor !== 'null');
+          return {
+            fecha: fFechaHora(rr.fecha),
+            texto: rr.texto_libre,
+            dificultad: rr.dificultad_percibida,
+            retro: rr.retroalimentacion,
+            valores,
+            tabla,
+          };
+        }),
+      };
+    }),
     notasClinicas: (notasClin ?? []).map((n) => ({
       titulo: n.titulo,
       contenido: n.contenido,

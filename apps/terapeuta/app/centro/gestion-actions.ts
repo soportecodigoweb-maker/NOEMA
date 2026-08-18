@@ -28,6 +28,7 @@ export async function agregarRecursoCentroAction(
   tipo: string,
   url: string,
   nota: string,
+  archivo?: { ruta: string; tipoMime: string; tamano: number } | null,
 ): Promise<{ ok: boolean }> {
   const centroId = await centroActual();
   if (!centroId || !titulo.trim()) return { ok: false };
@@ -37,6 +38,9 @@ export async function agregarRecursoCentroAction(
     tipo: tipo || 'documento',
     url: url.trim() || null,
     nota: nota.trim() || null,
+    ruta: archivo?.ruta ?? null,
+    tipo_mime: archivo?.tipoMime ?? null,
+    tamano_bytes: archivo?.tamano ?? null,
   });
   if (error) return { ok: false };
   revalidatePath('/centro/recursos');

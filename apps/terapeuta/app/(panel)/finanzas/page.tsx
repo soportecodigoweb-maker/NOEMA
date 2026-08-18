@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import {
   TrendingUp,
@@ -40,6 +41,15 @@ export default async function FinanzasPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // Si el terapeuta pertenece a un centro, la facturación la lleva el centro.
+  const { data: membresiaCentro } = await supabase
+    .from('centro_terapeutas')
+    .select('id')
+    .eq('terapeuta_id', user.id)
+    .eq('estado', 'activa')
+    .maybeSingle();
+  if (membresiaCentro) redirect('/inicio');
 
   const [{ data: pagos }, { data: vincs }, { data: movimientos }, { data: activos }, { data: config }] =
     await Promise.all([

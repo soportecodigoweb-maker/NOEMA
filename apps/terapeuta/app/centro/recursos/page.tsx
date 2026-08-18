@@ -15,7 +15,7 @@ export default async function RecursosCentroPage() {
 
   const { data } = await supabase
     .from('centro_recursos')
-    .select('id, titulo, tipo, url, nota')
+    .select('id, titulo, tipo, url, nota, ruta, tipo_mime')
     .eq('centro_id', user.id)
     .order('creado_at', { ascending: false });
 

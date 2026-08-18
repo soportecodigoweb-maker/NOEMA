@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, Check, Clock, ChevronRight } from 'lucide-react';
+import { Eye, Check, Clock, ChevronRight, Activity } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { datosSupervision } from '../data';
 
@@ -38,8 +38,16 @@ export default async function SupervisionPage() {
           {s.terapeutas.map((t) => {
             return (
               <section key={t.terapeutaId} className="rounded-2xl border border-noema-deep/10 bg-white p-5">
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <h2 className="font-serif text-lg text-ink">{t.nombre}</h2>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="flex items-center gap-3 font-serif text-lg text-ink">
+                    {t.nombre}
+                    <Link
+                      href={`/centro/supervision/adherencia/${t.terapeutaId}`}
+                      className="inline-flex items-center gap-1 rounded-md border border-noema-deep/15 px-2 py-1 text-xs font-normal text-ink hover:border-noema-sage/40"
+                    >
+                      <Activity className="size-3.5 text-noema-sage" /> Ver adherencia
+                    </Link>
+                  </h2>
                   {t.autorizada ? (
                     <span className="inline-flex items-center gap-1 rounded bg-noema-sage/10 px-2 py-0.5 text-[11px] text-noema-sage">
                       <Check className="size-3" /> Autorizó supervisión

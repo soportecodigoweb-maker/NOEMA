@@ -470,6 +470,9 @@ export type Database = {
           creado_at: string
           id: string
           nota: string | null
+          ruta: string | null
+          tamano_bytes: number | null
+          tipo_mime: string | null
           tipo: string
           titulo: string
           url: string | null
@@ -479,6 +482,9 @@ export type Database = {
           creado_at?: string
           id?: string
           nota?: string | null
+          ruta?: string | null
+          tamano_bytes?: number | null
+          tipo_mime?: string | null
           tipo?: string
           titulo: string
           url?: string | null
@@ -488,6 +494,9 @@ export type Database = {
           creado_at?: string
           id?: string
           nota?: string | null
+          ruta?: string | null
+          tamano_bytes?: number | null
+          tipo_mime?: string | null
           tipo?: string
           titulo?: string
           url?: string | null

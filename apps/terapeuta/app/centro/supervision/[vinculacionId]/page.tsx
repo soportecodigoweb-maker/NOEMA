@@ -283,6 +283,38 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
                   <div className="mt-2 space-y-1.5">
                     {x.respuestas.map((r, k) => (
                       <div key={k} className="border-l-2 border-noema-sage/30 pl-3">
+                        {r.tabla && (
+                          <div className="mb-2 overflow-x-auto rounded-lg border border-noema-deep/10">
+                            <table className="w-full min-w-[420px] text-xs">
+                              <thead>
+                                <tr className="bg-paper/60">
+                                  {r.tabla.columnas.map((c, ci) => (
+                                    <th key={ci} className="border-b border-noema-deep/10 px-2.5 py-1.5 text-left font-medium text-ink/70">{c}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {r.tabla.filas.map((fila, fi) => (
+                                  <tr key={fi} className="border-b border-noema-deep/[0.06] last:border-0">
+                                    {r.tabla!.columnas.map((_, ci) => (
+                                      <td key={ci} className="whitespace-pre-wrap px-2.5 py-1.5 align-top text-ink/85">{fila[ci] || '—'}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                        {r.valores.length > 0 && (
+                          <dl className="mb-1.5 space-y-1">
+                            {r.valores.map((v, vi) => (
+                              <div key={vi}>
+                                <dt className="text-xs font-medium text-ink/70">{v.label}</dt>
+                                <dd className="whitespace-pre-wrap text-sm text-ink/85">{v.valor}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
                         {r.texto && <p className="text-sm italic text-ink/80">"{r.texto}"</p>}
                         <p className="text-xs text-foreground-muted">
                           {r.fecha}

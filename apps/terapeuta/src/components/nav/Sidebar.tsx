@@ -53,6 +53,8 @@ export interface SidebarProps {
 export function Sidebar({ user, tieneCentro }: SidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
+  // Si el terapeuta pertenece a un centro, la facturación es tema del centro.
+  const visibles = tieneCentro ? items.filter((i) => i.href !== '/finanzas') : items;
 
   // El modo aprendiz puede pedir abrir/cerrar el menú para resaltar sus ítems.
   useEffect(() => {
@@ -138,7 +140,7 @@ export function Sidebar({ user, tieneCentro }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-2">
           <ul className="space-y-1">
-            {items.map((item) => {
+            {visibles.map((item) => {
               const active =
                 pathname === item.href ||
                 (item.href !== '/inicio' && pathname.startsWith(item.href));
