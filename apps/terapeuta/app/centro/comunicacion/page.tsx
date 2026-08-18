@@ -3,6 +3,7 @@ import { MessagesSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { listaTerapeutasCentro } from '../data';
 import { Anuncios, Conversaciones } from '@/components/centro/ComunicacionCentro';
+import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Comunicación · Centro' };
@@ -50,6 +51,12 @@ export default async function ComunicacionPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
+      {/* Tiempo real: las respuestas del terapeuta aparecen al instante */}
+      <RefrescarEnVivo
+        tabla="centro_mensajes"
+        filtro={`centro_id=eq.${user.id}`}
+        canal={`centro-chat-admin-${user.id}`}
+      />
       <div>
         <h1 className="flex items-center gap-2 font-serif text-3xl text-ink">
           <MessagesSquare className="size-7 text-noema-sage" /> Comunicación

@@ -116,7 +116,7 @@ export async function enviarMensajeCentroAction(
     tipo: 'centro',
     titulo: `Mensaje de ${c?.nombre_centro ?? 'tu centro'}`,
     cuerpo: cuerpo.trim().slice(0, 160),
-    url: '/ajustes',
+    url: '/mi-centro',
   });
 
   revalidatePath('/centro/comunicacion');
@@ -146,7 +146,7 @@ export async function enviarAcuerdoAction(
     tipo: 'centro',
     titulo: 'Tu centro te envió un acuerdo',
     cuerpo: `Tienes un documento para revisar y firmar: ${titulo.trim()}.`,
-    url: '/ajustes',
+    url: '/mi-centro',
   });
 
   revalidatePath(`/centro/terapeutas/${terapeutaId}`);

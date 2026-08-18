@@ -135,6 +135,9 @@ export default async function PanelLayout({
     }
   }
 
+  // ¿Pertenece a un centro? (para mostrar "Mi centro" en el menú)
+  const tieneCentro = !!membresiaSup;
+
   // Solicitud de acceso puntual pendiente (modo por-acceso).
   const solicitudSup = supervisionPendiente ? null : await solicitudSupervisionPendiente(user.id);
 
@@ -146,6 +149,7 @@ export default async function PanelLayout({
           avatarUrl: profile.avatar_url,
           titulo: terapeuta?.titulo ?? 'Terapeuta',
         }}
+        tieneCentro={tieneCentro}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
 

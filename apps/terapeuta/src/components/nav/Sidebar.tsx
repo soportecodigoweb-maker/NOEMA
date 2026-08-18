@@ -14,6 +14,7 @@ import {
   Settings,
   Menu,
   X,
+  Building2,
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
@@ -45,9 +46,11 @@ export interface SidebarProps {
     avatarUrl?: string | null;
     titulo?: string | null;
   };
+  /** Si pertenece a un centro, se muestra el acceso a "Mi centro". */
+  tieneCentro?: boolean;
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, tieneCentro }: SidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
 
@@ -165,6 +168,29 @@ export function Sidebar({ user }: SidebarProps) {
                 </li>
               );
             })}
+            {tieneCentro && (
+              <li>
+                <Link
+                  href="/mi-centro"
+                  onClick={() => setAbierto(false)}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                    pathname.startsWith('/mi-centro')
+                      ? 'bg-bone/10 text-bone'
+                      : 'text-bone/70 hover:bg-bone/[0.06] hover:text-bone',
+                  )}
+                >
+                  <Building2
+                    className={cn(
+                      'size-[18px] shrink-0',
+                      pathname.startsWith('/mi-centro') ? 'text-bone' : 'text-bone/60 group-hover:text-bone',
+                    )}
+                    strokeWidth={1.6}
+                  />
+                  Mi centro
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
 
