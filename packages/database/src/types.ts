@@ -343,6 +343,7 @@ export type Database = {
       }
       centros: {
         Row: {
+          acuerdo_terapeuta: string | null
           actualizado_at: string
           ciudad: string | null
           codigo_centro: string | null
@@ -357,6 +358,7 @@ export type Database = {
           telefono: string | null
         }
         Insert: {
+          acuerdo_terapeuta?: string | null
           actualizado_at?: string
           ciudad?: string | null
           codigo_centro?: string | null
@@ -371,6 +373,7 @@ export type Database = {
           telefono?: string | null
         }
         Update: {
+          acuerdo_terapeuta?: string | null
           actualizado_at?: string
           ciudad?: string | null
           codigo_centro?: string | null
@@ -550,6 +553,7 @@ export type Database = {
       }
       centro_terapeutas: {
         Row: {
+          acuerdo_aceptado_at: string | null
           centro_id: string
           comision_pct: number | null
           email_invitado: string | null
@@ -578,6 +582,7 @@ export type Database = {
           vinculado_at?: string
         }
         Update: {
+          acuerdo_aceptado_at?: string | null
           centro_id?: string
           comision_pct?: number | null
           email_invitado?: string | null
@@ -615,6 +620,7 @@ export type Database = {
           vinculacion_id: string
         }
         Update: {
+          acuerdo_aceptado_at?: string | null
           centro_id?: string
           creado_at?: string
           estado?: string

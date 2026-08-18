@@ -83,7 +83,11 @@ export async function responderInvitacionCentroAction(
   if (!ct || ct.estado !== 'pendiente') return { ok: false };
 
   if (acepta) {
-    await db.from('centro_terapeutas').update({ estado: 'activa' }).eq('id', ct.id);
+    // El terapeuta aceptó el acuerdo; ahora el centro debe confirmar (doble aceptación).
+    await db
+      .from('centro_terapeutas')
+      .update({ estado: 'por_confirmar', acuerdo_aceptado_at: new Date().toISOString() })
+      .eq('id', ct.id);
   } else {
     await db.from('centro_terapeutas').delete().eq('id', ct.id);
   }
@@ -97,9 +101,9 @@ export async function responderInvitacionCentroAction(
   await db.from('notificaciones').insert({
     destinatario_id: centroId,
     tipo: 'centro',
-    titulo: acepta ? 'Invitación aceptada' : 'Invitación rechazada',
+    titulo: acepta ? 'Un terapeuta aceptó el acuerdo' : 'Invitación rechazada',
     cuerpo: acepta
-      ? `${nombre} aceptó unirse a tu centro.`
+      ? `${nombre} aceptó el acuerdo de colaboración. Confirma su incorporación para que forme parte del equipo.`
       : `${nombre} no aceptó la invitación a tu centro.`,
     url: '/centro/terapeutas',
   });

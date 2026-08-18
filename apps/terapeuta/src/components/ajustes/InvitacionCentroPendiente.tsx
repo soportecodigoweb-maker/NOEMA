@@ -9,12 +9,15 @@ import { responderInvitacionCentroAction } from '../../../app/(panel)/ajustes/ce
 export function InvitacionCentroPendiente({
   centroId,
   centroNombre,
+  acuerdo,
 }: {
   centroId: string;
   centroNombre: string;
+  acuerdo: string | null;
 }) {
   const router = useRouter();
   const [oculto, setOculto] = useState(false);
+  const [aceptaAcuerdo, setAceptaAcuerdo] = useState(false);
   const [pending, startTransition] = useTransition();
 
   if (oculto) return null;
@@ -47,13 +50,33 @@ export function InvitacionCentroPendiente({
           <span className="font-medium text-ink">tu autorización</span>.
         </p>
 
+        {acuerdo && (
+          <>
+            <p className="mb-1 mt-4 text-xs uppercase tracking-wider text-foreground-muted">
+              Acuerdo de colaboración
+            </p>
+            <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-xl border border-noema-deep/10 bg-paper/40 p-3 text-xs leading-relaxed text-ink/80">
+              {acuerdo}
+            </div>
+            <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-ink/80">
+              <input
+                type="checkbox"
+                checked={aceptaAcuerdo}
+                onChange={(e) => setAceptaAcuerdo(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-noema-sage"
+              />
+              He leído y acepto el acuerdo de colaboración con este centro.
+            </label>
+          </>
+        )}
+
         <div className="mt-5 flex flex-col gap-2">
           <button
             onClick={() => responder(true)}
-            disabled={pending}
+            disabled={pending || (!!acuerdo && !aceptaAcuerdo)}
             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-noema-deep px-4 py-3 text-sm font-medium text-bone hover:bg-noema-deep/90 disabled:opacity-40"
           >
-            <Check className="size-4" /> {pending ? 'Procesando…' : 'Aceptar invitación'}
+            <Check className="size-4" /> {pending ? 'Procesando…' : 'Aceptar y unirme'}
           </button>
           <button
             onClick={() => responder(false)}

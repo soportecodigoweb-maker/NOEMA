@@ -102,16 +102,17 @@ export default async function PanelLayout({
     .eq('terapeuta_id', user.id)
     .eq('estado', 'pendiente')
     .maybeSingle();
-  let invitacion: { centroId: string; centroNombre: string } | null = null;
+  let invitacion: { centroId: string; centroNombre: string; acuerdo: string | null } | null = null;
   if (invitacionCentro) {
     const { data: c } = await supabase
       .from('centros')
-      .select('nombre_centro')
+      .select('nombre_centro, acuerdo_terapeuta')
       .eq('profile_id', invitacionCentro.centro_id)
       .maybeSingle();
     invitacion = {
       centroId: invitacionCentro.centro_id,
       centroNombre: c?.nombre_centro ?? 'Un centro terapéutico',
+      acuerdo: c?.acuerdo_terapeuta ?? null,
     };
   }
 
@@ -169,7 +170,11 @@ export default async function PanelLayout({
 
       {/* Invitación de un centro pendiente de aceptar */}
       {invitacion && (
-        <InvitacionCentroPendiente centroId={invitacion.centroId} centroNombre={invitacion.centroNombre} />
+        <InvitacionCentroPendiente
+          centroId={invitacion.centroId}
+          centroNombre={invitacion.centroNombre}
+          acuerdo={invitacion.acuerdo}
+        />
       )}
 
       {/* Autorización de supervisión clínica (si el centro la activó) */}

@@ -237,6 +237,68 @@ export async function invitarTerapeutaAction(
   return { ok: true, aviso: 'Invitación enviada. El terapeuta debe aceptarla.' };
 }
 
+/** El centro edita el acuerdo de colaboración que aceptan sus terapeutas. */
+export async function guardarAcuerdoCentroAction(texto: string): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !texto.trim()) return { ok: false };
+
+  const db = admin();
+  const { data: perfil } = await db.from('profiles').select('rol').eq('id', user.id).maybeSingle();
+  if (perfil?.rol !== 'centro') return { ok: false };
+
+  const { error } = await db
+    .from('centros')
+    .update({ acuerdo_terapeuta: texto.trim() })
+    .eq('profile_id', user.id);
+  if (error) return { ok: false };
+  revalidatePath('/centro/terapeutas');
+  return { ok: true };
+}
+
+/** El centro confirma la incorporación de un terapeuta que ya aceptó el acuerdo. */
+export async function confirmarIncorporacionAction(
+  terapeutaId: string,
+  acepta: boolean,
+): Promise<{ ok: boolean }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  const db = admin();
+  const { data: ct } = await db
+    .from('centro_terapeutas')
+    .select('id, estado')
+    .eq('centro_id', user.id)
+    .eq('terapeuta_id', terapeutaId)
+    .maybeSingle();
+  if (!ct || ct.estado !== 'por_confirmar') return { ok: false };
+
+  if (acepta) {
+    await db.from('centro_terapeutas').update({ estado: 'activa' }).eq('id', ct.id);
+  } else {
+    await db.from('centro_terapeutas').delete().eq('id', ct.id);
+  }
+
+  const { data: c } = await db.from('centros').select('nombre_centro').eq('profile_id', user.id).maybeSingle();
+  await db.from('notificaciones').insert({
+    destinatario_id: terapeutaId,
+    tipo: 'centro',
+    titulo: acepta ? 'Ya formas parte del centro' : 'Incorporación no confirmada',
+    cuerpo: acepta
+      ? `${c?.nombre_centro ?? 'El centro'} confirmó tu incorporación al equipo.`
+      : `${c?.nombre_centro ?? 'El centro'} no confirmó tu incorporación.`,
+    url: '/ajustes',
+  });
+
+  revalidatePath('/centro/terapeutas');
+  return { ok: true };
+}
+
 /** Reasigna TODOS los pacientes activos de un terapeuta a otro del centro. */
 export async function reasignarTodosPacientesAction(
   origenId: string,
