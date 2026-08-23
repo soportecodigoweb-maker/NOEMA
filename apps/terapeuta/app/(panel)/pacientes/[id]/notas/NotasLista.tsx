@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { Lock, Plus, Trash2, Check } from 'lucide-react';
 import { crearNotaAction, actualizarNotaAction, eliminarNotaAction } from './actions';
 
@@ -21,16 +21,45 @@ export function NotasLista({
   const [notas, setNotas] = useState<Nota[]>(iniciales);
   const [estado, setEstado] = useState<Record<string, 'guardando' | 'guardado' | undefined>>({});
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Lo que aún no se ha guardado, por si el terapeuta sale de la página.
+  const pendientes = useRef<Record<string, { titulo: string; contenido: string }>>({});
   const [, startTransition] = useTransition();
+
+  /** Guarda YA lo pendiente de una nota (o de todas). */
+  const guardarAhora = (id?: string) => {
+    const ids = id ? [id] : Object.keys(pendientes.current);
+    for (const k of ids) {
+      const p = pendientes.current[k];
+      if (!p) continue;
+      if (timers.current[k]) clearTimeout(timers.current[k]);
+      delete pendientes.current[k];
+      void actualizarNotaAction(k, p.titulo, p.contenido).then(() => {
+        setEstado((s) => ({ ...s, [k]: 'guardado' }));
+        setTimeout(() => setEstado((s) => ({ ...s, [k]: undefined })), 1500);
+      });
+    }
+  };
+
+  // Red de seguridad: guardar al salir de la página, cambiar de pestaña o
+  // desmontar el componente (antes se perdía lo escrito en los últimos 800 ms).
+  useEffect(() => {
+    const alOcultar = () => {
+      if (document.visibilityState === 'hidden') guardarAhora();
+    };
+    window.addEventListener('beforeunload', () => guardarAhora());
+    document.addEventListener('visibilitychange', alOcultar);
+    return () => {
+      document.removeEventListener('visibilitychange', alOcultar);
+      guardarAhora();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const programarGuardado = (id: string, titulo: string, contenido: string) => {
     setEstado((s) => ({ ...s, [id]: 'guardando' }));
+    pendientes.current[id] = { titulo, contenido };
     if (timers.current[id]) clearTimeout(timers.current[id]);
-    timers.current[id] = setTimeout(async () => {
-      await actualizarNotaAction(id, titulo, contenido);
-      setEstado((s) => ({ ...s, [id]: 'guardado' }));
-      setTimeout(() => setEstado((s) => ({ ...s, [id]: undefined })), 1500);
-    }, 800);
+    timers.current[id] = setTimeout(() => guardarAhora(id), 700);
   };
 
   const editar = (id: string, campo: 'titulo' | 'contenido', valor: string) => {
@@ -87,6 +116,7 @@ export function NotasLista({
               <input
                 value={n.titulo ?? ''}
                 onChange={(e) => editar(n.id, 'titulo', e.target.value)}
+                onBlur={() => guardarAhora(n.id)}
                 placeholder="Título (ej. Sesión 3 · 30 jul)"
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink placeholder:text-ink/35 focus:outline-none"
               />
@@ -109,6 +139,7 @@ export function NotasLista({
             <textarea
               value={n.contenido}
               onChange={(e) => editar(n.id, 'contenido', e.target.value)}
+              onBlur={() => guardarAhora(n.id)}
               placeholder="Observaciones clínicas, hipótesis, decisiones, contexto familiar, alertas…"
               className="min-h-[140px] w-full resize-y rounded-lg border border-noema-deep/10 bg-bone/20 px-3 py-2 text-sm leading-relaxed text-ink/85 focus:border-noema-sage focus:outline-none"
             />
@@ -117,7 +148,7 @@ export function NotasLista({
       )}
 
       <p className="flex items-center gap-1 text-xs text-foreground-muted">
-        <Lock className="size-3" /> Privadas: solo tú las ves. Se guardan solas.
+        <Lock className="size-3" /> Se guardan solas mientras escribes y al salir del campo.
       </p>
     </div>
   );

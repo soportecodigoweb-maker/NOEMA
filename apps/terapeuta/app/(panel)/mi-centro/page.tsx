@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { Building2, Megaphone } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ChatConCentro } from '@/components/centro/ChatConCentro';
+import { AcuerdosPorFirmar } from '@/components/centro/AcuerdosPorFirmar';
+import { ObservacionesSupervision } from '@/components/ajustes/ObservacionesSupervision';
+import { observacionesDelCentro } from '../ajustes/supervision-data';
 import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 
 export const dynamic = 'force-dynamic';
@@ -45,7 +48,7 @@ export default async function MiCentroPage() {
     );
   }
 
-  const [{ data: centro }, { data: mensajes }, { data: anuncios }] = await Promise.all([
+  const [{ data: centro }, { data: mensajes }, { data: anuncios }, { data: acuerdos }, observaciones] = await Promise.all([
     supabase.from('centros').select('nombre_centro').eq('profile_id', ct.centro_id).maybeSingle(),
     supabase
       .from('centro_mensajes')
@@ -59,6 +62,13 @@ export default async function MiCentroPage() {
       .eq('centro_id', ct.centro_id)
       .order('creado_at', { ascending: false })
       .limit(10),
+    supabase
+      .from('centro_acuerdos')
+      .select('id, titulo, contenido, enviado_at, firmado_at, firma_nombre')
+      .eq('terapeuta_id', user.id)
+      .order('enviado_at', { ascending: false })
+      .limit(20),
+    observacionesDelCentro(user.id),
   ]);
 
   return (
@@ -79,6 +89,21 @@ export default async function MiCentroPage() {
             Anuncios del equipo y tu conversación con la administración.
           </p>
         </div>
+
+        {/* Observaciones de supervisión */}
+        <ObservacionesSupervision items={observaciones} />
+
+        {/* Documentos y formatos para firmar */}
+        <AcuerdosPorFirmar
+          acuerdos={(acuerdos ?? []).map((a) => ({
+            id: a.id,
+            titulo: a.titulo,
+            contenido: a.contenido,
+            enviado: fmt(a.enviado_at),
+            firmado: a.firmado_at ? fmt(a.firmado_at) : null,
+            firmaNombre: a.firma_nombre,
+          }))}
+        />
 
         {/* Anuncios del centro */}
         {anuncios && anuncios.length > 0 && (

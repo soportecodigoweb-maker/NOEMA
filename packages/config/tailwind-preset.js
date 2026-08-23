@@ -40,7 +40,7 @@ module.exports = {
         },
         foreground: {
           DEFAULT: '#2A3328', // ink
-          muted: '#5C6B5A',
+          muted: '#48563F',
           inverse: '#FAF7F1',
         },
         brand: {

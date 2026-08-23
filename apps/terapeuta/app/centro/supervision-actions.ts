@@ -47,7 +47,7 @@ export async function activarSupervisionAction(activo: boolean): Promise<{ ok: b
       tipo: 'supervision',
       titulo: 'Tu centro solicita autorización de supervisión',
       cuerpo: `${nombreCentro?.nombre_centro ?? 'Tu centro'} activó supervisión clínica y pide tu autorización para acceder a la información de tus pacientes.`,
-      url: '/inicio',
+      url: '/mi-centro',
     }));
     if (notifs.length) await db.from('notificaciones').insert(notifs);
   }
@@ -154,7 +154,7 @@ export async function solicitarAccesoPacienteAction(
       titulo: 'Solicitud de acceso para supervisión',
       cuerpo: `${centro?.nombre_centro ?? 'Tu centro'} solicita autorización para revisar la información de un paciente.`,
       vinculacion_id: vinculacionId,
-      url: '/inicio',
+      url: '/mi-centro',
     });
   }
 
@@ -230,7 +230,7 @@ export async function invitarTerapeutaAction(
     tipo: 'centro',
     titulo: 'Invitación a un centro terapéutico',
     cuerpo: `${c?.nombre_centro ?? 'Un centro'} te invitó a formar parte de su equipo. Revisa la invitación para aceptarla.`,
-    url: '/inicio',
+    url: '/mi-centro',
   });
 
   revalidatePath('/centro/terapeutas');
@@ -292,7 +292,7 @@ export async function confirmarIncorporacionAction(
     cuerpo: acepta
       ? `${c?.nombre_centro ?? 'El centro'} confirmó tu incorporación al equipo.`
       : `${c?.nombre_centro ?? 'El centro'} no confirmó tu incorporación.`,
-    url: '/ajustes',
+    url: '/mi-centro',
   });
 
   revalidatePath('/centro/terapeutas');
@@ -417,7 +417,7 @@ export async function gestionarTerapeutaCentroAction(
     tipo: 'centro',
     titulo: 'Cambio en tu centro terapéutico',
     cuerpo,
-    url: '/ajustes',
+    url: '/mi-centro',
   });
 
   revalidatePath('/centro/terapeutas');
@@ -456,7 +456,7 @@ export async function comentarPracticaAction(
     tipo: 'supervision',
     titulo: 'Observación de supervisión clínica',
     cuerpo: 'El supervisor de tu centro dejó una observación sobre tu práctica clínica.',
-    url: '/inicio',
+    url: '/mi-centro',
   });
 
   revalidatePath('/centro/terapeutas');

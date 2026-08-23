@@ -138,7 +138,7 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
                         {formatFecha(h.generado_at)} · {formatHora(h.generado_at)}
                       </p>
                       {h.narrativa && (
-                        <p className="mt-0.5 line-clamp-2 text-xs text-foreground-muted">{h.narrativa}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-ink/70">{h.narrativa}</p>
                       )}
                     </button>
                   </li>
@@ -383,7 +383,7 @@ function Contenido({ data }: { data: ResumenData }) {
           <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-noema-sage">
             <Sparkles className="size-3.5" /> Síntesis del periodo
           </p>
-          <div className="space-y-1.5 text-sm leading-relaxed text-ink/85">
+          <div className="space-y-1.5 text-sm leading-relaxed text-ink">
             {data.narrativa.split('\n').filter(Boolean).map((linea, i) =>
               linea.trim().startsWith('-') ? (
                 <p key={i} className="flex gap-2 pl-1">
@@ -395,7 +395,7 @@ function Contenido({ data }: { data: ResumenData }) {
               ),
             )}
           </div>
-          <p className="mt-3 border-t border-noema-deep/[0.06] pt-2 text-[11px] italic text-foreground-muted">
+          <p className="mt-3 border-t border-noema-deep/[0.06] pt-2 text-[11px] italic text-ink/70">
             Síntesis operativa generada por IA a partir de datos observables. No es diagnóstico ni
             interpretación clínica — esa es tu decisión profesional.
           </p>
@@ -413,7 +413,7 @@ function Contenido({ data }: { data: ResumenData }) {
                   <span className="font-medium capitalize text-ink">{r.emocion}</span>
                   <span className="text-xs text-foreground-muted">int. {r.intensidad}/5</span>
                 </div>
-                {r.detonante && <p className="mt-0.5 text-xs text-ink/70">Detonante: {r.detonante}</p>}
+                {r.detonante && <p className="mt-0.5 text-xs text-ink/90">Detonante: {r.detonante}</p>}
                 {r.descripcion && <p className="mt-0.5 text-sm text-ink/80">{r.descripcion}</p>}
               </li>
             ))}
@@ -431,7 +431,7 @@ function Contenido({ data }: { data: ResumenData }) {
                   {formatFecha(d.fecha)}
                   {d.titulo ? ` · ${d.titulo}` : ''}
                 </p>
-                <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink/80">{d.contenido}</p>
+                <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink">{d.contenido}</p>
               </li>
             ))}
           </ul>

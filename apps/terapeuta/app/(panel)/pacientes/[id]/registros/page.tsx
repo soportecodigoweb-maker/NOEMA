@@ -69,35 +69,67 @@ export default async function PacienteRegistrosPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-medium text-ink capitalize">
-                      {r.emocion_principal_key.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-xs text-foreground-muted">
-                      Intensidad {r.intensidad}/5
-                    </span>
-                    <span className="text-xs text-foreground-muted">
-                      {r.hora.slice(0, 5)}
-                    </span>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex items-center gap-3">
+                    <span className="text-xs text-ink/60">{r.hora.slice(0, 5)} h</span>
                     {r.privacidad === 'marcado_sesion' && (
-                      <span className="ml-auto inline-flex items-center gap-1 text-xs text-noema-sage font-medium">
+                      <span className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-noema-sage">
                         <Bookmark className="size-3 fill-noema-sage" />
                         Para sesión
                       </span>
                     )}
                   </div>
 
-                  {r.descripcion && (
-                    <p className="text-sm text-ink/80 mb-2 leading-relaxed">
-                      {r.descripcion}
-                    </p>
-                  )}
-                  {r.situacion_detonante && (
-                    <p className="text-xs text-foreground-muted">
-                      Situación: {r.situacion_detonante}
-                    </p>
-                  )}
+                  {/* Campos separados y etiquetados, para leerlo de un vistazo */}
+                  <dl className="space-y-2.5">
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider text-ink/50">
+                        Situación
+                      </dt>
+                      <dd className="text-sm leading-relaxed text-ink/90">
+                        {r.situacion_detonante || 'No la describió'}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider text-ink/50">
+                        Emoción
+                      </dt>
+                      <dd className="text-sm font-medium capitalize text-ink">
+                        {r.emocion_principal_key.replace(/_/g, ' ')}
+                      </dd>
+                    </div>
+
+                    <div>
+                      <dt className="text-[11px] font-medium uppercase tracking-wider text-ink/50">
+                        Intensidad
+                      </dt>
+                      <dd className="flex items-center gap-2">
+                        <span className="flex gap-0.5" aria-hidden>
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <span
+                              key={n}
+                              className={`h-2 w-5 rounded-full ${
+                                n <= r.intensidad ? 'bg-noema-sage' : 'bg-noema-deep/10'
+                              }`}
+                            />
+                          ))}
+                        </span>
+                        <span className="text-sm font-medium text-ink">{r.intensidad}/5</span>
+                      </dd>
+                    </div>
+
+                    {r.descripcion && (
+                      <div>
+                        <dt className="text-[11px] font-medium uppercase tracking-wider text-ink/50">
+                          Lo que escribió
+                        </dt>
+                        <dd className="whitespace-pre-wrap text-sm leading-relaxed text-ink/90">
+                          {r.descripcion}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
                 </div>
               </div>
             </Card>

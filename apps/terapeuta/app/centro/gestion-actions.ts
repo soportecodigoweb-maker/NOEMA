@@ -79,7 +79,7 @@ export async function publicarAnuncioAction(titulo: string, cuerpo: string): Pro
     tipo: 'centro',
     titulo: `Anuncio del centro: ${titulo.trim()}`,
     cuerpo: cuerpo.trim().slice(0, 160),
-    url: '/inicio',
+    url: '/mi-centro',
   }));
   if (notifs.length) await db.from('notificaciones').insert(notifs);
 

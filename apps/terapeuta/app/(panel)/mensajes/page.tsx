@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { tiempoRelativo } from '@/lib/utils';
@@ -56,6 +56,39 @@ export default async function MensajesPage() {
     }),
   );
 
+  // Conversación con el centro terapéutico (si pertenece a uno).
+  const { data: membresiaCentro } = await supabase
+    .from('centro_terapeutas')
+    .select('centro_id')
+    .eq('terapeuta_id', user.id)
+    .eq('estado', 'activa')
+    .maybeSingle();
+  let chatCentro: { nombre: string; ultimo: string | null; fecha: string | null; noLeidos: number } | null = null;
+  if (membresiaCentro) {
+    const [{ data: c }, { data: ult }, { count: sinLeer }] = await Promise.all([
+      supabase.from('centros').select('nombre_centro').eq('profile_id', membresiaCentro.centro_id).maybeSingle(),
+      supabase
+        .from('centro_mensajes')
+        .select('cuerpo, creado_at')
+        .eq('terapeuta_id', user.id)
+        .order('creado_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('centro_mensajes')
+        .select('*', { count: 'exact', head: true })
+        .eq('terapeuta_id', user.id)
+        .eq('de_centro', true)
+        .is('leido_at', null),
+    ]);
+    chatCentro = {
+      nombre: c?.nombre_centro ?? 'Tu centro',
+      ultimo: ult?.cuerpo ?? null,
+      fecha: ult?.creado_at ?? null,
+      noLeidos: sinLeer ?? 0,
+    };
+  }
+
   // Ordenar: con mensajes primero, los más recientes arriba
   conversaciones.sort((a, b) => {
     if (!a.ultimo && !b.ultimo) return 0;
@@ -72,6 +105,41 @@ export default async function MensajesPage() {
           Comunicación asíncrona con tus pacientes. No es chat 24/7.
         </p>
       </div>
+
+      {/* Conversación con el centro terapéutico */}
+      {chatCentro && (
+        <Card variant="flat" className="mb-4 overflow-hidden p-0">
+          <Link
+            href="/mi-centro"
+            className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-paper/40"
+          >
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-sage/20 text-noema-deep/70">
+              <Building2 className="size-5" strokeWidth={1.8} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center gap-2">
+                <p className="truncate font-medium text-ink">{chatCentro.nombre}</p>
+                <span className="shrink-0 rounded bg-noema-sage/12 px-1.5 py-0.5 text-[10px] text-noema-sage">
+                  Centro
+                </span>
+                {chatCentro.fecha && (
+                  <span className="shrink-0 text-xs text-foreground-muted">
+                    · {tiempoRelativo(chatCentro.fecha)}
+                  </span>
+                )}
+              </div>
+              <p className="truncate text-sm text-foreground-muted">
+                {chatCentro.ultimo ?? 'Escríbele a la administración de tu centro'}
+              </p>
+            </div>
+            {chatCentro.noLeidos > 0 && (
+              <span className="shrink-0 rounded-full bg-noema-clay px-2 py-0.5 text-xs font-medium text-white">
+                {chatCentro.noLeidos}
+              </span>
+            )}
+          </Link>
+        </Card>
+      )}
 
       {conversaciones.length === 0 ? (
         <Card variant="flat" className="text-center py-16">

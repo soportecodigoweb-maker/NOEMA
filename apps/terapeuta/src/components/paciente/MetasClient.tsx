@@ -181,6 +181,19 @@ export function MetasClient({ iniciales }: { iniciales: Meta[] }) {
                         <span className="text-xs text-ink/45">{etiquetaRecurrencia(m.recurrencia)}</span>
                       )}
                     </div>
+                    <button
+                      onClick={() => compartir(m)}
+                      aria-label={m.compartida ? 'Dejar privada' : 'Compartir con mi terapeuta'}
+                      title={m.compartida ? 'Compartida con tu terapeuta · toca para hacerla privada' : 'Privada · toca para compartirla con tu terapeuta'}
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors ${
+                        m.compartida
+                          ? 'bg-noema-sage/12 text-noema-sage hover:bg-noema-sage/20'
+                          : 'text-ink/40 hover:bg-ink/[0.04] hover:text-ink/70'
+                      }`}
+                    >
+                      {m.compartida ? <Share2 className="size-3.5" /> : <Lock className="size-3.5" />}
+                      {m.compartida ? 'Compartida' : 'Privada'}
+                    </button>
                     <button onClick={() => eliminar(m.id)} aria-label="Eliminar" className="shrink-0 text-ink/30 hover:text-red-600">
                       <Trash2 className="size-4" />
                     </button>
@@ -197,6 +210,15 @@ export function MetasClient({ iniciales }: { iniciales: Meta[] }) {
                     <li key={m.id} className="flex items-center gap-3 rounded-lg border border-dashed border-ink/10 px-4 py-2 text-sm text-ink/55">
                       <span className="min-w-0 flex-1 truncate">{m.titulo}</span>
                       <span className="shrink-0 text-xs text-ink/40">{etiquetaRecurrencia(m.recurrencia)}</span>
+                      <button
+                        onClick={() => compartir(m)}
+                        aria-label={m.compartida ? 'Dejar privada' : 'Compartir con mi terapeuta'}
+                        className={`inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[11px] transition-colors ${
+                          m.compartida ? 'bg-noema-sage/12 text-noema-sage' : 'text-ink/40 hover:text-ink/70'
+                        }`}
+                      >
+                        {m.compartida ? <Share2 className="size-3.5" /> : <Lock className="size-3.5" />}
+                      </button>
                       <button onClick={() => eliminar(m.id)} aria-label="Eliminar" className="shrink-0 text-ink/30 hover:text-red-600">
                         <Trash2 className="size-4" />
                       </button>
