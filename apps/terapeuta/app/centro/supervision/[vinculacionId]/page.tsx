@@ -436,7 +436,11 @@ export default async function SupervisionDetallePage({ params, searchParams }: P
         </section>
       )}
 
-      <ComentarPractica terapeutaId={p.terapeutaId} />
+      <ComentarPractica
+        terapeutaId={p.terapeutaId}
+        vinculacionId={vinculacionId}
+        pacienteNombre={e.paciente.nombre}
+      />
     </div>
   );
 }

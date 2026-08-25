@@ -13,7 +13,7 @@ export async function observacionesDelCentro(terapeutaId: string): Promise<Obser
   const db = admin();
   const { data } = await db
     .from('supervision_comentarios')
-    .select('id, texto, creado_at, centro_id, visto_at')
+    .select('id, texto, contexto, creado_at, centro_id, visto_at')
     .eq('terapeuta_id', terapeutaId)
     .order('creado_at', { ascending: false })
     .limit(30);
@@ -32,6 +32,7 @@ export async function observacionesDelCentro(terapeutaId: string): Promise<Obser
     id: x.id,
     visto: !!x.visto_at,
     texto: x.texto,
+    contexto: x.contexto ?? null,
     centro: nombres.get(x.centro_id) ?? 'Tu centro',
     fecha: new Date(x.creado_at).toLocaleString('es-MX', {
       dateStyle: 'medium',

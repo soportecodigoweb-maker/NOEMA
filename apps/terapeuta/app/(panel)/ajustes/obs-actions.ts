@@ -22,7 +22,7 @@ export async function marcarObservacionVistaAction(id: string): Promise<{ ok: bo
   const db = admin();
   const { data: obs } = await db
     .from('supervision_comentarios')
-    .select('id, centro_id, terapeuta_id, visto_at')
+    .select('id, centro_id, terapeuta_id, visto_at, contexto, vinculacion_id')
     .eq('id', id)
     .maybeSingle();
   if (!obs || obs.terapeuta_id !== user.id || obs.visto_at) return { ok: false };
@@ -42,11 +42,16 @@ export async function marcarObservacionVistaAction(id: string): Promise<{ ok: bo
   await db.from('notificaciones').insert({
     destinatario_id: obs.centro_id,
     tipo: 'supervision',
-    titulo: 'Observación leída',
-    cuerpo: `${nombre} marcó como leída tu observación de supervisión.`,
-    url: '/centro/supervision',
+    titulo: '✓ Observación revisada',
+    cuerpo: obs.contexto
+      ? `${nombre} revisó tu observación sobre: ${obs.contexto}.`
+      : `${nombre} revisó tu observación de supervisión.`,
+    url: obs.vinculacion_id
+      ? `/centro/supervision/${obs.vinculacion_id}`
+      : '/centro/supervision',
   });
 
   revalidatePath('/ajustes');
+  revalidatePath('/mi-centro');
   return { ok: true };
 }

@@ -45,6 +45,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#F1ECE0',
+  // Evita que el "modo oscuro automático" del navegador (Chrome Android)
+  // invierta los colores y deje texto claro sobre fondo blanco.
+  colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
   // App con tamaño fijo: sin zoom con los dedos.

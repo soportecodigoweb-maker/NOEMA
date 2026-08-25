@@ -85,7 +85,7 @@ export function GenerarResumenButton({ vinculacionId }: { vinculacionId: string 
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-noema-deep/50 p-4">
-      <div className="my-6 w-full max-w-3xl rounded-2xl bg-white shadow-xl">
+      <div className="my-6 w-full max-w-3xl rounded-2xl bg-white text-ink shadow-xl [color-scheme:light]">
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-noema-deep/[0.06] px-6 py-4">
           <div className="flex items-center gap-2">

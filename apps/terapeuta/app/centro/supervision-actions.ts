@@ -428,6 +428,8 @@ export async function gestionarTerapeutaCentroAction(
 export async function comentarPracticaAction(
   terapeutaId: string,
   texto: string,
+  vinculacionId?: string | null,
+  contexto?: string | null,
 ): Promise<{ ok: boolean }> {
   const supabase = await createClient();
   const {
@@ -444,19 +446,27 @@ export async function comentarPracticaAction(
     .maybeSingle();
   if (!ct) return { ok: false };
 
-  const { error } = await db.from('supervision_comentarios').insert({
-    centro_id: user.id,
-    terapeuta_id: terapeutaId,
-    texto: texto.trim(),
-  });
+  const { data: fila, error } = await db
+    .from('supervision_comentarios')
+    .insert({
+      centro_id: user.id,
+      terapeuta_id: terapeutaId,
+      texto: texto.trim(),
+      vinculacion_id: vinculacionId || null,
+      contexto: contexto?.trim() || null,
+    })
+    .select('id')
+    .single();
   if (error) return { ok: false };
 
   await db.from('notificaciones').insert({
     destinatario_id: terapeutaId,
     tipo: 'supervision',
     titulo: 'Observación de supervisión clínica',
-    cuerpo: 'El supervisor de tu centro dejó una observación sobre tu práctica clínica.',
-    url: '/mi-centro',
+    cuerpo: contexto
+      ? `Tu centro dejó una observación sobre: ${contexto}.`
+      : 'El supervisor de tu centro dejó una observación sobre tu práctica clínica.',
+    url: fila ? `/mi-centro?obs=${fila.id}` : '/mi-centro',
   });
 
   revalidatePath('/centro/terapeutas');

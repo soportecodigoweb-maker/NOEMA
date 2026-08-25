@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Vesica } from '@/components/ui/Vesica';
+import { CentroNotificaciones } from '@/components/notificaciones/CentroNotificaciones';
 import { cn } from '@/lib/utils';
 import { signOutAction } from '../../../app/(auth)/actions';
 
@@ -87,9 +88,12 @@ export function PanelLateral({
           <Vesica size={24} color="rgba(250, 247, 241, 0.95)" strokeWidth={1.5} />
           <span className="font-serif text-lg tracking-[0.3em]">NOEMA</span>
         </Link>
-        <button onClick={() => setAbierto(true)} aria-label="Abrir menú" className="rounded-md p-1.5 hover:bg-bone/10">
-          <Menu className="size-6" strokeWidth={1.8} />
-        </button>
+        <div className="flex items-center gap-1">
+          <CentroNotificaciones tono="oscuro" />
+          <button onClick={() => setAbierto(true)} aria-label="Abrir menú" className="rounded-md p-1.5 hover:bg-bone/10">
+            <Menu className="size-6" strokeWidth={1.8} />
+          </button>
+        </div>
       </header>
 
       {abierto && (
@@ -114,6 +118,9 @@ export function PanelLateral({
               </span>
             </div>
           </Link>
+          <div className="hidden lg:block">
+            <CentroNotificaciones tono="oscuro" />
+          </div>
           <button onClick={() => setAbierto(false)} aria-label="Cerrar menú" className="rounded-md p-1 hover:bg-bone/10 lg:hidden">
             <X className="size-5" strokeWidth={1.8} />
           </button>
