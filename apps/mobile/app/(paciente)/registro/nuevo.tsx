@@ -52,21 +52,7 @@ const necesidades = [
   { key: 'otra', label: esMX.paciente.needsOther },
 ];
 
-const privacidades: Array<{
-  key: 'privado' | 'compartido' | 'marcado_sesion';
-  label: string;
-  hint: string;
-}> = [
-  { key: 'privado', label: esMX.paciente.privacyPrivate, hint: 'Solo tú lo ves.' },
-  { key: 'compartido', label: esMX.paciente.privacyShared, hint: 'Tu terapeuta podrá verlo.' },
-  {
-    key: 'marcado_sesion',
-    label: esMX.paciente.privacyForSession,
-    hint: 'Aparecerá destacado en tu próxima consulta.',
-  },
-];
-
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3;
 
 export default function NuevoRegistroScreen() {
   const router = useRouter();
@@ -76,11 +62,11 @@ export default function NuevoRegistroScreen() {
   const [intensidad, setIntensidad] = useState<number>(3);
   const [descripcion, setDescripcion] = useState('');
   const [necesidad, setNecesidad] = useState<string | null>(null);
-  const [privacidad, setPrivacidad] = useState<'privado' | 'compartido' | 'marcado_sesion'>('privado');
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const next = () => setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
+  const next = () => setStep((s) => (s < 3 ? ((s + 1) as Step) : s));
   const prev = () => setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
 
   const guardar = async () => {
@@ -94,7 +80,7 @@ export default function NuevoRegistroScreen() {
         intensidad,
         descripcion: descripcion || null,
         necesidad,
-        privacidad,
+        privacidad: 'compartido',
       });
       if (insertError) throw insertError;
       router.replace('/(paciente)/inicio');
@@ -108,8 +94,7 @@ export default function NuevoRegistroScreen() {
   const canAdvance =
     (step === 1 && !!emocion) ||
     (step === 2 && intensidad >= 1) ||
-    (step === 3 && true) || // contexto y necesidad son opcionales
-    (step === 4 && true);
+    (step === 3 && true); // contexto y necesidad son opcionales
 
   return (
     <>
@@ -124,7 +109,7 @@ export default function NuevoRegistroScreen() {
             <Pressable onPress={() => router.back()} hitSlop={12}>
               <Text style={styles.closeText}>Cancelar</Text>
             </Pressable>
-            <ProgressDots current={step} total={4} />
+            <ProgressDots current={step} total={3} />
             <View style={{ width: 60 }} />
           </View>
 
@@ -148,12 +133,6 @@ export default function NuevoRegistroScreen() {
                 onDescripcion={setDescripcion}
                 necesidad={necesidad}
                 onNecesidad={setNecesidad}
-              />
-            )}
-            {step === 4 && (
-              <StepPrivacidad
-                value={privacidad}
-                onChange={setPrivacidad}
                 error={error}
               />
             )}
@@ -167,7 +146,7 @@ export default function NuevoRegistroScreen() {
               </Button>
             )}
             <View style={{ flex: 1 }} />
-            {step < 4 ? (
+            {step < 3 ? (
               <Button variant="primary" size="lg" onPress={next} disabled={!canAdvance}>
                 {esMX.common.continue}
               </Button>
@@ -296,11 +275,13 @@ function StepContexto({
   onDescripcion,
   necesidad,
   onNecesidad,
+  error,
 }: {
   descripcion: string;
   onDescripcion: (s: string) => void;
   necesidad: string | null;
   onNecesidad: (s: string) => void;
+  error?: string | null;
 }) {
   return (
     <View style={styles.stepBlock}>
@@ -351,54 +332,14 @@ function StepContexto({
           })}
         </View>
       </View>
-    </View>
-  );
-}
 
-// ----------------------------------------------------------------------------
-// PASO 4: Privacidad
-// ----------------------------------------------------------------------------
-function StepPrivacidad({
-  value,
-  onChange,
-  error,
-}: {
-  value: 'privado' | 'compartido' | 'marcado_sesion';
-  onChange: (v: 'privado' | 'compartido' | 'marcado_sesion') => void;
-  error: string | null;
-}) {
-  return (
-    <View style={styles.stepBlock}>
-      <View style={styles.stepHeader}>
-        <Text variant="h2">¿Cómo quieres guardar este registro?</Text>
-        <Text variant="bodyM" color="#5C6B5A">
-          Tú decides qué comparte tu terapeuta. Puedes cambiarlo después.
+      {/* Nota: los registros siempre se comparten con el terapeuta */}
+      <Card padding={4} variant="flat" style={{ marginTop: spacing[4], backgroundColor: 'rgba(61,77,62,0.06)' }}>
+        <Text variant="muted" color={colors.noemaDeep}>
+          Tus registros se comparten con tu terapeuta para acompañar tu proceso.
         </Text>
-      </View>
-      <View style={{ gap: spacing[3] }}>
-        {privacidades.map((p) => {
-          const selected = value === p.key;
-          return (
-            <Pressable key={p.key} onPress={() => onChange(p.key)}>
-              <Card
-                padding={4}
-                variant="flat"
-                style={[
-                  selected && {
-                    borderColor: colors.noemaSage,
-                    borderWidth: 2,
-                  },
-                ]}
-              >
-                <Text variant="h3" style={{ marginBottom: spacing[1] }}>
-                  {p.label}
-                </Text>
-                <Text variant="muted">{p.hint}</Text>
-              </Card>
-            </Pressable>
-          );
-        })}
-      </View>
+      </Card>
+
       {error && (
         <Text variant="muted" color="#B85450" style={{ marginTop: spacing[3] }}>
           {error}
