@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { Lock, Plus, Trash2, Check } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Lock, Plus, Trash2, Check, Save } from 'lucide-react';
 import { crearNotaAction, actualizarNotaAction, eliminarNotaAction } from './actions';
 
 interface Nota {
@@ -19,137 +19,177 @@ export function NotasLista({
   iniciales: Nota[];
 }) {
   const [notas, setNotas] = useState<Nota[]>(iniciales);
-  const [estado, setEstado] = useState<Record<string, 'guardando' | 'guardado' | undefined>>({});
-  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  // Lo que aún no se ha guardado, por si el terapeuta sale de la página.
-  const pendientes = useRef<Record<string, { titulo: string; contenido: string }>>({});
-  const [, startTransition] = useTransition();
 
-  /** Guarda YA lo pendiente de una nota (o de todas). */
-  const guardarAhora = (id?: string) => {
-    const ids = id ? [id] : Object.keys(pendientes.current);
-    for (const k of ids) {
-      const p = pendientes.current[k];
-      if (!p) continue;
-      if (timers.current[k]) clearTimeout(timers.current[k]);
-      delete pendientes.current[k];
-      void actualizarNotaAction(k, p.titulo, p.contenido).then(() => {
-        setEstado((s) => ({ ...s, [k]: 'guardado' }));
-        setTimeout(() => setEstado((s) => ({ ...s, [k]: undefined })), 1500);
-      });
+  // Composer de nota nueva.
+  const [nuevoTitulo, setNuevoTitulo] = useState('');
+  const [nuevoContenido, setNuevoContenido] = useState('');
+  const [creando, startCrear] = useTransition();
+  const [errorNueva, setErrorNueva] = useState<string | null>(null);
+
+  const crear = () => {
+    if (!nuevoContenido.trim() && !nuevoTitulo.trim()) {
+      setErrorNueva('Escribe algo antes de guardar.');
+      return;
     }
-  };
-
-  // Red de seguridad: guardar al salir de la página, cambiar de pestaña o
-  // desmontar el componente (antes se perdía lo escrito en los últimos 800 ms).
-  useEffect(() => {
-    const alOcultar = () => {
-      if (document.visibilityState === 'hidden') guardarAhora();
-    };
-    window.addEventListener('beforeunload', () => guardarAhora());
-    document.addEventListener('visibilitychange', alOcultar);
-    return () => {
-      document.removeEventListener('visibilitychange', alOcultar);
-      guardarAhora();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const programarGuardado = (id: string, titulo: string, contenido: string) => {
-    setEstado((s) => ({ ...s, [id]: 'guardando' }));
-    pendientes.current[id] = { titulo, contenido };
-    if (timers.current[id]) clearTimeout(timers.current[id]);
-    timers.current[id] = setTimeout(() => guardarAhora(id), 700);
-  };
-
-  const editar = (id: string, campo: 'titulo' | 'contenido', valor: string) => {
-    let titulo = '';
-    let contenido = '';
-    setNotas((prev) =>
-      prev.map((n) => {
-        if (n.id !== id) return n;
-        const actualizada = { ...n, [campo]: valor };
-        titulo = actualizada.titulo ?? '';
-        contenido = actualizada.contenido;
-        return actualizada;
-      }),
-    );
-    programarGuardado(id, titulo, contenido);
-  };
-
-  const nueva = () => {
-    startTransition(async () => {
-      const r = await crearNotaAction(vinculacionId, '', '');
+    setErrorNueva(null);
+    startCrear(async () => {
+      const r = await crearNotaAction(vinculacionId, nuevoTitulo, nuevoContenido);
       if (r.ok && r.id) {
         setNotas((prev) => [
-          { id: r.id!, titulo: '', contenido: '', actualizado_at: new Date().toISOString() },
+          {
+            id: r.id!,
+            titulo: nuevoTitulo.trim() || null,
+            contenido: nuevoContenido,
+            actualizado_at: new Date().toISOString(),
+          },
           ...prev,
         ]);
+        setNuevoTitulo('');
+        setNuevoContenido('');
+      } else {
+        setErrorNueva('No se pudo guardar la nota. Intenta de nuevo.');
       }
-    });
-  };
-
-  const borrar = (id: string) => {
-    setNotas((prev) => prev.filter((n) => n.id !== id));
-    startTransition(() => {
-      eliminarNotaAction(id, vinculacionId);
     });
   };
 
   return (
     <div className="space-y-4">
-      <button
-        onClick={nueva}
-        className="inline-flex items-center gap-2 rounded-md bg-noema-deep px-4 py-2 text-sm font-medium text-bone hover:bg-noema-deep/90"
-      >
-        <Plus className="size-4" strokeWidth={1.9} /> Crear una nueva nota
-      </button>
+      {/* ── Nueva nota ── */}
+      <div className="rounded-2xl border border-noema-sage/25 bg-noema-sage/[0.04] p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <Plus className="size-4 text-noema-sage" strokeWidth={2} />
+          <h3 className="text-sm font-medium text-ink">Nueva nota</h3>
+        </div>
+        <input
+          value={nuevoTitulo}
+          onChange={(e) => setNuevoTitulo(e.target.value)}
+          placeholder="Título (ej. Sesión 3 · 30 jul) — opcional"
+          className="mb-2 w-full rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm text-ink placeholder:text-ink/35 focus:border-noema-sage focus:outline-none"
+        />
+        <textarea
+          value={nuevoContenido}
+          onChange={(e) => setNuevoContenido(e.target.value)}
+          placeholder="Observaciones clínicas, hipótesis, decisiones, contexto familiar, alertas…"
+          className="min-h-[120px] w-full resize-y rounded-md border border-noema-deep/15 bg-white px-3 py-2 text-sm leading-relaxed text-ink focus:border-noema-sage focus:outline-none"
+        />
+        {errorNueva && <p className="mt-1 text-sm text-red-600">{errorNueva}</p>}
+        <button
+          onClick={crear}
+          disabled={creando}
+          className="mt-2 inline-flex items-center gap-2 rounded-md bg-noema-deep px-4 py-2 text-sm font-medium text-bone hover:bg-noema-deep/90 disabled:opacity-40"
+        >
+          <Save className="size-4" /> {creando ? 'Guardando…' : 'Guardar nota'}
+        </button>
+      </div>
 
+      {/* ── Notas guardadas ── */}
       {notas.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-noema-deep/15 bg-white/60 p-8 text-center text-sm text-foreground-muted">
-          Aún no tienes notas. Crea una — por ejemplo, una por cada sesión.
+          Aún no tienes notas. Crea la primera arriba — por ejemplo, una por cada sesión.
         </div>
       ) : (
         notas.map((n) => (
-          <div key={n.id} className="rounded-2xl border border-noema-deep/10 bg-white p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <input
-                value={n.titulo ?? ''}
-                onChange={(e) => editar(n.id, 'titulo', e.target.value)}
-                onBlur={() => guardarAhora(n.id)}
-                placeholder="Título (ej. Sesión 3 · 30 jul)"
-                className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink placeholder:text-ink/35 focus:outline-none"
-              />
-              {estado[n.id] === 'guardando' && (
-                <span className="shrink-0 text-[11px] text-ink/40">Guardando…</span>
-              )}
-              {estado[n.id] === 'guardado' && (
-                <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-noema-sage">
-                  <Check className="size-3" /> Guardado
-                </span>
-              )}
-              <button
-                onClick={() => borrar(n.id)}
-                aria-label="Eliminar nota"
-                className="shrink-0 text-ink/30 hover:text-red-600"
-              >
-                <Trash2 className="size-4" />
-              </button>
-            </div>
-            <textarea
-              value={n.contenido}
-              onChange={(e) => editar(n.id, 'contenido', e.target.value)}
-              onBlur={() => guardarAhora(n.id)}
-              placeholder="Observaciones clínicas, hipótesis, decisiones, contexto familiar, alertas…"
-              className="min-h-[140px] w-full resize-y rounded-lg border border-noema-deep/10 bg-bone/20 px-3 py-2 text-sm leading-relaxed text-ink/85 focus:border-noema-sage focus:outline-none"
-            />
-          </div>
+          <NotaEditable
+            key={n.id}
+            nota={n}
+            vinculacionId={vinculacionId}
+            onBorrar={(id) => setNotas((prev) => prev.filter((x) => x.id !== id))}
+            onGuardado={(id, titulo, contenido) =>
+              setNotas((prev) =>
+                prev.map((x) => (x.id === id ? { ...x, titulo, contenido } : x)),
+              )
+            }
+          />
         ))
       )}
 
       <p className="flex items-center gap-1 text-xs text-foreground-muted">
-        <Lock className="size-3" /> Se guardan solas mientras escribes y al salir del campo.
+        <Lock className="size-3" /> Privadas: solo tú las ves. Toca «Guardar» para conservar tus
+        cambios.
       </p>
+    </div>
+  );
+}
+
+/** Una nota existente, editable, con botón de guardar explícito. */
+function NotaEditable({
+  nota,
+  vinculacionId,
+  onBorrar,
+  onGuardado,
+}: {
+  nota: Nota;
+  vinculacionId: string;
+  onBorrar: (id: string) => void;
+  onGuardado: (id: string, titulo: string | null, contenido: string) => void;
+}) {
+  const [titulo, setTitulo] = useState(nota.titulo ?? '');
+  const [contenido, setContenido] = useState(nota.contenido);
+  const [guardado, setGuardado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const sucio = titulo !== (nota.titulo ?? '') || contenido !== nota.contenido;
+
+  const guardar = () => {
+    setError(null);
+    startTransition(async () => {
+      const r = await actualizarNotaAction(nota.id, titulo, contenido);
+      if (r.ok) {
+        onGuardado(nota.id, titulo.trim() || null, contenido);
+        setGuardado(true);
+        setTimeout(() => setGuardado(false), 2500);
+      } else {
+        setError('No se pudo guardar. Intenta de nuevo.');
+      }
+    });
+  };
+
+  const borrar = () => {
+    onBorrar(nota.id);
+    startTransition(() => {
+      eliminarNotaAction(nota.id, vinculacionId);
+    });
+  };
+
+  return (
+    <div className="rounded-2xl border border-noema-deep/10 bg-white p-4">
+      <div className="mb-2 flex items-center gap-2">
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Título — opcional"
+          className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink placeholder:text-ink/35 focus:outline-none"
+        />
+        <button
+          onClick={borrar}
+          aria-label="Eliminar nota"
+          className="shrink-0 text-ink/30 hover:text-red-600"
+        >
+          <Trash2 className="size-4" />
+        </button>
+      </div>
+      <textarea
+        value={contenido}
+        onChange={(e) => setContenido(e.target.value)}
+        placeholder="Observaciones clínicas…"
+        className="min-h-[140px] w-full resize-y rounded-lg border border-noema-deep/10 bg-bone/20 px-3 py-2 text-sm leading-relaxed text-ink focus:border-noema-sage focus:outline-none"
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          onClick={guardar}
+          disabled={pending || !sucio}
+          className="inline-flex items-center gap-2 rounded-md bg-noema-deep px-3 py-1.5 text-sm font-medium text-bone hover:bg-noema-deep/90 disabled:opacity-40"
+        >
+          <Save className="size-4" /> {pending ? 'Guardando…' : sucio ? 'Guardar cambios' : 'Guardado'}
+        </button>
+        {guardado && (
+          <span className="inline-flex items-center gap-1 text-sm text-noema-sage">
+            <Check className="size-4" /> Guardado
+          </span>
+        )}
+        {error && <span className="text-sm text-red-600">{error}</span>}
+      </div>
     </div>
   );
 }
