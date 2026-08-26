@@ -120,7 +120,7 @@ export async function enviarMensajeCentroAction(
     tipo: 'centro',
     titulo: `Mensaje de ${c?.nombre_centro ?? 'tu centro'}`,
     cuerpo: cuerpo.trim().slice(0, 160),
-    url: '/mi-centro',
+    url: '/mensajes/centro',
   });
 
   revalidatePath('/centro/comunicacion');

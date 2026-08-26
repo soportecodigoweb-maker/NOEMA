@@ -12,13 +12,19 @@ export interface MensajeCentro {
   fecha: string;
 }
 
-/** Chat 1 a 1 entre el terapeuta y su centro. */
+/** Chat 1 a 1 entre el terapeuta y su centro.
+ *  `fill`: ocupa todo el alto disponible (para la pantalla dedicada) en vez de
+ *  una tarjeta de alto fijo. */
 export function ChatConCentro({
   centroNombre,
   mensajes,
+  fill = false,
+  ocultarEncabezado = false,
 }: {
   centroNombre: string;
   mensajes: MensajeCentro[];
+  fill?: boolean;
+  ocultarEncabezado?: boolean;
 }) {
   const router = useRouter();
   const [texto, setTexto] = useState('');
@@ -44,11 +50,19 @@ export function ChatConCentro({
   };
 
   return (
-    <div className="flex h-[min(70vh,560px)] flex-col overflow-hidden rounded-2xl border border-noema-deep/10 bg-white">
-      <div className="border-b border-noema-deep/[0.08] px-4 py-3">
-        <p className="font-medium text-ink">{centroNombre}</p>
-        <p className="text-xs text-foreground-muted">Conversación con la administración de tu centro</p>
-      </div>
+    <div
+      className={
+        fill
+          ? 'flex min-h-0 flex-1 flex-col overflow-hidden bg-white'
+          : 'flex h-[min(70vh,560px)] flex-col overflow-hidden rounded-2xl border border-noema-deep/10 bg-white'
+      }
+    >
+      {!ocultarEncabezado && (
+        <div className="border-b border-noema-deep/[0.08] px-4 py-3">
+          <p className="font-medium text-ink">{centroNombre}</p>
+          <p className="text-xs text-foreground-muted">Conversación con la administración de tu centro</p>
+        </div>
+      )}
 
       <div className="flex-1 space-y-2 overflow-y-auto bg-paper/30 p-4">
         {mensajes.length === 0 ? (

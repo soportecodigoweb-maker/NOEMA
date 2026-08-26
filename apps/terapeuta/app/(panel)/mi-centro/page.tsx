@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation';
-import { Building2, Megaphone } from 'lucide-react';
+import Link from 'next/link';
+import { Building2, Megaphone, MessageCircle, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { ChatConCentro } from '@/components/centro/ChatConCentro';
 import { AcuerdosPorFirmar } from '@/components/centro/AcuerdosPorFirmar';
 import { ObservacionesSupervision } from '@/components/ajustes/ObservacionesSupervision';
 import { observacionesDelCentro } from '../ajustes/supervision-data';
-import { RefrescarEnVivo } from '@/components/util/RefrescarEnVivo';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mi centro' };
@@ -48,14 +47,14 @@ export default async function MiCentroPage() {
     );
   }
 
-  const [{ data: centro }, { data: mensajes }, { data: anuncios }, { data: acuerdos }, observaciones] = await Promise.all([
+  const [{ data: centro }, { count: mensajesSinLeer }, { data: anuncios }, { data: acuerdos }, observaciones] = await Promise.all([
     supabase.from('centros').select('nombre_centro').eq('profile_id', ct.centro_id).maybeSingle(),
     supabase
       .from('centro_mensajes')
-      .select('id, cuerpo, de_centro, creado_at')
+      .select('*', { count: 'exact', head: true })
       .eq('terapeuta_id', user.id)
-      .order('creado_at', { ascending: true })
-      .limit(200),
+      .eq('de_centro', true)
+      .is('leido_at', null),
     supabase
       .from('centro_anuncios')
       .select('id, titulo, cuerpo, creado_at')
@@ -74,13 +73,6 @@ export default async function MiCentroPage() {
   return (
     <div className="px-5 py-8 sm:px-8">
       <div className="mx-auto max-w-3xl space-y-6">
-        {/* Tiempo real: si el centro escribe, aparece al instante */}
-        <RefrescarEnVivo
-          tabla="centro_mensajes"
-          filtro={`terapeuta_id=eq.${user.id}`}
-          canal={`centro-chat-${user.id}`}
-        />
-
         <div>
           <h1 className="flex items-center gap-2 font-serif text-3xl text-ink">
             <Building2 className="size-7 text-noema-sage" /> {centro?.nombre_centro ?? 'Mi centro'}
@@ -123,16 +115,27 @@ export default async function MiCentroPage() {
           </section>
         )}
 
-        {/* Chat 1 a 1 */}
-        <ChatConCentro
-          centroNombre={centro?.nombre_centro ?? 'Tu centro'}
-          mensajes={(mensajes ?? []).map((m) => ({
-            id: m.id,
-            cuerpo: m.cuerpo,
-            deCentro: m.de_centro,
-            fecha: fmt(m.creado_at),
-          }))}
-        />
+        {/* Chat: se abre en su ventana dedicada (como el de pacientes) */}
+        <Link
+          href="/mensajes/centro"
+          className="flex items-center gap-3 rounded-2xl border border-noema-deep/10 bg-white p-4 transition-colors hover:border-noema-sage/40"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-sage/15 text-noema-deep/70">
+            <MessageCircle className="size-5" strokeWidth={1.8} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium text-ink">Chat con la administración</span>
+            <span className="block text-xs text-foreground-muted">
+              Abre la conversación con tu centro
+            </span>
+          </span>
+          {mensajesSinLeer && mensajesSinLeer > 0 ? (
+            <span className="shrink-0 rounded-full bg-noema-clay px-2 py-0.5 text-xs font-medium text-white">
+              {mensajesSinLeer}
+            </span>
+          ) : null}
+          <ChevronRight className="size-5 shrink-0 text-foreground-muted" />
+        </Link>
       </div>
     </div>
   );

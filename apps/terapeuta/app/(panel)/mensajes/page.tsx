@@ -110,7 +110,7 @@ export default async function MensajesPage() {
       {chatCentro && (
         <Card variant="flat" className="mb-4 overflow-hidden p-0">
           <Link
-            href="/mi-centro"
+            href="/mensajes/centro"
             className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-paper/40"
           >
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-sage/20 text-noema-deep/70">
