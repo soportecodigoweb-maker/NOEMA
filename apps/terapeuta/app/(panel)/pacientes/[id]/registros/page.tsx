@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { formatFecha } from '@/lib/utils';
 import { Bookmark } from 'lucide-react';
+import { RetroRegistro } from '@/components/pacientes/RetroRegistro';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export default async function PacienteRegistrosPage({ params }: PageProps) {
   const { data: registros } = await supabase
     .from('registros_emocionales')
     .select(
-      'id, fecha, hora, emocion_principal_key, intensidad, descripcion, situacion_detonante, privacidad',
+      'id, fecha, hora, emocion_principal_key, intensidad, descripcion, situacion_detonante, privacidad, retroalimentacion, retroalimentacion_at',
     )
     .eq('paciente_id', vinc.paciente_id)
     .order('fecha', { ascending: false })
@@ -130,6 +130,21 @@ export default async function PacienteRegistrosPage({ params }: PageProps) {
                       </div>
                     )}
                   </dl>
+
+                  {/* Mensaje / retroalimentación del terapeuta a este registro */}
+                  <RetroRegistro
+                    registroId={r.id}
+                    vinculacionId={id}
+                    inicial={r.retroalimentacion}
+                    fecha={
+                      r.retroalimentacion_at
+                        ? new Date(r.retroalimentacion_at).toLocaleDateString('es-MX', {
+                            day: 'numeric',
+                            month: 'short',
+                          })
+                        : null
+                    }
+                  />
                 </div>
               </div>
             </Card>

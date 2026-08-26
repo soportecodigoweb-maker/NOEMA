@@ -2163,6 +2163,9 @@ export type Database = {
           necesidad: string | null
           paciente_id: string
           pensamientos: string | null
+          retroalimentacion: string | null
+          retroalimentacion_at: string | null
+          retroalimentacion_por: string | null
           privacidad: Database["public"]["Enums"]["nivel_privacidad"]
           registrado_at: string
           sensaciones_fisicas: string | null
@@ -2183,6 +2186,9 @@ export type Database = {
           necesidad?: string | null
           paciente_id: string
           pensamientos?: string | null
+          retroalimentacion?: string | null
+          retroalimentacion_at?: string | null
+          retroalimentacion_por?: string | null
           privacidad?: Database["public"]["Enums"]["nivel_privacidad"]
           registrado_at?: string
           sensaciones_fisicas?: string | null
@@ -2203,6 +2209,9 @@ export type Database = {
           necesidad?: string | null
           paciente_id?: string
           pensamientos?: string | null
+          retroalimentacion?: string | null
+          retroalimentacion_at?: string | null
+          retroalimentacion_por?: string | null
           privacidad?: Database["public"]["Enums"]["nivel_privacidad"]
           registrado_at?: string
           sensaciones_fisicas?: string | null

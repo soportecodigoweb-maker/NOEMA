@@ -19,7 +19,7 @@ export default async function RegistrosPage() {
     supabase.from('emociones_catalogo').select('key, nombre_es, familia').eq('activa', true).order('orden'),
     supabase
       .from('registros_emocionales')
-      .select('id, fecha, hora, emocion_principal_key, emociones_secundarias, intensidad, descripcion, situacion_detonante, privacidad')
+      .select('id, fecha, hora, emocion_principal_key, emociones_secundarias, intensidad, descripcion, situacion_detonante, privacidad, retroalimentacion, retroalimentacion_at')
       .eq('paciente_id', user.id)
       .order('fecha', { ascending: false })
       .order('hora', { ascending: false })

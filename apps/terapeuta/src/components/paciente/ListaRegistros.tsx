@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Share2, Lock, Check, CheckSquare, Square, X, ListChecks } from 'lucide-react';
+import { Share2, Lock, Check, CheckSquare, Square, X, ListChecks, MessageCircle } from 'lucide-react';
 import { IconoEmocion } from '@/components/paciente/IconoEmocion';
 import { cambiarPrivacidadRegistrosAction } from '../../../app/paciente/actions';
 
@@ -21,6 +21,8 @@ interface Registro {
   descripcion: string | null;
   situacion_detonante: string | null;
   privacidad: string;
+  retroalimentacion?: string | null;
+  retroalimentacion_at?: string | null;
 }
 
 const ES_COMPARTIDO = (p: string) => p === 'compartido' || p === 'marcado_sesion';
@@ -222,6 +224,14 @@ export function ListaRegistros({
                       </button>
                     )}
                   </div>
+                  {r.retroalimentacion && (
+                    <div className="mt-2 rounded-lg border-l-2 border-noema-sage bg-noema-sage/[0.07] px-3 py-2">
+                      <p className="inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-noema-sage">
+                        <MessageCircle className="size-3" /> Mensaje de tu terapeuta
+                      </p>
+                      <p className="mt-0.5 whitespace-pre-wrap text-sm text-ink/90">{r.retroalimentacion}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </li>
