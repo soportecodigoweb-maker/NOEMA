@@ -126,6 +126,38 @@ export async function obtenerFraseMotivacionalAction(): Promise<{ familia: Famil
   return elegirFraseMotivacional(conteo, semillaDelDia());
 }
 
+/**
+ * Cambia la privacidad de uno o varios registros emocionales YA creados, para
+ * que el paciente pueda compartir con su terapeuta (o volver a privado) después
+ * de haberlos guardado. Funciona individual o en lote.
+ */
+export async function cambiarPrivacidadRegistrosAction(
+  ids: string[],
+  privacidad: Privacidad,
+): Promise<{ ok: boolean; cambiados?: number; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+  const limpios = (ids ?? []).filter(Boolean);
+  if (limpios.length === 0) return { ok: false, error: 'No elegiste ningún registro.' };
+  if (!['privado', 'compartido', 'marcado_sesion'].includes(privacidad)) {
+    return { ok: false, error: 'Opción no válida.' };
+  }
+
+  const { error, count } = await supabase
+    .from('registros_emocionales')
+    .update({ privacidad }, { count: 'exact' })
+    .in('id', limpios)
+    .eq('paciente_id', user.id); // solo los suyos
+  if (error) return { ok: false, error: 'No se pudo actualizar. Intenta de nuevo.' };
+
+  revalidatePath('/paciente/registros');
+  revalidatePath('/paciente/progreso');
+  return { ok: true, cambiados: count ?? limpios.length };
+}
+
 /** Crea una entrada de diario. */
 export async function crearDiarioAction(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   const supabase = await createClient();
