@@ -7,10 +7,12 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ comentar?: string }>;
 }
 
-export default async function PacienteRegistrosPage({ params }: PageProps) {
+export default async function PacienteRegistrosPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { comentar } = await searchParams;
   const supabase = await createClient();
 
   const { data: vinc } = await supabase
@@ -60,7 +62,14 @@ export default async function PacienteRegistrosPage({ params }: PageProps) {
       ) : (
         <ul className="space-y-3">
           {registros.map((r) => (
-            <Card key={r.id} variant="flat" className="hover:bg-paper/30 transition-colors">
+            <Card
+              key={r.id}
+              id={`registro-${r.id}`}
+              variant="flat"
+              className={`transition-colors hover:bg-paper/30 ${
+                r.id === comentar ? 'ring-2 ring-noema-sage/40' : ''
+              }`}
+            >
               <div className="flex items-start gap-4">
                 <div className="text-center shrink-0 w-14">
                   <p className="font-serif text-2xl text-ink">{new Date(r.fecha).getDate()}</p>
@@ -135,6 +144,7 @@ export default async function PacienteRegistrosPage({ params }: PageProps) {
                   <RetroRegistro
                     registroId={r.id}
                     vinculacionId={id}
+                    abrirInicial={r.id === comentar}
                     inicial={r.retroalimentacion}
                     fecha={
                       r.retroalimentacion_at

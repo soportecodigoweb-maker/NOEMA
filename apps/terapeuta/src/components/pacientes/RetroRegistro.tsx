@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageCircle, Check, Pencil, X } from 'lucide-react';
 import { retroalimentarRegistroAction } from '../../../app/(panel)/pacientes/[id]/registros/actions';
@@ -11,18 +11,31 @@ export function RetroRegistro({
   vinculacionId,
   inicial,
   fecha,
+  abrirInicial = false,
 }: {
   registroId: string;
   vinculacionId: string;
   inicial: string | null;
   fecha: string | null;
+  /** Si llega desde la notificación de este registro, abre el recuadro solo. */
+  abrirInicial?: boolean;
 }) {
   const router = useRouter();
   const [valor, setValor] = useState(inicial ?? '');
   const [guardado, setGuardado] = useState(inicial);
-  const [editando, setEditando] = useState(!inicial);
+  // Colapsado por defecto; se abre con el botón "Responder" (o desde la notif).
+  const [editando, setEditando] = useState(abrirInicial && !inicial);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Si llega desde la notificación, lleva la vista a este registro.
+  useEffect(() => {
+    if (abrirInicial) {
+      ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const enviar = () => {
     setError(null);
@@ -59,9 +72,21 @@ export function RetroRegistro({
     );
   }
 
+  // Sin comentario y colapsado: botón para abrir el recuadro.
+  if (!editando) {
+    return (
+      <button
+        onClick={() => setEditando(true)}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-noema-sage/40 bg-noema-sage/[0.06] px-3 py-1.5 text-sm font-medium text-noema-sage hover:bg-noema-sage/15"
+      >
+        <MessageCircle className="size-4" /> Comentar esta emoción
+      </button>
+    );
+  }
+
   // Editor.
   return (
-    <div className="mt-3 rounded-lg border border-noema-sage/25 bg-noema-sage/[0.04] p-3">
+    <div ref={ref} className="mt-3 rounded-lg border border-noema-sage/25 bg-noema-sage/[0.04] p-3">
       <p className="mb-1.5 inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider text-noema-sage">
         <MessageCircle className="size-3" /> Responder a este registro
       </p>
@@ -81,18 +106,16 @@ export function RetroRegistro({
         >
           <Check className="size-4" /> {pending ? 'Enviando…' : 'Enviar al paciente'}
         </button>
-        {guardado != null && (
-          <button
-            onClick={() => {
-              setValor(guardado ?? '');
-              setEditando(false);
-              setError(null);
-            }}
-            className="inline-flex items-center gap-1 px-2 py-1.5 text-sm text-ink/50 hover:text-ink"
-          >
-            <X className="size-4" /> Cancelar
-          </button>
-        )}
+        <button
+          onClick={() => {
+            setValor(guardado ?? '');
+            setEditando(false);
+            setError(null);
+          }}
+          className="inline-flex items-center gap-1 px-2 py-1.5 text-sm text-ink/50 hover:text-ink"
+        >
+          <X className="size-4" /> Cancelar
+        </button>
       </div>
     </div>
   );
