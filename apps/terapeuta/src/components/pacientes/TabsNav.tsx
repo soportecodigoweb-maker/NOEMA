@@ -14,6 +14,7 @@ const tabs = [
   { slug: 'diario', label: 'Diario' },
   { slug: 'sesiones', label: 'Sesiones' },
   { slug: 'ejercicios', label: 'Ejercicios' },
+  { slug: 'metas', label: 'Metas' },
   { slug: 'notas', label: 'Notas' },
   { slug: 'plan-apoyo', label: 'Plan de apoyo' },
   { slug: 'documentos', label: 'Documentos' },
