@@ -18,7 +18,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
   const [otroActivo, setOtroActivo] = useState(false);
   const [otroTexto, setOtroTexto] = useState('');
   const [intensidad, setIntensidad] = useState(3);
-  const [privacidad, setPrivacidad] = useState('privado');
+  
   const [error, setError] = useState<string | null>(null);
   const [frase, setFrase] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -34,7 +34,6 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
     setOtroActivo(false);
     setOtroTexto('');
     setIntensidad(3);
-    setPrivacidad('privado');
   };
 
   const enviar = (formData: FormData) => {
@@ -52,7 +51,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
     formData.set('emociones_secundarias', secundarias.join(','));
     formData.set('emocion_otro', otroTxt);
     formData.set('intensidad', String(intensidad));
-    formData.set('privacidad', privacidad);
+    formData.set('privacidad', 'compartido');
     setError(null);
     startTransition(async () => {
       const res = await crearRegistroAction(formData);
@@ -178,29 +177,9 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
         />
       </div>
 
-      <div>
-        <label className="mb-1 block text-sm text-ink/70">Privacidad</label>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { v: 'privado', l: 'Privado (solo yo)' },
-            { v: 'compartido', l: 'Compartir con mi terapeuta' },
-            { v: 'marcado_sesion', l: 'Marcar para sesión' },
-          ].map((o) => (
-            <button
-              key={o.v}
-              type="button"
-              onClick={() => setPrivacidad(o.v)}
-              className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
-                privacidad === o.v
-                  ? 'border-noema-sage bg-noema-sage/15 text-noema-deep'
-                  : 'border-ink/15 text-ink/60 hover:border-noema-sage'
-              }`}
-            >
-              {o.l}
-            </button>
-          ))}
-        </div>
-      </div>
+      <p className="rounded-md bg-noema-sage/10 px-3 py-2 text-xs text-noema-deep">
+        Tus registros se comparten con tu terapeuta para acompañar tu proceso.
+      </p>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

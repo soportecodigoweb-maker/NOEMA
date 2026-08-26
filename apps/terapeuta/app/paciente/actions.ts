@@ -53,7 +53,7 @@ export async function crearRegistroAction(
   const intensidad = Number(formData.get('intensidad') ?? 3);
   let descripcion = String(formData.get('descripcion') ?? '').trim();
   const situacion = String(formData.get('situacion') ?? '').trim();
-  const privacidad = String(formData.get('privacidad') ?? 'privado') as Privacidad;
+  const privacidad: Privacidad = 'compartido'; // siempre se comparte con el terapeuta
 
   if (!emocion) return { ok: false, error: 'Elige al menos una emoción.' };
 

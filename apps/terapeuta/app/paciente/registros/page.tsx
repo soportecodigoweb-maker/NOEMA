@@ -31,8 +31,8 @@ export default async function RegistrosPage() {
       <div className="mb-5">
         <h1 className="font-serif text-3xl text-ink">Mis registros</h1>
         <p className="mt-1 text-sm text-ink/60">
-          Anota cómo te sientes. Tú decides qué compartes con tu terapeuta — y puedes cambiarlo
-          después, uno por uno o varios a la vez.
+          Anota cómo te sientes. Tus registros se comparten con tu terapeuta para acompañar tu
+          proceso.
         </p>
       </div>
 
