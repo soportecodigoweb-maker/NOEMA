@@ -67,8 +67,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copiar standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/apps/terapeuta/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/terapeuta/.next/static ./apps/terapeuta/.next/static
-# public/ es opcional (no tenemos static assets); creamos vacío
-RUN mkdir -p ./apps/terapeuta/public && chown -R nextjs:nodejs ./apps/terapeuta/public
+# public/ — assets estáticos (íconos PWA, service worker, offline). Deben
+# servirse en producción, por eso copiamos la carpeta real.
+COPY --from=builder --chown=nextjs:nodejs /app/apps/terapeuta/public ./apps/terapeuta/public
 
 USER nextjs
 EXPOSE 3000

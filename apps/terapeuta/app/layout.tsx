@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, DM_Sans, Caveat } from 'next/font/google';
 import './globals.css';
 import { SonidosUI } from '@/components/sonidos/SonidosUI';
+import { RegistrarSW } from '@/components/pwa/RegistrarSW';
+import { InstalarPWA } from '@/components/pwa/InstalarPWA';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -35,6 +37,19 @@ export const metadata: Metadata = {
     'Da seguimiento real a tus pacientes entre sesiones. Organiza, registra y prepara mejor cada consulta.',
   applicationName: 'NOEMA',
   authors: [{ name: 'NOEMA' }],
+  // PWA: íconos e integración con iOS ("Agregar a inicio").
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'NOEMA',
+    statusBarStyle: 'default',
+  },
   robots: {
     // El panel del terapeuta no debe indexarse;
     // las páginas públicas (landing, directorio) sobreescriben esto.
@@ -67,6 +82,9 @@ export default function RootLayout({
         {children}
         {/* Sonidos de interacción (toques, teclas, interruptores) — ambos roles */}
         <SonidosUI />
+        {/* PWA: registra el service worker para instalación y modo sin conexión */}
+        <RegistrarSW />
+        <InstalarPWA />
       </body>
     </html>
   );
