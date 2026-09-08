@@ -1780,6 +1780,30 @@ export type Database = {
           },
         ]
       }
+      push_tokens: {
+        Row: {
+          actualizado_at: string
+          id: string
+          plataforma: string | null
+          token: string
+          user_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          id?: string
+          plataforma?: string | null
+          token: string
+          user_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          id?: string
+          plataforma?: string | null
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           actualizado_at: string

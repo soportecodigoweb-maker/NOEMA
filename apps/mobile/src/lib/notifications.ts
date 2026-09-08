@@ -11,6 +11,8 @@
  */
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import { supabase } from './supabase';
 
 // Mostrar notificaciones en primer plano también.
 Notifications.setNotificationHandler({
@@ -73,5 +75,33 @@ export async function cancelarRecordatorio(id: string): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(id);
   } catch {
     // ignorar si ya no existe
+  }
+}
+
+/**
+ * Registra el token de push de este dispositivo para el usuario, y lo guarda en
+ * la BD. El servidor lo usa para enviar notificaciones push (vía Expo).
+ * Si no hay FCM/APNs configurado aún, falla en silencio (no rompe la app).
+ */
+export async function registrarPushToken(userId: string): Promise<void> {
+  try {
+    const permitido = await asegurarPermisoNotificaciones();
+    if (!permitido) return;
+    const projectId =
+      (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId;
+    if (!projectId) return;
+    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    if (!token) return;
+    await supabase.from('push_tokens').upsert(
+      {
+        user_id: userId,
+        token,
+        plataforma: Platform.OS,
+        actualizado_at: new Date().toISOString(),
+      },
+      { onConflict: 'token' },
+    );
+  } catch {
+    /* sin credenciales de push (FCM/APNs) o simulador: se ignora */
   }
 }
