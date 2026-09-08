@@ -27,6 +27,7 @@ interface Registro {
   intensidad: number;
   descripcion: string | null;
   privacidad: 'privado' | 'compartido' | 'marcado_sesion';
+  retroalimentacion: string | null;
 }
 
 export default function RegistroIndexScreen() {
@@ -41,7 +42,7 @@ export default function RegistroIndexScreen() {
     desde.setDate(desde.getDate() - 60);
     const { data } = await supabase
       .from('registros_emocionales')
-      .select('id, fecha, hora, emocion_principal_key, intensidad, descripcion, privacidad')
+      .select('id, fecha, hora, emocion_principal_key, intensidad, descripcion, privacidad, retroalimentacion')
       .eq('paciente_id', user.id)
       .gte('fecha', desde.toISOString().slice(0, 10))
       .order('fecha', { ascending: false })
@@ -121,11 +122,16 @@ export default function RegistroIndexScreen() {
                             {r.descripcion}
                           </Text>
                         )}
-                        <View style={styles.privacyChip}>
-                          <Text variant="caption" color="#5C6B5A">
-                            {privacidadLabel(r.privacidad)}
-                          </Text>
-                        </View>
+                        {r.retroalimentacion && (
+                          <View style={styles.retroBox}>
+                            <Text variant="caption" color={colors.noemaSage} style={{ marginBottom: 2 }}>
+                              Mensaje de tu terapeuta
+                            </Text>
+                            <Text variant="bodyM" color={colors.ink}>
+                              {r.retroalimentacion}
+                            </Text>
+                          </View>
+                        )}
                       </Card>
                     ))}
                   </View>
@@ -153,12 +159,6 @@ function capitalizar(key: string): string {
   return key.split('_').map((s) => (s[0]?.toUpperCase() ?? '') + s.slice(1)).join(' ');
 }
 
-function privacidadLabel(p: string): string {
-  if (p === 'privado') return 'Privado';
-  if (p === 'marcado_sesion') return 'Para sesión';
-  return 'Compartido';
-}
-
 function emotionColorFor(key: string): string {
   if (key.includes('feliz') || key.includes('satisf') || key.includes('orgu')) return emotionColors.feliz;
   if (key.includes('cansad') || key.includes('agot')) return emotionColors.cansado;
@@ -174,5 +174,11 @@ const styles = StyleSheet.create({
   fechaLabel: { marginLeft: spacing[1] },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing[3] },
   emocionDot: { width: 12, height: 12, borderRadius: 6 },
-  privacyChip: { marginTop: spacing[2], alignSelf: 'flex-start' },
+  retroBox: {
+    marginTop: spacing[2],
+    paddingLeft: spacing[3],
+    paddingVertical: spacing[1],
+    borderLeftWidth: 2,
+    borderLeftColor: colors.noemaSage,
+  },
 });

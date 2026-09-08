@@ -30,6 +30,7 @@ interface Meta {
   nota: string | null;
   completado: boolean;
   recurrencia: string;
+  compartida: boolean;
 }
 
 export default function MisMetasScreen() {
@@ -44,7 +45,7 @@ export default function MisMetasScreen() {
     if (!user) return;
     const { data } = await supabase
       .from('recordatorios_personales')
-      .select('id, titulo, nota, completado, recurrencia')
+      .select('id, titulo, nota, completado, recurrencia, compartida')
       .eq('paciente_id', user.id)
       .order('completado', { ascending: true })
       .order('creado_at', { ascending: false });
@@ -91,6 +92,16 @@ export default function MisMetasScreen() {
       })
       .eq('id', meta.id);
     await load();
+  };
+
+  const compartir = async (meta: Meta) => {
+    const nuevo = !meta.compartida;
+    setMetas((prev) => prev.map((m) => (m.id === meta.id ? { ...m, compartida: nuevo } : m)));
+    await supabase
+      .from('recordatorios_personales')
+      .update({ compartida: nuevo })
+      .eq('id', meta.id)
+      .eq('paciente_id', user?.id ?? '');
   };
 
   const eliminar = async (id: string) => {
@@ -198,7 +209,7 @@ export default function MisMetasScreen() {
                 Por hacer ({activas.length})
               </Text>
               {activas.map((m) => (
-                <MetaRow key={m.id} meta={m} onToggle={() => toggle(m)} onDelete={() => eliminar(m.id)} />
+                <MetaRow key={m.id} meta={m} onToggle={() => toggle(m)} onShare={() => compartir(m)} onDelete={() => eliminar(m.id)} />
               ))}
             </View>
           )}
@@ -210,7 +221,7 @@ export default function MisMetasScreen() {
                 Completadas ({hechas.length})
               </Text>
               {hechas.map((m) => (
-                <MetaRow key={m.id} meta={m} onToggle={() => toggle(m)} onDelete={() => eliminar(m.id)} />
+                <MetaRow key={m.id} meta={m} onToggle={() => toggle(m)} onShare={() => compartir(m)} onDelete={() => eliminar(m.id)} />
               ))}
             </View>
           )}
@@ -233,10 +244,12 @@ export default function MisMetasScreen() {
 function MetaRow({
   meta,
   onToggle,
+  onShare,
   onDelete,
 }: {
   meta: Meta;
   onToggle: () => void;
+  onShare: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -256,6 +269,11 @@ function MetaRow({
       >
         {meta.titulo}
       </Text>
+      <Pressable onPress={onShare} hitSlop={8} style={[styles.sharePill, meta.compartida && styles.sharePillOn]}>
+        <Text style={{ fontSize: 11, color: meta.compartida ? colors.noemaSage : '#9AA697', fontFamily: fontFamily.sansMedium }}>
+          {meta.compartida ? '✓ Compartida' : 'Compartir'}
+        </Text>
+      </Pressable>
       <Pressable onPress={onDelete} hitSlop={10}>
         <Text style={{ color: '#B85450', fontSize: 18 }}>×</Text>
       </Pressable>
@@ -288,6 +306,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkOn: { backgroundColor: colors.noemaSage, borderColor: colors.noemaSage },
+  sharePill: {
+    borderWidth: 1,
+    borderColor: 'rgba(61,77,62,0.20)',
+    borderRadius: 999,
+    paddingHorizontal: spacing[2],
+    paddingVertical: 3,
+  },
+  sharePillOn: { borderColor: colors.noemaSage, backgroundColor: 'rgba(61,77,62,0.08)' },
   recChip: {
     borderWidth: 1,
     borderColor: 'rgba(61,77,62,0.20)',
