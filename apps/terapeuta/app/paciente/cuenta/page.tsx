@@ -5,6 +5,7 @@ import { SubirAvatar } from '@/components/cuenta/SubirAvatar';
 import { ToggleAprendiz } from '@/components/aprendiz/ToggleAprendiz';
 import { ToggleSonidosUI } from '@/components/sonidos/ToggleSonidosUI';
 import { ToggleAutoLogout } from '@/components/cuenta/ToggleAutoLogout';
+import { MiTerapeuta } from '@/components/paciente/MiTerapeuta';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Mi cuenta' };
@@ -16,11 +17,31 @@ export default async function CuentaPacientePage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/signin');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('nombre, avatar_url, modo_aprendiz, auto_logout_habilitado')
-    .eq('id', user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: vinc }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('nombre, avatar_url, modo_aprendiz, auto_logout_habilitado')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('vinculaciones')
+      .select('terapeuta_id')
+      .eq('paciente_id', user.id)
+      .in('estado', ['activa', 'pausada'])
+      .order('fecha_inicio', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  let terapeutaNombre: string | null = null;
+  if (vinc?.terapeuta_id) {
+    const { data: tp } = await supabase
+      .from('profiles')
+      .select('nombre, apellidos')
+      .eq('id', vinc.terapeuta_id)
+      .maybeSingle();
+    terapeutaNombre = [tp?.nombre, tp?.apellidos].filter(Boolean).join(' ') || 'Tu terapeuta';
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8 sm:py-10">
@@ -36,6 +57,13 @@ export default async function CuentaPacientePage() {
           nombre={profile?.nombre ?? ''}
         />
       </div>
+
+      {/* Mi terapeuta + opción de desvincularme */}
+      {terapeutaNombre && (
+        <div className="mt-4">
+          <MiTerapeuta terapeutaNombre={terapeutaNombre} />
+        </div>
+      )}
 
       <div className="mt-4">
         <ToggleAprendiz inicial={profile?.modo_aprendiz ?? true} />

@@ -86,6 +86,29 @@ export default function CuentaScreen() {
     );
   };
 
+  const desvincularme = () => {
+    Alert.alert(
+      '¿Desvincularte de tu terapeuta?',
+      'Tu terapeuta dejará de acompañarte y de ver tu proceso. Tu información se conserva, pero perderás el seguimiento hasta que te vincules de nuevo. Tu terapeuta recibirá aviso.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sí, desvincularme',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await supabase.rpc('desvincularme');
+            if (error) {
+              Alert.alert('No se pudo', 'Intenta de nuevo en un momento.');
+              return;
+            }
+            await refreshProfile();
+            router.replace('/(paciente)/inicio');
+          },
+        },
+      ],
+    );
+  };
+
   const cambiarTerapeuta = () => {
     Alert.alert(
       'Cambiar de terapeuta',
@@ -170,6 +193,9 @@ export default function CuentaScreen() {
                 style={styles.changeBtn}
               >
                 <Text style={styles.changeBtnText}>Cambiar de terapeuta</Text>
+              </Pressable>
+              <Pressable onPress={desvincularme} style={styles.unlinkBtn}>
+                <Text style={styles.unlinkBtnText}>Desvincularme</Text>
               </Pressable>
             </Card>
           ) : (
@@ -325,6 +351,16 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: 'rgba(46, 59, 46, 0.06)',
+  },
+  unlinkBtn: {
+    marginTop: spacing[2],
+    alignItems: 'center',
+    paddingVertical: spacing[2],
+  },
+  unlinkBtnText: {
+    fontFamily: fontFamily.sansMedium,
+    fontSize: 14,
+    color: '#B85450',
   },
   changeBtn: { marginTop: spacing[4], paddingVertical: spacing[2] },
   changeBtnText: {

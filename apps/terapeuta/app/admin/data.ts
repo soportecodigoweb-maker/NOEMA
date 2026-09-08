@@ -322,6 +322,8 @@ export interface DetalleUsuario {
   telefono: string | null;
   ciudad: string | null;
   resumen: { label: string; valor: string | number }[];
+  // Solo para pacientes: su terapeuta actual (si tiene) para poder desvincular.
+  vinculacion: { id: string; estado: string; terapeutaNombre: string } | null;
 }
 
 /** Detalle de un usuario para el dueño: info básica y resumen NO clínico. */
@@ -339,6 +341,7 @@ export async function detalleUsuario(id: string): Promise<DetalleUsuario | null>
 
   let suscripcion = '—';
   const resumen: { label: string; valor: string | number }[] = [];
+  let vinculacionPaciente: DetalleUsuario['vinculacion'] = null;
 
   if (p.rol === 'terapeuta') {
     const [{ data: t }, { count: pac }] = await Promise.all([
@@ -353,12 +356,20 @@ export async function detalleUsuario(id: string): Promise<DetalleUsuario | null>
     suscripcion = 'gratis';
     const { data: vinc } = await db
       .from('vinculaciones')
-      .select('id, estado')
+      .select('id, estado, terapeuta_id')
       .eq('paciente_id', id)
       .order('fecha_inicio', { ascending: false })
       .limit(1)
       .maybeSingle();
     const vid = vinc?.id;
+    if (vinc?.terapeuta_id) {
+      const { data: tp } = await db.from('profiles').select('nombre, apellidos').eq('id', vinc.terapeuta_id).maybeSingle();
+      vinculacionPaciente = {
+        id: vinc.id,
+        estado: vinc.estado,
+        terapeutaNombre: [tp?.nombre, tp?.apellidos].filter(Boolean).join(' ') || 'Terapeuta',
+      };
+    }
     const [{ count: regs }, { count: diario }, tareasRes, sesRes] = await Promise.all([
       db.from('registros_emocionales').select('*', { count: 'exact', head: true }).eq('paciente_id', id),
       db.from('diario_entradas').select('*', { count: 'exact', head: true }).eq('paciente_id', id),
@@ -393,6 +404,7 @@ export async function detalleUsuario(id: string): Promise<DetalleUsuario | null>
     telefono: p.telefono,
     ciudad: p.ciudad,
     resumen,
+    vinculacion: vinculacionPaciente,
   };
 }
 

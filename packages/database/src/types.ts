@@ -3213,6 +3213,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      desvincularme: {
+        Args: never
+        Returns: undefined
+      }
       mi_rol: {
         Args: never
         Returns: Database["public"]["Enums"]["rol_usuario"]

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronLeft, Mail, Phone, MapPin, Calendar, Clock, CreditCard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { detalleUsuario } from '../../data';
+import { DesvincularPaciente } from '@/components/admin/DesvincularPaciente';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,6 +75,13 @@ export default async function UsuarioDetallePage({ params }: PageProps) {
             ))}
           </dl>
         </section>
+      )}
+
+      {u.vinculacion && (
+        <DesvincularPaciente
+          vinculacionId={u.vinculacion.id}
+          terapeutaNombre={u.vinculacion.terapeutaNombre}
+        />
       )}
     </div>
   );

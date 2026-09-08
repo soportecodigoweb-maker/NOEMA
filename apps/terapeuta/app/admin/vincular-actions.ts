@@ -85,3 +85,57 @@ export async function crearVinculacionManualAction(
   revalidatePath('/admin/vincular');
   return { ok: true };
 }
+
+/** El dueño desvincula manualmente a un paciente de su terapeuta. Cierra la
+ *  vinculación (estado 'finalizada') y avisa a ambas partes. */
+export async function desvincularPacienteAdminAction(
+  vinculacionId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+  if (!(await esDueno(user.id))) return { ok: false, error: 'Sin permiso.' };
+
+  const db = admin();
+  const { data: vinc } = await db
+    .from('vinculaciones')
+    .select('id, paciente_id, terapeuta_id, estado')
+    .eq('id', vinculacionId)
+    .maybeSingle();
+  if (!vinc) return { ok: false, error: 'Vinculación no encontrada.' };
+
+  const { error } = await db
+    .from('vinculaciones')
+    .update({ estado: 'finalizada', fecha_fin: new Date().toISOString() })
+    .eq('id', vinculacionId);
+  if (error) return { ok: false, error: 'No se pudo desvincular.' };
+
+  // El paciente vuelve a estado sin_terapeuta.
+  if (vinc.paciente_id) {
+    await db.from('profiles').update({ rol: 'sin_terapeuta' }).eq('id', vinc.paciente_id);
+  }
+
+  const avisos = [];
+  if (vinc.paciente_id)
+    avisos.push({
+      destinatario_id: vinc.paciente_id,
+      tipo: 'vinculacion',
+      titulo: 'Se cerró tu vínculo con tu terapeuta',
+      cuerpo: 'La administración de NOEMA cerró tu vínculo. Puedes vincularte con un nuevo terapeuta cuando quieras.',
+      url: '/paciente',
+    });
+  if (vinc.terapeuta_id)
+    avisos.push({
+      destinatario_id: vinc.terapeuta_id,
+      tipo: 'vinculacion',
+      titulo: 'Se cerró un vínculo con un paciente',
+      cuerpo: 'La administración de NOEMA cerró el vínculo con uno de tus pacientes.',
+      url: '/pacientes',
+    });
+  if (avisos.length) await db.from('notificaciones').insert(avisos);
+
+  revalidatePath('/admin/usuarios');
+  return { ok: true };
+}

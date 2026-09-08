@@ -454,3 +454,53 @@ export async function responderTareaAction(
   revalidatePath('/paciente/tareas');
   return { ok: true };
 }
+
+/** El propio paciente se desvincula de su terapeuta (con advertencia en la UI).
+ *  Cierra la vinculación y avisa al terapeuta. */
+export async function desvincularmeAction(): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Tu sesión expiró.' };
+
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceKey || !url) return { ok: false, error: 'Configuración no disponible.' };
+  const db = createAdminClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: vinc } = await db
+    .from('vinculaciones')
+    .select('id, terapeuta_id')
+    .eq('paciente_id', user.id)
+    .in('estado', ['activa', 'pausada'])
+    .order('fecha_inicio', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!vinc) return { ok: false, error: 'No tienes un terapeuta vinculado.' };
+
+  const { error } = await db
+    .from('vinculaciones')
+    .update({ estado: 'finalizada', fecha_fin: new Date().toISOString() })
+    .eq('id', vinc.id);
+  if (error) return { ok: false, error: 'No se pudo desvincular. Intenta de nuevo.' };
+
+  await db.from('profiles').update({ rol: 'sin_terapeuta' }).eq('id', user.id);
+
+  if (vinc.terapeuta_id) {
+    const { data: perfil } = await db.from('profiles').select('nombre').eq('id', user.id).maybeSingle();
+    await db.from('notificaciones').insert({
+      destinatario_id: vinc.terapeuta_id,
+      tipo: 'vinculacion',
+      titulo: 'Un paciente se desvinculó',
+      cuerpo: `${perfil?.nombre ?? 'Un paciente'} decidió terminar el vínculo contigo.`,
+      url: '/pacientes',
+    });
+  }
+
+  revalidatePath('/paciente/cuenta');
+  revalidatePath('/paciente');
+  return { ok: true };
+}
