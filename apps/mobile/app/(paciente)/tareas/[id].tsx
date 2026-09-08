@@ -34,6 +34,7 @@ interface Tarea {
   fecha_limite: string | null;
   estado: string;
   campos_respuesta: CampoRespuesta[] | null;
+  tabla_columnas: { key: string; label: string }[] | null;
 }
 
 export default function DetalleTareaScreen() {
@@ -48,6 +49,7 @@ export default function DetalleTareaScreen() {
   const [error, setError] = useState<string | null>(null);
   // Respuestas a los campos dinámicos de la plantilla (#2)
   const [campos, setCampos] = useState<Record<string, string | number>>({});
+  const [filas, setFilas] = useState<string[][]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const setCampo = (key: string, value: string | number) =>
@@ -57,10 +59,15 @@ export default function DetalleTareaScreen() {
     (async () => {
       const { data } = await supabase
         .from('tareas')
-        .select('id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta')
+        .select('id, titulo, descripcion, contenido_md, fecha_limite, estado, campos_respuesta, tabla_columnas')
         .eq('id', id!)
         .maybeSingle();
-      setTarea(data as Tarea | null);
+      const t = data as Tarea | null;
+      setTarea(t);
+      const cols = t?.tabla_columnas;
+      if (cols && cols.length > 0) {
+        setFilas([cols.map(() => ''), cols.map(() => '')]);
+      }
 
       // Traer última retroalimentación del terapeuta (si existe) (#4)
       if (user) {
@@ -84,10 +91,23 @@ export default function DetalleTareaScreen() {
     setSaving(true);
     try {
       // Insertar respuesta (incluye campos dinámicos de la plantilla)
+      const cols = tarea.tabla_columnas;
+      let respuestasPayload: Record<string, string | number> = campos;
+      if (cols && cols.length > 0) {
+        const filasConDatos = filas.filter((f) => f.some((c) => c.trim()));
+        if (filasConDatos.length === 0) {
+          setSaving(false);
+          setError('Escribe al menos una fila antes de enviar.');
+          return;
+        }
+        respuestasPayload = {
+          tabla: JSON.stringify({ columnas: cols.map((c) => c.label), filas: filasConDatos }),
+        };
+      }
       const { error: rErr } = await supabase.from('tarea_respuestas').insert({
         tarea_id: tarea.id,
         paciente_id: user.id,
-        respuestas: campos,
+        respuestas: respuestasPayload,
         texto_libre: textoLibre || null,
         dificultad_percibida: dificultad,
         compartir_terapeuta: compartir,
@@ -155,18 +175,59 @@ export default function DetalleTareaScreen() {
                   </Card>
                 )}
 
-                {/* Campos dinámicos de la plantilla (#2) */}
-                {tarea.campos_respuesta && tarea.campos_respuesta.length > 0 && (
-                  <View style={{ marginTop: spacing[6], gap: spacing[5] }}>
-                    {tarea.campos_respuesta.map((campo) => (
-                      <CampoDinamico
-                        key={campo.key}
-                        campo={campo}
-                        valor={campos[campo.key]}
-                        onChange={(v) => setCampo(campo.key, v)}
-                      />
+                {/* Autorregistro en tabla: el paciente llena filas */}
+                {tarea.tabla_columnas && tarea.tabla_columnas.length > 0 ? (
+                  <View style={{ marginTop: spacing[6], gap: spacing[3] }}>
+                    <Text variant="h3">Completa la tabla</Text>
+                    {filas.map((fila, fi) => (
+                      <Card key={fi} padding={3} variant="flat" style={{ gap: spacing[3] }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text variant="caption" color="#5C6B5A">Fila {fi + 1}</Text>
+                          {filas.length > 1 && (
+                            <Pressable onPress={() => setFilas((p) => p.filter((_, k) => k !== fi))} hitSlop={8}>
+                              <Text style={{ color: '#B85450', fontSize: 16 }}>×</Text>
+                            </Pressable>
+                          )}
+                        </View>
+                        {tarea.tabla_columnas!.map((col, ci) => (
+                          <View key={col.key} style={{ gap: 4 }}>
+                            <Text variant="caption" color={colors.ink}>{col.label}</Text>
+                            <Input
+                              multiline
+                              placeholder={col.label}
+                              value={fila[ci] ?? ''}
+                              onChangeText={(v) =>
+                                setFilas((p) => p.map((f, k) => (k === fi ? f.map((x, j) => (j === ci ? v : x)) : f)))
+                              }
+                            />
+                          </View>
+                        ))}
+                      </Card>
                     ))}
+                    <Pressable
+                      onPress={() => setFilas((p) => [...p, tarea.tabla_columnas!.map(() => '')])}
+                      style={styles.addRow}
+                    >
+                      <Text style={{ fontFamily: fontFamily.sansMedium, fontSize: 14, color: colors.noemaDeep }}>
+                        + Agregar fila
+                      </Text>
+                    </Pressable>
                   </View>
+                ) : (
+                  /* Campos dinámicos de la plantilla (#2) */
+                  tarea.campos_respuesta &&
+                  tarea.campos_respuesta.length > 0 && (
+                    <View style={{ marginTop: spacing[6], gap: spacing[5] }}>
+                      {tarea.campos_respuesta.map((campo) => (
+                        <CampoDinamico
+                          key={campo.key}
+                          campo={campo}
+                          valor={campos[campo.key]}
+                          onChange={(v) => setCampo(campo.key, v)}
+                        />
+                      ))}
+                    </View>
+                  )
                 )}
 
                 <View style={{ marginTop: spacing[6], gap: spacing[3] }}>
@@ -344,6 +405,14 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing[5], paddingVertical: spacing[3] },
   back: { fontFamily: fontFamily.sansMedium, fontSize: 14, color: '#5C6B5A' },
   scroll: { padding: spacing[5], paddingBottom: spacing[8] },
+  addRow: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(61,77,62,0.25)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
   scaleRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing[2] },
   scaleChip: {
     flex: 1,
