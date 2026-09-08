@@ -2,11 +2,12 @@
   "expo": {
     "name": "NOEMA",
     "slug": "noema",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "noema",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "icon": "./assets/images/icon.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.noema.mobile",
@@ -18,9 +19,11 @@
     },
     "android": {
       "package": "app.noema.mobile",
-      "permissions": [
-        "NOTIFICATIONS"
-      ]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#2E3B2E"
+      },
+      "permissions": ["NOTIFICATIONS"]
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +34,23 @@
       "expo-font",
       "expo-localization",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F1ECE0"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#2E3B2E"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
