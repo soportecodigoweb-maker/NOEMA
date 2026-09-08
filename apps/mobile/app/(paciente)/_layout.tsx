@@ -3,11 +3,13 @@
  *
  * NOTA: temporalmente usando chars tipográficos para isolated SVG runtime issue.
  */
+import { useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, View, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, fontFamily, radii } from '@/lib/theme';
 import { Text } from '@/components/ui/Text';
+import { asegurarPermisoNotificaciones } from '@/lib/notifications';
 
 const tabIcons = {
   inicio: '⌂',
@@ -19,6 +21,13 @@ const tabIcons = {
 
 export default function PacienteLayout() {
   const router = useRouter();
+
+  // Al entrar a la app pedimos el permiso de notificaciones y creamos el canal,
+  // para que NOEMA aparezca en los ajustes de notificaciones del teléfono y
+  // pueda enviar los recordatorios.
+  useEffect(() => {
+    asegurarPermisoNotificaciones().catch(() => {});
+  }, []);
 
   return (
     <Tabs
