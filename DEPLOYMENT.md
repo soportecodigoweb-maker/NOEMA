@@ -103,6 +103,75 @@ eas submit --platform android  # primero google play console
 
 ---
 
+## 3b. Notificaciones push (Expo)
+
+Cómo funciona: cada fila nueva en `notificaciones` (mensaje del terapeuta, tarea asignada, recordatorio de registro, alerta de crisis…) dispara el trigger `enviar_push_notificacion`, que manda la notificación con `pg_net` a la API de Expo (`exp.host`) para todos los dispositivos del destinatario guardados en `push_tokens`. La app registra su token al entrar y lo borra al cerrar sesión. Un job horario (`limpiar_push_tokens_horario`) borra los tokens que Expo reporta como `DeviceNotRegistered`.
+
+El código ya está listo; lo que falta son **credenciales**, que no se commitean:
+
+### a) Base de datos
+
+```bash
+supabase db push   # aplica 20260917120000_push_activar.sql (habilita pg_net y pg_cron)
+```
+
+Verifica en el SQL Editor que existen:
+
+```sql
+select extname from pg_extension where extname in ('pg_net', 'pg_cron');
+select jobname from cron.job where jobname = 'limpiar_push_tokens_horario';
+```
+
+En Supabase **self-hosted**, la imagen `supabase/postgres` ya trae ambas extensiones precargadas. Si `pg_net` no aparece, revisa que `shared_preload_libraries` incluya `pg_net` y reinicia la BD.
+
+### b) Android — Firebase Cloud Messaging (FCM V1)
+
+1. Crea un proyecto en https://console.firebase.google.com y añade una app Android con el paquete `app.noema.mobile`.
+2. Descarga `google-services.json` y guárdalo como variable de EAS tipo archivo (así no entra al repo):
+
+```bash
+cd apps/mobile
+eas env:create --scope project --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --environment production
+eas env:create --scope project --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --environment preview
+```
+
+   `app.config.js` lo engancha automáticamente. Para builds locales, deja el archivo en `apps/mobile/google-services.json` (está en `.gitignore`).
+
+3. En Firebase → Configuración del proyecto → Cuentas de servicio → **Generar nueva clave privada** (JSON), y súbela a EAS:
+
+```bash
+eas credentials --platform android
+# → production → Google Service Account → Manage your Google Service Account Key for Push Notifications (FCM V1) → Set up
+```
+
+### c) iOS — APNs
+
+```bash
+eas credentials --platform ios
+# → production → Push Notifications: Manage your Apple Push Notifications Key → Set up a new key
+```
+
+EAS crea y sube la clave APNs con tu cuenta de Apple Developer. No hace falta ningún archivo en el repo.
+
+### d) Token de acceso de Expo (recomendado)
+
+Evita que alguien con tus tokens de dispositivo mande push haciéndose pasar por NOEMA. En https://expo.dev → Account settings → Access tokens crea uno y, en **Project settings → Push notifications**, activa "Enhanced Security". Luego guárdalo en la BD:
+
+```sql
+alter database postgres set app.settings.expo_access_token = 'expo_xxx';
+```
+
+### e) Probar
+
+1. Haz un build con `eas build --profile preview` e instálalo en un teléfono real (en simulador/Expo Go no hay push).
+2. Inicia sesión como paciente y acepta el permiso. Confirma que hay una fila en `push_tokens`.
+3. Desde el panel del terapeuta mándale un mensaje. Debe sonar en el teléfono y, al tocarlo, abrir la pantalla de mensajes.
+4. Si no llega: mira las respuestas de Expo en `select status_code, content from net._http_response order by id desc limit 5;`. Un `DeviceNotRegistered` significa credenciales FCM/APNs faltantes o token de otro build.
+
+Preferencias que ya se respetan: los toggles de **Ajustes → Mis notificaciones** y **No molestar** del terapeuta (en ese horario llegan sin sonido, salvo crisis) y **Notificaciones al paciente** por vinculación.
+
+---
+
 ## 4. Stripe — pasos críticos
 
 ### Configurar producto y precio
@@ -147,6 +216,8 @@ noema.app        → A     → 76.76.21.21           (landing futura)
 | `SUPABASE_SERVICE_ROLE_KEY` | Vercel + Supabase functions | Supabase → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel + Mobile EAS | Supabase → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel + Mobile EAS | Supabase → Settings → API (Publishable) |
+| `GOOGLE_SERVICES_JSON` (archivo) | Mobile EAS (push Android) | Firebase → Configuración del proyecto → tu app Android |
+| `app.settings.expo_access_token` (ajuste de BD) | Trigger `enviar_push_notificacion` | expo.dev → Account settings → Access tokens |
 
 ---
 
@@ -157,6 +228,7 @@ noema.app        → A     → 76.76.21.21           (landing futura)
 - [ ] Variables de entorno configuradas en Vercel
 - [ ] Webhook de Stripe configurado y validado (Stripe te muestra "succeeded")
 - [ ] Dominio apuntando a Vercel y certificado SSL emitido
+- [ ] Push: credenciales FCM V1 (Android) y APNs (iOS) cargadas en EAS; mensaje de prueba recibido en un teléfono real (sección 3b)
 - [ ] App Store Connect y Google Play Console con la app aprobada
 - [ ] Política de privacidad pública y enlazada en App Store + Google Play
 - [ ] Primera prueba end-to-end real: alta de terapeuta → vincular paciente real → registro → resumen IA → cobro Stripe

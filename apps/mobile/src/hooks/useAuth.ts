@@ -11,6 +11,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { eliminarPushToken } from '@/lib/notifications';
 
 export type RolUsuario = 'terapeuta' | 'paciente' | 'sin_terapeuta' | 'admin';
 
@@ -107,6 +108,8 @@ export function useAuth() {
   );
 
   const signOut = useCallback(async () => {
+    // Primero dejar de recibir push en este dispositivo (requiere sesión por la RLS).
+    await eliminarPushToken();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }, []);

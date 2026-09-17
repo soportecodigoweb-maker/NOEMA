@@ -21,7 +21,7 @@ Este documento cubre DOS conjuntos de requerimientos:
 | # | Requerimiento | Estado |
 |---|---|---|
 | 1 | Info del paciente en tiempo real | 🟡 Parcial (datos llegan, falta realtime instantáneo) |
-| 2 | Retroalimentar con push + IA | 🔴 Pendiente (mensajes existen; falta push + IA) |
+| 2 | Retroalimentar con push + IA | 🟡 Parcial (mensajes + push ✅; falta IA) |
 | 3 | Plantillas, forms, PDFs, fecha límite | 🟡 Parcial (7 plantillas ✅ + fecha límite en DB; falta form builder + PDF) |
 | 4 | Métricas + historial NOM-004 | 🟡 Parcial (KPIs básicos; falta historial completo) |
 | 5 | Notas + adjuntos + inmutabilidad | 🟡 Parcial (notas ✅; falta adjuntos + inmutabilidad) |
@@ -140,9 +140,9 @@ filtros de riesgo y buscador) → abre su ficha → botón de config (riesgo + t
 
 | # | Función del paciente | Estado |
 |---|---|---|
-| 1 | Mensajes autoayuda push por algoritmo/historial | 🟡 Corpus + algoritmo ✅ hechos; falta push + revisión clínica |
+| 1 | Mensajes autoayuda push por algoritmo/historial | 🟡 Corpus + algoritmo + infra push ✅; falta programar envíos + revisión clínica |
 | 2 | Acceso y respuesta a tareas asignadas | 🟡 Pantallas existen; falta render dinámico de formatos |
-| 3 | Recordatorios de tareas + alarmas propias | 🔴 Falta infra expo-notifications |
+| 3 | Recordatorios de tareas + alarmas propias | ✅ Locales hechos; push remoto ✅ (faltan credenciales FCM/APNs) |
 | 4 | Retroalimentación tras cada tarea | 🔴 Nuevo |
 | 5 | Recordatorios/tareas propias + panel de progreso | 🔴 Nuevo |
 | 6 | Botón SOS si el terapeuta lo activa | ✅ **Hecho y verificado** |
@@ -168,7 +168,7 @@ filtros de riesgo y buscador) → abre su ficha → botón de config (riesgo + t
 - **Corpus inicial:** 27 mensajes FUNCIONALES (no frases motivacionales vacías) — cada uno con una acción concreta, basados en TCC/ACT/DBT/Activación Conductual/Mindfulness/autocompasión.
 - ⚠️ **Falta para completar #1:**
   1. **Validación + ampliación clínica** del corpus (una psicóloga debe revisar el tono, corregir y expandir a "todos los casos" como pediste — 27 es un punto de partida, no exhaustivo).
-  2. **Entrega por push:** requiere infraestructura Expo Notifications (registro de tokens, programación de envíos, cron). Es una pieza de infra aparte.
+  2. **Entrega por push:** la infraestructura ya está (tokens, trigger → Expo, limpieza de tokens; ver `DEPLOYMENT.md` → 3b). Falta programar el envío de estos mensajes y cargar credenciales FCM/APNs en EAS.
 
 ### 🐛 Fix de bug encontrado
 El trigger `proteger_columnas_vinculacion` (que protege columnas del terapeuta) bloqueaba también al `service_role` (admin/edge functions/seeds), porque su `auth.uid()` es null. Reparado: ahora exime service_role. La protección sigue aplicando al paciente.
@@ -177,7 +177,7 @@ El trigger `proteger_columnas_vinculacion` (que protege columnas del terapeuta) 
 
 **Necesita decisión/recursos tuyos:**
 - **#1 completar** → revisión clínica del corpus (psicóloga) + decisión de cuándo activar push.
-- **#3, push de #1** → requiere setup Expo Notifications (infra; se verifica solo con build real en dispositivo, no en dev).
+- **#3, push de #1** → requiere credenciales FCM (Android) y APNs (iOS) en EAS (`DEPLOYMENT.md` → 3b); se verifica solo con build real en dispositivo, no en dev.
 
 **Trabajo bounded pendiente (safe):**
 - #2 render dinámico de formatos de tarea (campos_respuesta) ~6-8h
@@ -212,7 +212,7 @@ Completado adicionalmente en esta tanda, todo verificado:
 - **#5** ✅ Metas/recordatorios propios + panel de progreso personal.
 - **#7** ✅ Patrones datos-duros (bienestar vs malestar por situación/conducta) SIN interpretación.
 - **#10 + #11** ✅ Agenda: terapeuta agenda + paciente agenda si está habilitado (RLS verificada).
-- **#3** ✅ Recordatorios LOCALES (notificaciones on-device) en metas. Push REMOTO pendiente (infra).
+- **#3** ✅ Recordatorios LOCALES (notificaciones on-device) en metas. Push REMOTO ✅ (código listo; faltan credenciales FCM/APNs).
 
 ## Bugs arreglados en esta tanda
 - **emociones_catalogo VACÍO** en cloud → rompía TODO el registro de emociones (FK). Movido a migration + re-sembrado. María recuperó sus 18 registros.
@@ -227,13 +227,13 @@ Completado adicionalmente en esta tanda, todo verificado:
 
 ### 11 funciones paciente
 ✅ #2 #3(local) #4 #5 #6 #7 #8 #9 #10 #11
-🟡 #1 (corpus+algoritmo listos; falta push remoto + validación clínica del corpus)
+🟡 #1 (corpus+algoritmo+push listos; falta programar envíos + validación clínica del corpus)
 
 ## Lo que QUEDA y por qué (bloqueado en ti)
 1. **IA (terapeuta #6, parte IA de #2 y #1-paciente):** necesito cuenta OpenAI/Anthropic + API key.
 2. **Pagos (terapeuta #10) + finanzas (#11):** necesito tus precios definitivos + Stripe.
 3. **Publicar contenido clínico** (plantillas, psicoeducación, corpus autoayuda): revisión de una psicóloga.
-4. **Push REMOTO** (entrega de mensajes autoayuda/terapeuta): requiere push server + se verifica en build real.
+4. **Push REMOTO** (entrega de mensajes autoayuda/terapeuta): código listo (2026-09-17: `pg_net` + trigger tolerante + preferencias + limpieza de tokens + navegación al tocar). Falta cargar credenciales FCM/APNs en EAS y probar en build real.
 5. **Realtime (terapeuta #1)** y **form builder visual (terapeuta #3):** trabajo bounded pendiente, no bloqueado, solo tiempo.
 
 ## Migrations de esta tanda

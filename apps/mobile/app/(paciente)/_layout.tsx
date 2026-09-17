@@ -3,14 +3,11 @@
  *
  * NOTA: temporalmente usando chars tipográficos para isolated SVG runtime issue.
  */
-import { useEffect } from 'react';
 import { Tabs, useRouter } from 'expo-router';
 import { Pressable, View, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, fontFamily, radii } from '@/lib/theme';
 import { Text } from '@/components/ui/Text';
-import { registrarPushToken } from '@/lib/notifications';
-import { useAuth } from '@/hooks/useAuth';
 
 const tabIcons = {
   inicio: '⌂',
@@ -22,13 +19,9 @@ const tabIcons = {
 
 export default function PacienteLayout() {
   const router = useRouter();
-  const { user } = useAuth();
 
-  // Al entrar a la app: pide permiso, crea el canal y registra el token de push
-  // (para que NOEMA aparezca en los ajustes del teléfono y pueda enviar push).
-  useEffect(() => {
-    if (user?.id) registrarPushToken(user.id).catch(() => {});
-  }, [user?.id]);
+  // El permiso de notificaciones y el registro del token de push se hacen en
+  // el layout raíz (usePushNotifications), para paciente y sin_terapeuta.
 
   return (
     <Tabs

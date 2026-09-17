@@ -3260,6 +3260,10 @@ export type Database = {
         Returns: undefined
       }
       redimir_codigo: { Args: { p_codigo: string }; Returns: Json }
+      registrar_push_token: {
+        Args: { p_plataforma?: string; p_token: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       asegurar_plantillas_terapeuta: { Args: never; Returns: number }

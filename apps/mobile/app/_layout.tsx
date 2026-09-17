@@ -36,6 +36,7 @@ import {
 import { colors } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useAvisoPrivacidad } from '@/hooks/useAvisoPrivacidad';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 SystemUI.setBackgroundColorAsync(colors.paper).catch(() => {});
 
@@ -83,6 +84,20 @@ function AuthGate() {
   // Aviso de privacidad (#9): solo checamos para pacientes autenticados.
   const esPaciente = profile?.rol === 'paciente' || profile?.rol === 'sin_terapeuta';
   const avisoEstado = useAvisoPrivacidad(esPaciente ? profile?.id : null);
+
+  // Push: registrar token y abrir la pantalla correcta al tocar una notificación.
+  // Solo cuando ya pasó aviso de privacidad + onboarding (ya está "dentro").
+  const dentroDeLaApp =
+    !loading &&
+    !!session &&
+    esPaciente &&
+    avisoEstado === 'accepted' &&
+    profile?.onboarding_completo === true;
+  usePushNotifications({
+    userId: profile?.id,
+    rol: esPaciente ? (profile!.rol as 'paciente' | 'sin_terapeuta') : null,
+    listo: dentroDeLaApp,
+  });
 
   useEffect(() => {
     if (loading) return;
