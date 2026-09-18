@@ -74,12 +74,16 @@ export async function updateSession(request: NextRequest) {
   const isLanding = path === '/';
   // El callback de auth debe cargar SIN sesión (ahí es donde se establece).
   const isCallback = path === '/auth/callback';
+  // /api/push/* se protege solo con CRON_SECRET (despachar) o con la sesión
+  // que lee la propia ruta (prueba); sin esto el middleware lo manda a /signin.
+  const isPushApi = path.startsWith('/api/push/');
   const isPublic =
     isAuthPage ||
     isLegalPage ||
     isLanding ||
     isDirectorio ||
     isCallback ||
+    isPushApi ||
     path.startsWith('/_next');
 
   if (!user && !isPublic) {

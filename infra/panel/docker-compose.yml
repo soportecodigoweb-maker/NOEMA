@@ -8,6 +8,9 @@
 #   NEXT_PUBLIC_SUPABASE_ANON_KEY  (ANON key de Supabase self-hosted)
 #   NEXT_PUBLIC_SITE_URL           (https://noema.agentecodigoweb.com)
 #   SUPABASE_SERVICE_ROLE_KEY      (server-side)
+#   VAPID_PRIVATE_KEY              (push web; par de src/lib/push-vapid.ts)
+#   VAPID_SUBJECT                  (mailto:soportenoema@gmail.com)
+#   CRON_SECRET                    (mismo valor en el trigger y el cron de la BD)
 #
 # Levantar: docker compose up -d --build
 # Logs:     docker compose logs -f panel
@@ -35,6 +38,10 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       # URL interna para SSR (red Docker → Kong directo, sin DNS/SSL)
       - SUPABASE_INTERNAL_URL=http://supabase-kong:8000
+      # Push web (web-push/VAPID). Si no están aquí, el contenedor NO las ve.
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - CRON_SECRET=${CRON_SECRET}
     networks:
       - traefik
     labels:

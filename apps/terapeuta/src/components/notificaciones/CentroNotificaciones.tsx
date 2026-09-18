@@ -14,6 +14,7 @@ import {
   Check,
 } from 'lucide-react';
 import { tiempoRelativo } from '@/lib/utils';
+import { PushAvisos } from './PushAvisos';
 
 export interface Notificacion {
   id: string;
@@ -208,6 +209,9 @@ export function CentroNotificaciones({
               </ul>
             )}
           </div>
+
+          {/* Prender/apagar los avisos push de este dispositivo (terapeuta y paciente). */}
+          <PushAvisos />
         </div>
       )}
     </div>

@@ -1513,6 +1513,7 @@ export type Database = {
           destinatario_id: string
           id: string
           leida_at: string | null
+          push_enviada: boolean
           tipo: string
           titulo: string
           url: string | null
@@ -1524,6 +1525,7 @@ export type Database = {
           destinatario_id: string
           id?: string
           leida_at?: string | null
+          push_enviada?: boolean
           tipo: string
           titulo: string
           url?: string | null
@@ -1535,6 +1537,7 @@ export type Database = {
           destinatario_id?: string
           id?: string
           leida_at?: string | null
+          push_enviada?: boolean
           tipo?: string
           titulo?: string
           url?: string | null
@@ -1779,6 +1782,36 @@ export type Database = {
             referencedColumns: ["profile_id"]
           },
         ]
+      }
+      push_suscripciones: {
+        Row: {
+          actualizado_at: string
+          auth: string
+          creado_at: string
+          endpoint: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          actualizado_at?: string
+          auth: string
+          creado_at?: string
+          endpoint: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          actualizado_at?: string
+          auth?: string
+          creado_at?: string
+          endpoint?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       push_tokens: {
         Row: {
@@ -3260,6 +3293,25 @@ export type Database = {
         Returns: undefined
       }
       redimir_codigo: { Args: { p_codigo: string }; Returns: Json }
+      marcar_push_enviada: { Args: { p_ids: string[] }; Returns: number }
+      push_pendientes: {
+        Args: { p_horas?: number }
+        Returns: {
+          id: string
+          destinatario_id: string
+          tipo: string
+          titulo: string
+          cuerpo: string | null
+          url: string | null
+          endpoint: string
+          p256dh: string
+          auth: string
+        }[]
+      }
+      registrar_push_suscripcion: {
+        Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string }
+        Returns: undefined
+      }
       registrar_push_token: {
         Args: { p_plataforma?: string; p_token: string }
         Returns: undefined
