@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 interface PromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -113,6 +114,13 @@ export function InstalarPWA() {
             </button>
           </div>
         </div>
+        <button
+          onClick={ocultar}
+          aria-label="Cerrar"
+          className="rounded p-0.5 text-foreground-muted hover:bg-bone hover:text-ink"
+        >
+          <X className="size-4" />
+        </button>
       </div>
     </div>
   );
