@@ -14,6 +14,7 @@ const CLAVE = 'noema:pwa-oculto';
 export function InstalarPWA() {
   const [visible, setVisible] = useState(false);
   const [esIOS, setEsIOS] = useState(false);
+  const [esMovil, setEsMovil] = useState(true);
   const [deferred, setDeferred] = useState<PromptEvent | null>(null);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function InstalarPWA() {
     const ua = window.navigator.userAgent;
     const ios = /iphone|ipad|ipod/i.test(ua) && !/crios|fxios/i.test(ua); // Safari iOS
     setEsIOS(ios);
+    setEsMovil(/android|iphone|ipad|ipod/i.test(ua));
 
     if (ios) {
       // iOS no dispara beforeinstallprompt: mostramos instrucciones.
@@ -79,7 +81,9 @@ export function InstalarPWA() {
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-ink">Instala NOEMA en tu teléfono</p>
+          <p className="text-sm font-medium text-ink">
+            {esMovil ? 'Instala NOEMA en tu teléfono' : 'Instala NOEMA en tu computadora'}
+          </p>
           {esIOS ? (
             <p className="mt-0.5 text-xs leading-relaxed text-foreground-muted">
               Toca el botón <span className="font-medium text-ink">Compartir</span> ⬆️ y luego{' '}
@@ -87,7 +91,9 @@ export function InstalarPWA() {
             </p>
           ) : (
             <p className="mt-0.5 text-xs leading-relaxed text-foreground-muted">
-              Ábrela como app, a pantalla completa y con su propio ícono.
+              {esMovil
+                ? 'Ábrela como app, a pantalla completa y con su propio ícono.'
+                : 'Ábrela en su propia ventana, con acceso directo y sin la barra del navegador.'}
             </p>
           )}
           <div className="mt-2 flex items-center gap-2">
@@ -99,7 +105,10 @@ export function InstalarPWA() {
                 Instalar
               </button>
             )}
-            <button onClick={ocultar} className="px-2 py-1.5 text-sm text-foreground-muted hover:text-ink">
+            <button
+              onClick={ocultar}
+              className="px-2 py-1.5 text-sm text-foreground-muted hover:text-ink"
+            >
               Ahora no
             </button>
           </div>

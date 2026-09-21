@@ -44,7 +44,15 @@ export function InvitacionPush() {
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
-    setIos(esIosSinInstalar());
+    // En iPhone sin instalar, el aviso genérico de instalar (InstalarPWA) ya
+    // lo dice; solo insistimos nosotros si la persona lo cerró para siempre.
+    let pwaOculto = false;
+    try {
+      pwaOculto = window.localStorage.getItem('noema:pwa-oculto') === '1';
+    } catch {
+      /* noop */
+    }
+    setIos(esIosSinInstalar() && pwaOculto);
     setCerrada(enEspera());
   }, []);
 
