@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { PacienteNav } from '@/components/paciente/PacienteNav';
 import { SosTab } from '@/components/paciente/SosTab';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
+import { InvitacionPush } from '@/components/notificaciones/InvitacionPush';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
@@ -116,6 +117,9 @@ export default async function PacienteLayout({
 
       {/* Botón de apoyo como pestaña lateral escondida (solo si está habilitado) */}
       {funciones.sos && <SosTab />}
+
+      {/* Invitación a activar avisos push en este dispositivo (al entrar) */}
+      <InvitacionPush />
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />

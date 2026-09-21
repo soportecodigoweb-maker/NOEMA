@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { PanelLateral } from '@/components/nav/PanelLateral';
+import { InvitacionPush } from '@/components/notificaciones/InvitacionPush';
 
 export default async function CentroLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -60,6 +61,7 @@ export default async function CentroLayout({ children }: { children: React.React
       <main className="min-w-0 flex-1 overflow-x-hidden px-5 py-8 sm:px-8">
         <div className="mx-auto max-w-5xl">{children}</div>
       </main>
+      <InvitacionPush />
       <AutoLogout habilitado={profile.auto_logout_habilitado} />
     </div>
   );

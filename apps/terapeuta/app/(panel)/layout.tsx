@@ -5,6 +5,7 @@ import { RegistrosEnVivo } from '@/components/registros/RegistrosEnVivo';
 import { AvisoNotificacion } from '@/components/notificaciones/AvisoNotificacion';
 import { GuiaAprendiz } from '@/components/aprendiz/GuiaAprendiz';
 import { AvisoModoAprendiz } from '@/components/aprendiz/AvisoModoAprendiz';
+import { InvitacionPush } from '@/components/notificaciones/InvitacionPush';
 import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { EncuestaSatisfaccion } from '@/components/soporte/EncuestaSatisfaccion';
@@ -152,6 +153,9 @@ export default async function PanelLayout({
         tieneCentro={tieneCentro}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
+
+      {/* Invitación a activar avisos push en este dispositivo (al entrar) */}
+      <InvitacionPush />
 
       {/* Alertas de crisis en vivo (#4) — visibles en cualquier pantalla */}
       <AlertasCrisisEnVivo habilitado={config?.notif_crisis ?? true} />
