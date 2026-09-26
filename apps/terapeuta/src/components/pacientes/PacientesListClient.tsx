@@ -137,7 +137,7 @@ export function PacientesListClient({ rows }: { rows: VinculacionRow[] }) {
           </p>
         </Card>
       ) : (
-        <Card variant="flat" className="overflow-hidden p-0">
+        <Card data-demo="lista-pacientes" variant="flat" className="overflow-hidden p-0">
           <ul className="divide-y divide-noema-deep/[0.06]">
             {filtradas.map((v) => {
               const cfg = riesgoConfig(v.nivel_riesgo);
@@ -145,6 +145,7 @@ export function PacientesListClient({ rows }: { rows: VinculacionRow[] }) {
                 <li key={v.id}>
                   <Link
                     href={`/pacientes/${v.id}`}
+                    data-demo-paciente={v.paciente?.nombre ?? undefined}
                     className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-paper/40"
                   >
                     {/* Indicador de riesgo */}

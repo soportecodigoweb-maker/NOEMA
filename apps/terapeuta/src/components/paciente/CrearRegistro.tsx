@@ -69,6 +69,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
     return (
       <div>
         <button
+          data-demo="btn-registrar"
           onClick={() => {
             setFrase(null);
             setAbierto(true);
@@ -91,7 +92,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
   }
 
   return (
-    <form action={enviar} className="space-y-4 rounded-2xl border border-ink/10 bg-white p-6">
+    <form data-demo="form-registro" action={enviar} className="space-y-4 rounded-2xl border border-ink/10 bg-white p-6">
       <h3 className="font-serif text-lg text-ink">¿Cómo te sientes?</h3>
 
       <div>
@@ -106,6 +107,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
               <button
                 key={e.key}
                 type="button"
+                data-demo={`emocion-${e.key}`}
                 onClick={() => toggleEmocion(e.key)}
                 aria-pressed={activa}
                 className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
@@ -149,6 +151,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <div>
         <label className="mb-1 block text-sm text-ink/70">Intensidad: {intensidad}/5</label>
         <input
+          data-demo="intensidad"
           type="range"
           min={1}
           max={5}
@@ -161,6 +164,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <div>
         <label className="mb-1 block text-sm text-ink/70">¿Qué lo detonó? (opcional)</label>
         <input
+          data-demo="situacion"
           name="situacion"
           placeholder="Ej. Trabajo, Familia, Pareja…"
           className="w-full rounded-md border border-ink/15 bg-bone px-3 py-2 text-sm focus:border-noema-sage focus:outline-none"
@@ -170,6 +174,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
       <div>
         <label className="mb-1 block text-sm text-ink/70">Describe (opcional)</label>
         <textarea
+          data-demo="descripcion"
           name="descripcion"
           rows={2}
           placeholder="Lo que quieras anotar…"
@@ -185,6 +190,7 @@ export function CrearRegistro({ emociones }: { emociones: Emocion[] }) {
 
       <div className="flex gap-2">
         <button
+          data-demo="guardar-registro"
           type="submit"
           disabled={pending || (seleccion.length === 0 && !(otroActivo && otroTexto.trim()))}
           className="rounded-md bg-noema-deep px-4 py-2 text-sm font-medium text-bone hover:bg-noema-deep/90 disabled:opacity-40"

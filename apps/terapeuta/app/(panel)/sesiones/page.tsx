@@ -85,7 +85,9 @@ export default async function SesionesPage() {
         <NuevaSesion pacientes={opcionesPaciente} />
       </div>
 
-      <VistaSesiones sesiones={sesionesCal} />
+      <div data-demo="agenda">
+        <VistaSesiones sesiones={sesionesCal} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SignInForm } from './SignInForm';
+import { BotonesDemo } from './BotonesDemo';
 
 export const metadata = { title: 'Inicia sesión' };
 
@@ -52,6 +53,9 @@ export default async function SignInPage({ searchParams }: PageProps) {
       )}
 
       <SignInForm />
+
+      {/* Demo público: página web y sandbox por rol, sin iniciar sesión */}
+      <BotonesDemo />
 
       <p className="text-sm text-foreground-muted text-center">
         ¿Aún no tienes cuenta?{' '}

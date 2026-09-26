@@ -73,7 +73,7 @@ export default async function PacientesPage() {
             Administra tus vinculaciones, asigna tareas y revisa avances.
           </p>
         </div>
-        <Link href="/pacientes/nuevo">
+        <Link href="/pacientes/nuevo" data-demo="nuevo-paciente">
           <Button variant="primary" size="md">
             <Plus className="size-4" strokeWidth={2} />
             Nuevo paciente

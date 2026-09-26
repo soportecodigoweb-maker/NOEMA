@@ -108,7 +108,7 @@ export default async function PacienteInicioPage() {
       </header>
 
       {/* Frase motivacional del día (algorítmica, según su cuadro) */}
-      <div className="mb-4 flex items-start gap-3 rounded-2xl border border-noema-sage/25 bg-gradient-to-br from-noema-sage/[0.08] to-transparent p-4">
+      <div data-demo="frase" className="mb-4 flex items-start gap-3 rounded-2xl border border-noema-sage/25 bg-gradient-to-br from-noema-sage/[0.08] to-transparent p-4">
         <Sparkles className="mt-0.5 size-5 shrink-0 text-noema-sage" strokeWidth={1.7} />
         <p className="text-[0.95rem] leading-relaxed text-ink/85">{frase}</p>
       </div>
@@ -118,7 +118,7 @@ export default async function PacienteInicioPage() {
 
       {/* 2 · Accesos rápidos */}
       {accesos.length > 0 && (
-        <div className="mb-7 flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div data-demo="accesos" className="mb-7 flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {accesos.map((a) => (
             <Link
               key={a.href}
@@ -138,10 +138,10 @@ export default async function PacienteInicioPage() {
       {!vinculacion ? (
         <VincularTerapeuta />
       ) : (
-        <section>
+        <section data-demo="resumen">
           <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-ink/40">Tu resumen</p>
           <div className="space-y-3.5">
-            <MensajeNoema />
+            <div data-demo="mensaje-noema"><MensajeNoema /></div>
             <ProximaSesionCard sesion={proximaSesion} terapeuta={terapeutaNombre} />
             <MensajesCard sinLeer={mensajesSinLeer} />
             <MobileAppCard />
@@ -157,6 +157,7 @@ function BannerEmocion() {
   const puntos = ['#C7D2BD', '#F0C9AE', '#E8B5AB', '#D9B98C', '#B9C9CC'];
   return (
     <Link
+      data-demo="banner-emocion"
       href="/paciente/registros"
       className="group relative mb-4 flex items-center gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-noema-deep via-noema-sage to-noema-sage px-5 py-4 text-bone shadow-[0_12px_30px_-14px_rgba(46,59,46,0.6)] transition-transform hover:-translate-y-0.5"
     >

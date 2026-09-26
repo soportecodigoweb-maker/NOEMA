@@ -1,0 +1,563 @@
+/* =============================================================================
+   NOEMA · Modo demo (sandbox + video demo)
+   Paleta: la de NOEMA. El acento del demo es un "arcilla" cálido (#B85450)
+   que ya usan las gráficas, sobre el verde profundo y el papel de siempre.
+   ========================================================================== */
+
+:root {
+  --demo-acento: #b85450;
+  --demo-acento-suave: #e8b5ab;
+  --demo-tira: 44px;
+}
+
+/* ── Tira superior: empuja la app hacia abajo ─────────────────────────────── */
+html.demo-con-tira body {
+  padding-top: var(--demo-tira);
+}
+html.demo-con-tira aside.lg\:sticky {
+  top: var(--demo-tira);
+  height: calc(100vh - var(--demo-tira));
+}
+html.demo-con-tira header.sticky {
+  top: var(--demo-tira);
+}
+html.demo-con-tira .fixed.inset-y-0 {
+  top: var(--demo-tira);
+}
+
+/* ── Cursor simulado ──────────────────────────────────────────────────────── */
+.demo-cursor {
+  position: fixed;
+  z-index: 92;
+  pointer-events: none;
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.3s;
+  will-change: transform;
+}
+.demo-cursor svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+.demo-cursor-onda {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid var(--demo-acento);
+  opacity: 0;
+}
+.demo-cursor-onda.activa {
+  animation: demo-onda 0.55s ease-out;
+}
+@keyframes demo-onda {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* ── Resaltado (oscurecer + rectángulo) ───────────────────────────────────── */
+.demo-resaltado {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  border-radius: 14px;
+  border: 2px solid var(--demo-acento);
+  box-shadow:
+    0 0 0 9999px rgba(24, 31, 24, 0.55),
+    0 0 0 4px rgba(184, 84, 80, 0.25);
+  transition:
+    top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s;
+}
+.demo-resaltado.oculto {
+  opacity: 0;
+}
+
+/* ── Gráficas que se dibujan al llegar el recorrido ───────────────────────── */
+.demo-dibujar [data-grafica='barras'] [data-barra] {
+  transform-origin: bottom;
+  animation: demo-crecer 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-dibujar [data-grafica='barras'] [data-barra]:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.demo-dibujar [data-grafica='spark'] path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: demo-trazar 1.4s ease-out forwards;
+}
+.demo-dibujar [data-grafica='spark'] path[fill^='url'] {
+  stroke-dasharray: none;
+  animation: demo-aparecer 1.2s ease-out 0.4s both;
+}
+.demo-dibujar [data-grafica='anillo'] [data-arco] {
+  animation: demo-arco 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes demo-crecer {
+  from {
+    transform: scaleY(0.02);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes demo-trazar {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes demo-aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes demo-arco {
+  from {
+    stroke-dashoffset: var(--demo-arco-total, 999);
+  }
+}
+
+/* ── Animaciones compartidas (tarjeta, tira, video) ──────────────────────── */
+@keyframes demo-subir {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes demo-bajar {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes demo-fundido {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes demo-palabra {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(6px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+@keyframes demo-capa {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes demo-aro {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(180deg) scale(1.04);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) scale(1);
+  }
+}
+@keyframes demo-latido {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+@keyframes demo-escribiendo {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.demo-anim-subir {
+  animation: demo-subir 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-anim-bajar {
+  animation: demo-bajar 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-anim-fundido {
+  animation: demo-fundido 0.4s ease-out both;
+}
+.demo-anim-capa {
+  animation: demo-capa 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-palabra {
+  display: inline-block;
+  animation: demo-palabra 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Reproductor de video ─────────────────────────────────────────────────── */
+.demo-video {
+  --fondo: #1d271e;
+  --texto: #faf7f1;
+  --tenue: rgba(250, 247, 241, 0.68);
+  --acento: #e2b6a5;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--fondo);
+  color: var(--texto);
+  overflow: hidden;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+}
+.demo-video-aro {
+  position: absolute;
+  left: 68%;
+  top: 50%;
+  width: min(72vw, 900px);
+  height: min(72vw, 900px);
+  border-radius: 999px;
+  border: 1px solid rgba(250, 247, 241, 0.09);
+  box-shadow:
+    inset 0 0 120px rgba(199, 210, 189, 0.06),
+    0 0 160px rgba(199, 210, 189, 0.05);
+  filter: blur(1.5px);
+  animation: demo-aro 60s linear infinite;
+  pointer-events: none;
+}
+.demo-video-progreso {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  width: min(92vw, 1280px);
+  z-index: 5;
+}
+.demo-video-progreso span {
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(250, 247, 241, 0.16);
+  overflow: hidden;
+}
+.demo-video-progreso span i {
+  display: block;
+  height: 100%;
+  background: var(--acento);
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+}
+.demo-video-escena {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: 4vw;
+  padding: 7vh 6vw 12vh;
+  transition: opacity 0.3s ease;
+}
+.demo-video-escena.saliendo {
+  opacity: 0;
+}
+.demo-video-texto {
+  max-width: 560px;
+}
+.demo-video-etiqueta {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: clamp(11px, 0.95vw, 14px);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--acento);
+  margin-bottom: 1.6vh;
+}
+.demo-video-titulo {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(34px, 4.6vw, 66px);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin: 0 0 2.4vh;
+}
+.demo-video-parrafo {
+  font-size: clamp(15px, 1.35vw, 21px);
+  line-height: 1.55;
+  color: var(--tenue);
+  margin: 0;
+}
+.demo-video-escenario {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+}
+.demo-video-controles {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 6;
+}
+.demo-video-controles button {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 247, 241, 0.16);
+  background: rgba(250, 247, 241, 0.05);
+  color: var(--texto);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+.demo-video-controles button:hover {
+  background: rgba(250, 247, 241, 0.12);
+  transform: translateY(-1px);
+}
+.demo-video-contador {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  padding: 0 10px;
+  color: var(--tenue);
+}
+.demo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  min-height: 34px;
+  justify-content: center;
+}
+.demo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(250, 247, 241, 0.96);
+  color: #2a3328;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  animation: demo-subir 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--chip, #d9b98c);
+}
+
+/* Marcos de dispositivo */
+.demo-laptop {
+  position: relative;
+  width: 100%;
+  max-width: 980px;
+}
+.demo-laptop-pantalla {
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid rgba(250, 247, 241, 0.14);
+  background: #0f150f;
+  padding: 10px;
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+.demo-laptop-vidrio {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f1ece0;
+}
+.demo-laptop-base {
+  margin: 0 -6%;
+  height: 14px;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(180deg, rgba(250, 247, 241, 0.22), rgba(250, 247, 241, 0.08));
+}
+.demo-laptop-base::after {
+  content: '';
+  display: block;
+  margin: 0 auto;
+  width: 14%;
+  height: 4px;
+  border-radius: 0 0 6px 6px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.demo-telefono {
+  position: relative;
+  width: var(--tel-ancho, 300px);
+  aspect-ratio: 390 / 820;
+  border-radius: 42px;
+  padding: 10px;
+  background: #0f150f;
+  border: 1px solid rgba(250, 247, 241, 0.16);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+}
+.demo-telefono-vidrio {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 33px;
+  overflow: hidden;
+  background: #f1ece0;
+}
+.demo-telefono-isla {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62px;
+  height: 14px;
+  border-radius: 999px;
+  background: #0f150f;
+  z-index: 3;
+}
+/* La app real cargada en un tamaño fijo y escalada para caber en el marco. */
+.demo-app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  border: 0;
+  background: #f1ece0;
+}
+
+/* Ventana de teléfono dentro del sandbox */
+.demo-ventana-tel {
+  position: fixed;
+  z-index: 86;
+  right: max(4vw, 24px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: demo-capa 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-ventana-tel-rotulo {
+  max-width: 320px;
+  text-align: center;
+  color: #faf7f1;
+  font-size: 15px;
+  line-height: 1.45;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.demo-ventana-tel-rotulo b {
+  display: block;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--demo-acento-suave);
+  margin-bottom: 6px;
+}
+.demo-oscuro {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgba(24, 31, 24, 0.62);
+  animation: demo-fundido 0.35s ease-out both;
+}
+
+/* Precio */
+.demo-precio {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: clamp(64px, 9vw, 150px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Móvil: texto arriba, dispositivo abajo */
+@media (max-width: 900px) {
+  .demo-video-escena {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: 3vh;
+    padding: 9vh 6vw 13vh;
+  }
+  .demo-video-titulo {
+    font-size: clamp(28px, 8vw, 44px);
+  }
+  .demo-video-parrafo {
+    font-size: 15px;
+  }
+  .demo-video-aro {
+    left: 50%;
+    top: 70%;
+  }
+  .demo-ventana-tel {
+    right: 50%;
+    transform: translate(50%, -50%);
+  }
+  /* El teléfono no debe tapar el texto ni los controles: se limita por alto. */
+  .demo-video-escenario .demo-telefono {
+    width: min(var(--tel-ancho, 300px), 26vh);
+  }
+  .demo-video-escenario .demo-laptop {
+    max-width: min(980px, 92vw);
+  }
+  .demo-chips {
+    margin-top: 10px;
+  }
+  .demo-video-controles {
+    bottom: 14px;
+    gap: 6px;
+  }
+  .demo-video-controles button {
+    width: 44px;
+    height: 44px;
+  }
+}

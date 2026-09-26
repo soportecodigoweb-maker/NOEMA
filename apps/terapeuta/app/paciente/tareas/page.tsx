@@ -66,7 +66,7 @@ export default async function TareasPacientePage() {
           No tienes tareas asignadas por ahora.
         </div>
       ) : (
-        <ul className="mt-6 space-y-6">
+        <ul data-demo="tareas" className="mt-6 space-y-6">
           {tareas.map((t) => {
             const est = ESTADO_LABEL[t.estado] ?? { label: t.estado, color: 'bg-ink/10 text-ink/50' };
             const feedback = (t.respuestas ?? [])
@@ -85,7 +85,7 @@ export default async function TareasPacientePage() {
               ? `${est.label} · hasta ${new Date(t.fecha_limite).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`
               : est.label;
             return (
-              <li key={t.id}>
+              <li key={t.id} data-demo-tarea={t.estado}>
                 <HojaMembretada titulo={t.titulo} subtitulo={t.descripcion} etiqueta={etiqueta}>
                   {t.contenido_md && (
                     <div className="whitespace-pre-wrap font-sans text-[0.95rem] leading-relaxed text-ink/85">

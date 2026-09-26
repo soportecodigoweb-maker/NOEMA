@@ -1849,6 +1849,7 @@ export type Database = {
           eliminada_at: string | null
           email: string
           es_dueno: boolean
+          demo_visitante: string | null
           estado_cuenta: string
           id: string
           modo_aprendiz: boolean
@@ -1872,6 +1873,7 @@ export type Database = {
           eliminada_at?: string | null
           email: string
           es_dueno?: boolean
+          demo_visitante?: string | null
           estado_cuenta?: string
           id: string
           locale?: string
@@ -1894,6 +1896,7 @@ export type Database = {
           eliminada_at?: string | null
           email?: string
           es_dueno?: boolean
+          demo_visitante?: string | null
           estado_cuenta?: string
           id?: string
           modo_aprendiz?: boolean
@@ -3308,6 +3311,13 @@ export type Database = {
           auth: string
         }[]
       }
+      demo_crear_visitante: {
+        Args: { p_visitante: string; p_password: string; p_ip_hash?: string | null }
+        Returns: Json
+      }
+      demo_estado: { Args: { p_visitante: string }; Returns: Json }
+      demo_reiniciar: { Args: { p_visitante: string }; Returns: Json }
+      demo_limpiar: { Args: { p_horas?: number }; Returns: number }
       registrar_push_suscripcion: {
         Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string }
         Returns: undefined

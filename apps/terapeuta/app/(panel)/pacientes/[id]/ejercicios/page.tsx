@@ -74,15 +74,17 @@ export default async function EjerciciosPacientePage({ params }: PageProps) {
       <RefrescarEnVivo tabla="tareas" filtro={`vinculacion_id=eq.${id}`} canal={`tareas-terapeuta-${id}`} />
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif text-2xl text-ink mb-1">Ejercicios y tareas</h2>
+          <h2 data-demo="tareas-titulo" className="font-serif text-2xl text-ink mb-1">Ejercicios y tareas</h2>
           <p className="text-sm text-foreground-muted">
             Lo que asignaste y cómo ha respondido el paciente.
           </p>
         </div>
+        <div data-demo="asignar">
         <AsignarEjercicioDialog
           vinculacionId={id}
           plantillas={(plantillas as any) ?? []}
         />
+        </div>
       </div>
 
       {lista.length === 0 ? (

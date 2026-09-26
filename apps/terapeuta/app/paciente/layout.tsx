@@ -9,6 +9,10 @@ import { AutoLogout } from '@/components/cuenta/AutoLogout';
 import { CanalizacionPendiente } from '@/components/paciente/CanalizacionPendiente';
 import { SoporteBoton } from '@/components/soporte/SoporteBoton';
 import { createClient } from '@/lib/supabase/server';
+import { ModoDemo } from '@/components/demo/ModoDemo';
+import { estadoDemo } from '@/lib/demo/servidor';
+import { COOKIE_DEMO } from '@/lib/demo/constantes';
+import { cookies } from 'next/headers';
 import { VERSION_AVISO_PACIENTE } from '@/lib/aviso-privacidad-paciente';
 
 export default async function PacienteLayout({
@@ -68,6 +72,13 @@ export default async function PacienteLayout({
     redirect('/aviso-paciente');
   }
 
+  // Cuenta demo pública: capa de demo (tira, recorrido) y sin avisos de producto.
+  // Se detecta por la cookie del visitante y se confirma contra la base (la
+  // cuenta con sesión debe ser la paciente demo de ese visitante).
+  const visitanteDemo = (await cookies()).get(COOKIE_DEMO)?.value;
+  const demoEstado = visitanteDemo ? await estadoDemo(visitanteDemo) : null;
+  const demo = !!demoEstado?.ok && demoEstado.paciente_id === user.id;
+
   // Nombre del terapeuta vinculado (query separada — el FK apunta a terapeutas,
   // no a profiles, así que no se puede usar embed).
 
@@ -118,18 +129,20 @@ export default async function PacienteLayout({
       {/* Botón de apoyo como pestaña lateral escondida (solo si está habilitado) */}
       {funciones.sos && <SosTab />}
 
+      {demo && <ModoDemo rol="paciente" vinculacionId={demoEstado?.vinculacion_id ?? null} />}
+
       {/* Invitación a activar avisos push en este dispositivo (al entrar) */}
-      <InvitacionPush />
+      {!demo && <InvitacionPush />}
 
       {/* Aviso emergente de mensajes del terapeuta */}
       <AvisoNotificacion />
 
       {/* Tour guiado (modo aprendiz) + aviso de dónde activarlo */}
-      <GuiaAprendiz activo={profile.modo_aprendiz} />
-      <AvisoModoAprendiz />
+      {!demo && <GuiaAprendiz activo={profile.modo_aprendiz} />}
+      {!demo && <AvisoModoAprendiz />}
 
       {/* Auto-cierre de sesión por inactividad (si el paciente lo activó) */}
-      <AutoLogout habilitado={profile.auto_logout_habilitado} />
+      <AutoLogout habilitado={!demo && profile.auto_logout_habilitado} />
 
       {/* Ventana de autorización de canalización (si hay una pendiente) */}
       {canalizacion && (
@@ -137,7 +150,7 @@ export default async function PacienteLayout({
       )}
 
       {/* Botón de ayuda / soporte → llega al Panel de Dueño */}
-      <SoporteBoton />
+      {!demo && <SoporteBoton />}
     </div>
   );
 }

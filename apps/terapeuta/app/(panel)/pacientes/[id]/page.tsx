@@ -90,11 +90,11 @@ export default async function PacienteResumenPage({ params }: PageProps) {
     <div className="space-y-6">
       {/* Botón IA */}
       <div className="flex justify-end">
-        <GenerarResumenButton vinculacionId={id} />
+        <div data-demo="resumen-ia"><GenerarResumenButton vinculacionId={id} /></div>
       </div>
 
       {/* KPIs */}
-      <div>
+      <div data-demo="panorama">
         <h2 className="font-serif text-2xl text-ink mb-1">Panorama general</h2>
         <p className="text-sm text-foreground-muted mb-4">
           Resumen de los últimos 30 días.
@@ -127,7 +127,7 @@ export default async function PacienteResumenPage({ params }: PageProps) {
       {/* Dos columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Último registro */}
-        <Card>
+        <Card data-demo="ultimo-registro">
           <CardHeader>
             <CardTitle>Último registro</CardTitle>
             {ultimoRegistro && (
@@ -166,7 +166,7 @@ export default async function PacienteResumenPage({ params }: PageProps) {
         </Card>
 
         {/* Temas / emociones más frecuentes */}
-        <Card>
+        <Card data-demo="emociones-frecuentes">
           <CardHeader>
             <CardTitle>Emociones frecuentes</CardTitle>
             <CardDescription>

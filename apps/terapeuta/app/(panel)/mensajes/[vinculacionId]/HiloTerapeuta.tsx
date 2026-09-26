@@ -109,7 +109,7 @@ export function HiloTerapeuta({
   return (
     <div className="flex h-full flex-col">
       {/* Mensajes */}
-      <div ref={scrollRef} className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-5 py-6 sm:px-8">
+      <div ref={scrollRef} data-demo="hilo" className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-5 py-6 sm:px-8">
         {mensajes.length === 0 ? (
           <div className="rounded-2xl border border-noema-deep/[0.06] bg-white py-12 text-center text-foreground-muted">
             Aún no hay mensajes. Escribe el primero.
@@ -144,7 +144,7 @@ export function HiloTerapeuta({
       </div>
 
       {/* Composer */}
-      <div className="border-t border-noema-deep/[0.06] bg-paper p-4">
+      <div data-demo="composer" className="border-t border-noema-deep/[0.06] bg-paper p-4">
         <div className="mx-auto max-w-3xl space-y-2">
           {/* Panel: mensajes rápidos por paciente (#6/#7) */}
           {mostrarRapidos && (
@@ -283,6 +283,7 @@ export function HiloTerapeuta({
               <MessageSquareText className="size-4" strokeWidth={1.7} />
             </button>
             <textarea
+              data-demo="chat-texto"
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => {

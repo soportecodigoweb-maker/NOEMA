@@ -122,7 +122,7 @@ export default async function ProgresoPage() {
 
       {/* Puntaje + bienestar */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center gap-4 rounded-2xl border border-noema-deep/10 bg-white p-5 sm:col-span-1">
+        <div data-demo="puntaje" className="flex items-center gap-4 rounded-2xl border border-noema-deep/10 bg-white p-5 sm:col-span-1">
           <Anillo
             valor={puntaje}
             total={100}
@@ -146,7 +146,7 @@ export default async function ProgresoPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-noema-deep/10 bg-white p-5 sm:col-span-2">
+        <div data-demo="bienestar" className="rounded-2xl border border-noema-deep/10 bg-white p-5 sm:col-span-2">
           <div className="mb-2 flex items-center justify-between">
             <p className="caption">Bienestar por semana</p>
             <Tendencia delta={deltaBienestar} />
@@ -168,7 +168,7 @@ export default async function ProgresoPage() {
 
       {/* Logros */}
       {logros.length > 0 && (
-        <div className="mb-6">
+        <div data-demo="logros" className="mb-6">
           <h2 className="mb-3 flex items-center gap-1.5 font-serif text-lg text-ink">
             <Sparkles className="size-4 text-noema-sage" /> Tus logros
           </h2>

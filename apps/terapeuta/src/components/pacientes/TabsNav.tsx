@@ -26,7 +26,7 @@ export function TabsNav({ vinculacionId }: TabsNavProps) {
   const base = `/pacientes/${vinculacionId}`;
 
   return (
-    <nav className="-mb-[1px] flex gap-1 overflow-x-auto border-b border-noema-deep/[0.06] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav data-demo="tabs" className="-mb-[1px] flex gap-1 overflow-x-auto border-b border-noema-deep/[0.06] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((t) => {
         const href = t.slug ? `${base}/${t.slug}` : base;
         const active =
@@ -37,6 +37,7 @@ export function TabsNav({ vinculacionId }: TabsNavProps) {
           <Link
             key={t.slug}
             href={href}
+            data-demo={`tab-${t.slug || 'resumen'}`}
             className={cn(
               'shrink-0 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors',
               active

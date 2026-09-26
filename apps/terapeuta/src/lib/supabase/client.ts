@@ -1,9 +1,26 @@
 /**
  * Cliente Supabase para Client Components.
  * Usa cookies del navegador (manejadas por @supabase/ssr internamente).
+ *
+ * Modo demo: en las rutas /paciente se usa la sesión del paciente demo
+ * (clave distinta), igual que en el servidor. El cambio de rol en el demo se
+ * hace con una carga completa de página, así que la clave no cambia a mitad
+ * de una misma pantalla.
  */
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@noema/database';
+import {
+  COOKIE_DEMO_UI,
+  STORAGE_KEY_AUTH,
+  STORAGE_KEY_DEMO_PACIENTE,
+  esRutaPaciente,
+} from '@/lib/demo/constantes';
+
+function claveSesion(): string {
+  if (typeof window === 'undefined') return STORAGE_KEY_AUTH;
+  const hayDemo = document.cookie.split(';').some((c) => c.trim() === `${COOKIE_DEMO_UI}=1`);
+  return hayDemo && esRutaPaciente(window.location.pathname) ? STORAGE_KEY_DEMO_PACIENTE : STORAGE_KEY_AUTH;
+}
 
 export function createClient() {
   return createBrowserClient<Database>(
@@ -21,7 +38,7 @@ export function createClient() {
       // storageKey FIJO: el navegador usa la URL pública y el servidor la interna;
       // sin una clave fija, el nombre de la cookie (incl. el code_verifier de PKCE)
       // no coincidiría entre ambos y el login con Google fallaría al volver.
-      auth: { storageKey: 'sb-noema-auth', flowType: 'pkce' },
+      auth: { storageKey: claveSesion(), flowType: 'pkce' },
     },
   );
 }

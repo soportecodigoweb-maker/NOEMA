@@ -2,8 +2,28 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { COOKIE_DEMO, COOKIE_DEMO_UI, STORAGE_KEY_DEMO_PACIENTE } from '@/lib/demo/constantes';
+
+/**
+ * Si la persona venía del demo público y ahora inicia sesión con su cuenta
+ * real, se retira el demo (cookies y sesión del paciente demo) para que las
+ * rutas /paciente no la manden al sandbox.
+ */
+async function salirDelDemo() {
+  try {
+    const jar = await cookies();
+    if (!jar.get(COOKIE_DEMO)) return;
+    jar.set(COOKIE_DEMO, '', { path: '/', maxAge: 0 });
+    jar.set(COOKIE_DEMO_UI, '', { path: '/', maxAge: 0 });
+    for (const c of jar.getAll()) {
+      if (c.name.startsWith(STORAGE_KEY_DEMO_PACIENTE)) jar.set(c.name, '', { path: '/', maxAge: 0 });
+    }
+  } catch {
+    /* fuera de una acción: nada que hacer */
+  }
+}
 
 /** URL base real de esta petición (funciona en Vercel sin depender de env). */
 async function origenActual(): Promise<string> {
@@ -23,7 +43,8 @@ export async function signInAction(formData: FormData): Promise<ActionResult> {
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
 
-  const supabase = await createClient();
+  await salirDelDemo();
+  const supabase = await createClient({ storageKey: 'sb-noema-auth' });
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {

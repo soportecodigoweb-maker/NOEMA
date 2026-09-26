@@ -165,7 +165,7 @@ export default async function AjustesPage({ searchParams }: SearchParams) {
         <ObservacionesSupervision items={observaciones} />
 
         {/* Funciones del paciente y notificaciones */}
-        <PanelConfiguracion inicial={configInicial} />
+        <div data-demo="config-paciente"><PanelConfiguracion inicial={configInicial} /></div>
 
         {!membresia && (
         <PlanCard

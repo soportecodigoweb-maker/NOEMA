@@ -37,7 +37,7 @@ export default async function DiarioPage() {
         </p>
       </div>
 
-      <div data-tour="pac-diario-escribir">
+      <div data-tour="pac-diario-escribir" data-demo="diario-escribir">
         <CrearDiario />
       </div>
 

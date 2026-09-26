@@ -40,7 +40,7 @@ export default async function PacienteDiarioPage({ params }: PageProps) {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="mb-1 font-serif text-2xl text-ink">Diario</h2>
+        <h2 data-demo="diario-titulo" className="mb-1 font-serif text-2xl text-ink">Diario</h2>
         <p className="text-sm text-foreground-muted">
           Solo ves las entradas que tu paciente decidió compartir. Lo que marca como
           privado es su espacio y nunca te llega. Las marcadas con{' '}

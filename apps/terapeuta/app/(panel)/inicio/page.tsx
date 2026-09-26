@@ -167,14 +167,14 @@ export default async function InicioPage() {
       </div>
 
       {/* Alerta destacada si hay crisis sin resolver */}
-      {alertas && alertas > 0 && (
+      {(alertas ?? 0) > 0 && (
         <Link
           href="/pacientes"
           className="mb-6 flex items-center gap-3 rounded-2xl border border-noema-clay/40 bg-noema-clay/[0.06] px-5 py-4 transition-colors hover:bg-noema-clay/10"
         >
           <LifeBuoy className="size-5 shrink-0 text-noema-clay" strokeWidth={1.9} />
           <p className="flex-1 text-sm text-ink">
-            <span className="font-semibold">{alertas} alerta{alertas > 1 ? 's' : ''} de apoyo sin resolver.</span>{' '}
+            <span className="font-semibold">{alertas} alerta{(alertas ?? 0) > 1 ? 's' : ''} de apoyo sin resolver.</span>{' '}
             Revisa a tus pacientes que pidieron ayuda.
           </p>
           <ArrowUpRight className="size-4 text-noema-clay" />
@@ -182,7 +182,7 @@ export default async function InicioPage() {
       )}
 
       {/* KPIs — cada uno enlaza a su sección */}
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div data-demo="kpis" className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiLink
           href="/pacientes"
           icon={<Users className="size-4" />}
@@ -218,7 +218,7 @@ export default async function InicioPage() {
       {/* Fila de visualizaciones */}
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Carga de la semana */}
-        <Card className="lg:col-span-2">
+        <Card data-demo="carga" className="lg:col-span-2">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-serif text-lg text-ink">Carga de la semana</h2>
             <Link href="/sesiones" className="text-xs text-noema-sage hover:underline">
@@ -235,7 +235,7 @@ export default async function InicioPage() {
         </Card>
 
         {/* Distribución de riesgo */}
-        <Card>
+        <Card data-demo="riesgo">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="font-serif text-lg text-ink">Nivel de riesgo</h2>
             <Link href="/pacientes" className="text-xs text-noema-sage hover:underline">
@@ -269,7 +269,7 @@ export default async function InicioPage() {
 
       {/* Dos columnas: pacientes recientes + próximas sesiones */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card data-demo="pacientes-recientes" className="lg:col-span-2">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="font-serif text-lg text-ink">Tus pacientes</h2>
             <Link href="/pacientes" className="text-xs text-noema-sage hover:underline">
@@ -327,7 +327,7 @@ export default async function InicioPage() {
           )}
         </Card>
 
-        <Card>
+        <Card data-demo="proximas">
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="font-serif text-lg text-ink">Próximas sesiones</h2>
             <Link href="/sesiones" className="text-xs text-noema-sage hover:underline">
@@ -403,7 +403,7 @@ function KpiLink({
       <div className="flex items-end justify-between gap-2">
         <div>
           <div className="flex items-baseline gap-2">
-            <p className={`font-serif text-3xl ${alerta ? 'text-noema-clay' : 'text-ink'}`}>{value}</p>
+            <p data-demo-contador className={`font-serif text-3xl ${alerta ? 'text-noema-clay' : 'text-ink'}`}>{value}</p>
             {extra}
           </div>
           <p className="caption mt-1">{label}</p>

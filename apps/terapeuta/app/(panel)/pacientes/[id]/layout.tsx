@@ -44,7 +44,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
   return (
     <div>
       {/* Cabecera del paciente */}
-      <div className="px-5 pt-8 pb-6 sm:px-8 sm:pt-10 border-b border-noema-deep/[0.06]">
+      <div data-demo="cabecera-paciente" className="px-5 pt-8 pb-6 sm:px-8 sm:pt-10 border-b border-noema-deep/[0.06]">
         <Link
           href="/pacientes"
           className="inline-flex items-center gap-1 text-foreground-muted hover:text-ink mb-4 text-sm"
@@ -75,6 +75,7 @@ export default async function PacienteLayout({ children, params }: LayoutProps) 
 
           <div className="flex items-center gap-2">
             <Link
+              data-demo="btn-mensaje"
               href={`/mensajes/${vinc.id}`}
               className="inline-flex items-center gap-2 rounded-md border border-noema-deep/15 bg-bone px-3 py-2 text-sm font-medium text-ink transition-colors hover:border-noema-deep/30"
             >

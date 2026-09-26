@@ -76,7 +76,7 @@ export default async function AnaliticasPage() {
       </div>
 
       {/* KPIs — cada uno lleva a su detalle */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div data-demo="kpis-analiticas" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Kpi label="Pacientes activos" value={conteoEstados.activa ?? 0} href="/pacientes" />
         <Kpi label="Sesiones realizadas" value={sesionesRealizadas ?? 0} href="/sesiones" />
         <Kpi
@@ -94,7 +94,7 @@ export default async function AnaliticasPage() {
       </div>
 
       {/* Distribución de estados de vinculación */}
-      <Card>
+      <Card data-demo="estado-consulta">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -136,7 +136,7 @@ export default async function AnaliticasPage() {
       </Card>
 
       {/* Top emociones agregadas */}
-      <Card>
+      <Card data-demo="emociones-registradas">
         <CardHeader>
           <CardTitle>Emociones más registradas</CardTitle>
           <CardDescription>

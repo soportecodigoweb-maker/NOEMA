@@ -4,13 +4,32 @@
  *
  * IMPORTANTE: este cliente es por-request. NUNCA cachear la instancia
  * entre requests (compartiría sesiones de distintos usuarios).
+ *
+ * Modo demo: el middleware manda la ruta en `x-noema-ruta` y `x-noema-demo`
+ * cuando hay visitante demo; con eso elegimos la sesión del paciente demo en
+ * /paciente y la de la psicóloga demo en el resto (ver lib/demo/constantes).
  */
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { Database } from '@noema/database';
+import { STORAGE_KEY_AUTH, STORAGE_KEY_DEMO_PACIENTE, esRutaPaciente } from '@/lib/demo/constantes';
 
-export async function createClient() {
+/** Clave de sesión que toca según la petición actual. */
+async function claveSesionActual(): Promise<string> {
+  try {
+    const h = await headers();
+    if (h.get('x-noema-demo') === '1' && esRutaPaciente(h.get('x-noema-ruta') ?? '')) {
+      return STORAGE_KEY_DEMO_PACIENTE;
+    }
+  } catch {
+    /* fuera de una petición (build, jobs): sesión normal */
+  }
+  return STORAGE_KEY_AUTH;
+}
+
+export async function createClient(opts?: { storageKey?: string }) {
   const cookieStore = await cookies();
+  const storageKey = opts?.storageKey ?? (await claveSesionActual());
 
   // En producción usamos URL interna (red Docker → kong:8000) para SSR.
   // Sin esto, el server llamaría a la URL pública (HTTPS), que requiere DNS+SSL ya configurados.
@@ -24,7 +43,7 @@ export async function createClient() {
       // storageKey FIJO (igual en cliente/servidor/middleware) para que el
       // code_verifier de PKCE y las cookies de sesión tengan el mismo nombre
       // aunque el navegador use la URL pública y el server la interna.
-      auth: { storageKey: 'sb-noema-auth', flowType: 'pkce' },
+      auth: { storageKey, flowType: 'pkce' },
       cookieOptions: {
         // Forzar path / para que las cookies se manden en TODAS las rutas
         path: '/',

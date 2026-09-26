@@ -45,7 +45,7 @@ export default async function PacienteRegistrosPage({ params, searchParams }: Pa
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-serif text-2xl text-ink mb-1">Registros emocionales</h2>
+        <h2 data-demo="registros-titulo" className="font-serif text-2xl text-ink mb-1">Registros emocionales</h2>
         <p className="text-sm text-foreground-muted">
           Lo que tu paciente compartió contigo. Las entradas marcadas con{' '}
           <Bookmark className="inline size-3 fill-noema-sage stroke-noema-sage" />{' '}

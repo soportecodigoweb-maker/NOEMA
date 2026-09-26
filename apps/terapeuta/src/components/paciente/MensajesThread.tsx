@@ -141,7 +141,7 @@ export function MensajesThread({
       </header>
 
       {/* Mensajes */}
-      <div ref={scrollRef} className="flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} data-demo="hilo" className="flex-1 space-y-2.5 overflow-y-auto px-4 py-4">
         {mensajes.length === 0 ? (
           <p className="pt-10 text-center text-sm text-ink/50">
             Aún no hay mensajes. Escribe uno para comenzar.
@@ -177,6 +177,7 @@ export function MensajesThread({
       <div className="shrink-0 border-t border-ink/10 bg-white px-3 py-2.5">
         <div className="flex items-end gap-2">
           <textarea
+            data-demo="chat-texto"
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             onKeyDown={(e) => {
@@ -191,6 +192,7 @@ export function MensajesThread({
             className="max-h-32 min-h-[44px] flex-1 resize-none rounded-2xl border-[0.5px] border-ink/15 bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink/40 focus:border-noema-sage focus:outline-none"
           />
           <button
+            data-demo="chat-enviar"
             onClick={enviar}
             disabled={pending || !texto.trim()}
             className="flex size-11 shrink-0 items-center justify-center rounded-full bg-noema-deep text-bone transition-opacity hover:bg-noema-deep/90 disabled:opacity-40"

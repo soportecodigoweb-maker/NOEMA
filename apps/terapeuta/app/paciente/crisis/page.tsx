@@ -106,15 +106,17 @@ export default async function PacienteCrisisPage() {
 
       {/* Contacto con el terapeuta (#10) + aviso inmediato (#4) */}
       {vinc && verTerapeuta && (
+        <div data-demo="contacto-crisis">
         <ContactoCrisis
           terapeutaNombre={terapeutaNombre ?? 'mi terapeuta'}
           telefonoTerapeuta={vinc.telefono_terapeuta ?? telefonoTerap}
           sosHabilitado={vinc.sos_habilitado !== false}
         />
+        </div>
       )}
 
       {vinc && (
-        <div className="mb-8">
+        <div data-demo="plan-apoyo" className="mb-8">
           <PlanApoyoPaciente
             contacto={{
               nombre: plan?.contacto_nombre ?? null,
@@ -132,7 +134,7 @@ export default async function PacienteCrisisPage() {
 
       {/* Líneas de emergencia */}
       {verLineas && (
-      <section className="mb-8">
+      <section data-demo="lineas" className="mb-8">
         <h2 className="mb-3 text-xs uppercase tracking-wider text-ink/50">
           Líneas de emergencia — México (24/7)
         </h2>

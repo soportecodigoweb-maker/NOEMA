@@ -37,11 +37,13 @@ export default async function RegistrosPage() {
       </div>
 
       {/* Botón largo estilo NOEMA, debajo del texto */}
-      <div data-tour="pac-registrar">
+      <div data-tour="pac-registrar" data-demo="registrar">
         <CrearRegistro emociones={emociones ?? []} />
       </div>
 
-      <ListaRegistros registros={registros ?? []} emociones={emociones ?? []} />
+      <div data-demo="lista-registros">
+        <ListaRegistros registros={registros ?? []} emociones={emociones ?? []} />
+      </div>
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function Sparkline({
     : { width, className: 'block max-w-full overflow-hidden' };
 
   return (
-    <svg height={height} viewBox={`0 0 ${width} ${height}`} {...dims}>
+    <svg data-grafica="spark" height={height} viewBox={`0 0 ${width} ${height}`} {...dims}>
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.18" />
@@ -90,13 +90,14 @@ export function Barras({
 }) {
   const max = maxProp ?? Math.max(...data.map((d) => d.valor), 1);
   return (
-    <div className="flex items-end gap-2" style={{ height }}>
+    <div data-grafica="barras" className="flex items-end gap-2" style={{ height }}>
       {data.map((d, i) => {
         const hPct = Math.max(2, (d.valor / max) * 100);
         return (
           <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
             <span className="text-[11px] font-medium text-ink/70">{d.valor}</span>
             <div
+              data-barra
               className="w-full rounded-md transition-all"
               style={{ height: `${hPct}%`, backgroundColor: d.color ?? color, minHeight: 4 }}
               title={`${d.label}: ${d.valor}`}
@@ -132,9 +133,10 @@ export function Anillo({
   const pct = total > 0 ? Math.min(1, valor / total) : 0;
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
+      <svg data-grafica="anillo" width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={DEEP} strokeOpacity="0.08" strokeWidth={grosor} />
         <circle
+          data-arco
           cx={size / 2}
           cy={size / 2}
           r={r}

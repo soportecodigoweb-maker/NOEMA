@@ -45,12 +45,13 @@ export default async function PlanApoyoPage({ params }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="mb-1 font-serif text-2xl text-ink">Plan de apoyo</h2>
+        <h2 data-demo="plan-titulo" className="mb-1 font-serif text-2xl text-ink">Plan de apoyo</h2>
         <p className="text-sm text-foreground-muted">
           Configura el contacto de emergencia, el plan de seguridad y los recursos. El paciente
           puede verlos y editar su plan; verás aquí cuando lo use.
         </p>
       </div>
+      <div data-demo="plan-apoyo">
       <PlanApoyoTerapeuta
         vinculacionId={id}
         plan={plan}
@@ -63,6 +64,7 @@ export default async function PlanApoyoPage({ params }: PageProps) {
         recursos={recursos ?? []}
         usos={usosFmt}
       />
+      </div>
     </div>
   );
 }

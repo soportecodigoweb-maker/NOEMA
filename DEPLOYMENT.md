@@ -258,6 +258,52 @@ avisa cuando el push trae alguna) ni tocar otros contenedores del VPS.
 
 ---
 
+## 6c. Demo público (video demo + sandbox por visitante)
+
+El demo de ventas vive en el mismo dominio que la app y no necesita cuenta:
+
+| Ruta | Qué es |
+|---|---|
+| `/web` | Página web pública con la entrada a los dos demos |
+| `/demo/psicologo` y `/demo/paciente` | Hub por rol: Video demo y Cuenta demo |
+| `/demo/video/psicologo` y `/demo/video/paciente` | Reproductor de 12 y 11 diapositivas con la app real dentro |
+| `/demo/entrar?rol=…&a=…` | Crea al visitante (dos cuentas demo + historia) y abre sus dos sesiones |
+| `/demo/reiniciar` (POST), `/demo/salir`, `/demo/estado` | Reiniciar la historia, salir del demo, ids para el recorrido |
+
+**Cómo funciona.** Cada visitante recibe su propia pareja de cuentas reales (psicóloga demo +
+paciente demo, más tres pacientes de relleno) creadas en la base con `demo_crear_visitante()`
+(migración `20260926120000_demo_publico.sql`). Las dos sesiones viven a la vez en cookies
+distintas (`sb-noema-auth` para la psicóloga, `sb-noema-dpac` para el paciente, que solo se usa
+en rutas `/paciente`), por eso el panel puede mostrar el teléfono del paciente en un iframe y el
+video puede tener laptop y teléfono a la vez. Los perfiles demo llevan `profiles.demo_visitante`;
+con eso los layouts montan la capa del demo (tira, recorrido) y esconden los avisos de producto.
+
+**Reinicio.** "Reiniciar demo" vuelve a sembrar la historia del visitante (`demo_reiniciar`). El
+job de pg_cron `demo_reinicio_nocturno` corre a las 03:00 CDMX (`0 9 * * *` UTC) y borra a todos
+los visitantes del día (`demo_limpiar(0)`), cuentas incluidas. Freno de abuso: 200 visitantes
+nuevos por hora.
+
+**Activar en producción.**
+
+1. Aplicar la migración en el VPS (a mano, como siempre):
+   ```bash
+   docker exec -i supabase-db psql -U postgres -d postgres < supabase/migrations/20260926120000_demo_publico.sql
+   ```
+2. Comprobar que el job quedó programado y probar la creación de un visitante:
+   ```sql
+   select jobname, schedule from cron.job where jobname = 'demo_reinicio_nocturno';
+   select public.demo_crear_visitante(gen_random_uuid(), 'prueba-temporal', null);
+   select public.demo_limpiar(0);   -- borra la prueba
+   ```
+3. El panel ya usa `SUPABASE_SERVICE_ROLE_KEY` del `.env` del VPS para llamar a esas funciones;
+   no hace falta ninguna variable nueva.
+4. Abrir `https://app.somosnoema.com/signin` y probar los tres botones.
+
+**Textos que se editan sin tocar código:** precio del video (`apps/terapeuta/src/lib/demo/precio.ts`),
+guiones del recorrido (`src/lib/demo/recorrido-*.ts`) y diapositivas (`src/lib/demo/video-*.ts`).
+
+---
+
 ## 7. Checklist pre-lanzamiento
 
 - [ ] Migraciones aplicadas en Supabase Cloud

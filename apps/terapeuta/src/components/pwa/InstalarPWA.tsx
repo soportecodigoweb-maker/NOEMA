@@ -26,6 +26,9 @@ export function InstalarPWA() {
       (navigator as unknown as { standalone?: boolean }).standalone === true;
     if (standalone) return;
 
+    // En el demo público no invitamos a instalar.
+    if (document.cookie.split(';').some((c) => c.trim() === 'noema_demo_ui=1')) return;
+
     let oculto = false;
     try {
       oculto = localStorage.getItem(CLAVE) === '1';
