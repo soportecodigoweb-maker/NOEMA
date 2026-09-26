@@ -1,0 +1,127 @@
+# =============================================================================
+# NOEMA · Despliegue automático del panel (apps/terapeuta) al VPS de Hostgator
+# =============================================================================
+# Cada push a `main` que toque el panel hace, por SSH, lo mismo que hacíamos a
+# mano: respaldar /opt/noema/source, subir el árbol con git archive | tar,
+# reconstruir SOLO el contenedor noema-panel y comprobar que responde.
+#
+# No aplica migraciones de Supabase (siguen siendo manuales: docker exec -i
+# supabase-db psql ...). Si el push trae migraciones nuevas, el job lo avisa.
+#
+# Secrets necesarios en GitHub → Settings → Secrets and variables → Actions:
+#   VPS_HOST     69.6.207.91
+#   VPS_PORT     22022
+#   VPS_SSH_KEY  llave PRIVADA ed25519 dedicada a este flujo (su pública va en
+#                /root/.ssh/authorized_keys del VPS). Ver DEPLOYMENT.md → 6b.
+# =============================================================================
+name: Desplegar panel al VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/terapeuta/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'infra/panel/**'
+      - '.github/workflows/deploy-panel.yml'
+  workflow_dispatch:
+
+# Nunca dos despliegues a la vez; el segundo espera al primero.
+concurrency:
+  group: deploy-panel
+  cancel-in-progress: false
+
+env:
+  DOMINIO: https://app.somosnoema.com
+
+jobs:
+  deploy:
+    name: Subir código y reconstruir noema-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # para poder comparar con el commit anterior
+
+      - name: Preparar SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_SSH_KEY" || { echo "::error::Falta el secret VPS_SSH_KEY"; exit 1; }
+          test -n "$VPS_HOST" || { echo "::error::Falta el secret VPS_HOST"; exit 1; }
+          test -n "$VPS_PORT" || { echo "::error::Falta el secret VPS_PORT"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName $VPS_HOST
+            Port $VPS_PORT
+            User root
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            ConnectTimeout 20
+            ServerAliveInterval 30
+          EOF
+          ssh vps 'echo "conectado a $(hostname)"'
+
+      - name: Respaldar el código actual del VPS
+        run: |
+          set -euo pipefail
+          ssh vps '
+            set -e
+            mkdir -p /opt/noema/source
+            f=/opt/noema/source-backup-$(date +%Y%m%d-%H%M%S).tar.gz
+            tar -czf "$f" -C /opt/noema source
+            echo "respaldo: $f"
+            # Conservar solo los últimos 5 respaldos para no llenar el disco.
+            ls -t /opt/noema/source-backup-*.tar.gz | tail -n +6 | xargs -r rm -f
+          '
+
+      - name: Subir el árbol del commit
+        run: |
+          set -euo pipefail
+          git archive --format=tar HEAD | ssh vps 'tar -x -C /opt/noema/source'
+          ssh vps 'echo "'"${GITHUB_SHA}"'" > /opt/noema/source/.desplegado'
+
+      - name: Reconstruir solo el panel
+        run: |
+          set -euo pipefail
+          ssh vps 'cd /opt/noema/panel && docker compose up -d --build panel'
+
+      - name: Verificar que responde
+        run: |
+          set -euo pipefail
+          # El contenedor tarda unos segundos en arrancar tras el build.
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$DOMINIO/signin" || true)
+            if [ "$code" = "200" ]; then echo "OK: $DOMINIO/signin → 200"; exit 0; fi
+            echo "intento $i: $code, esperando…"; sleep 5
+          done
+          echo "::error::$DOMINIO/signin no respondió 200 tras el despliegue"
+          ssh vps 'docker logs --tail 60 noema-panel' || true
+          exit 1
+
+      - name: Avisar si hay migraciones nuevas (se aplican a mano)
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: |
+          nuevas=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- supabase/migrations || true)
+          if [ -n "$nuevas" ]; then
+            echo "::warning::Este push trae migraciones que NO se aplicaron solas. Aplícalas en el VPS con docker exec -i supabase-db psql -U postgres -d postgres < archivo.sql:"
+            echo "$nuevas"
+          else
+            echo "Sin migraciones nuevas."
+          fi

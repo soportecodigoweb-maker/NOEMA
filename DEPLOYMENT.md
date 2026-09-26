@@ -221,6 +221,43 @@ noema.app        → A     → 76.76.21.21           (landing futura)
 
 ---
 
+## 6b. Despliegue automático del panel (GitHub Actions → VPS)
+
+Cada push a `main` que toque `apps/terapeuta/`, `packages/` o el lockfile ejecuta
+`.github/workflows/deploy-panel.yml`: entra por SSH al VPS, respalda `/opt/noema/source`,
+sube el árbol con `git archive | tar`, reconstruye solo `noema-panel` y comprueba que
+`https://app.somosnoema.com/signin` responde 200. También se puede lanzar a mano desde
+GitHub → Actions → "Desplegar panel al VPS" → Run workflow.
+
+Activación (una sola vez):
+
+1. Genera una llave SSH dedicada al flujo, sin passphrase (en cualquier máquina):
+
+```bash
+ssh-keygen -t ed25519 -C "github-actions-noema" -f ./noema-deploy -N ""
+```
+
+2. Autoriza la pública en el VPS (una línea nueva en `/root/.ssh/authorized_keys`):
+
+```bash
+cat ./noema-deploy.pub | ssh hostgator-vps "cat >> /root/.ssh/authorized_keys"
+```
+
+3. En GitHub → repo → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret | Valor |
+|---|---|
+| `VPS_HOST` | `69.6.207.91` |
+| `VPS_PORT` | `22022` |
+| `VPS_SSH_KEY` | el contenido COMPLETO del archivo `noema-deploy` (la privada, con las líneas BEGIN/END) |
+
+4. Borra `noema-deploy` y `noema-deploy.pub` de la máquina donde los generaste.
+
+Lo que el flujo NO hace: aplicar migraciones de Supabase (siguen siendo manuales, y el job
+avisa cuando el push trae alguna) ni tocar otros contenedores del VPS.
+
+---
+
 ## 7. Checklist pre-lanzamiento
 
 - [ ] Migraciones aplicadas en Supabase Cloud
